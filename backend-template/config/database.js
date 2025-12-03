@@ -1,10 +1,10 @@
 const sql = require('mssql');
 
 const config = {
-  server: process.env.DB_SERVER || 'localhost',
-  database: process.env.DB_NAME || 'opennos',
-  user: process.env.DB_USER || 'sa',
-  password: process.env.DB_PASSWORD || 'your_password',
+  server: 'localhost',
+  database: 'opennos',
+  user: 'sa',
+  password: 'prueba1298@',
   options: {
     encrypt: false,
     trustServerCertificate: true,
