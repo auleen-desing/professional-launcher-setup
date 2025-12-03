@@ -83,19 +83,19 @@ export function HeroSection() {
                 </div>
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-foreground mb-2">
-                    🎮 Season PvP Tournament
+                    🎉 Invitation Event!
                   </h3>
                   <p className="text-muted-foreground text-sm mb-4">
-                    Participate in the biggest tournament on the server. Exclusive prizes, 
-                    unique titles and epic rewards await you.
+                    Bring friends and Earn Exclusive Rewards! Invite your friends to NovaEra 
+                    and unlock amazing prizes together.
                   </p>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Users className="w-4 h-4" />
-                      <span>256 participants</span>
+                      <span>Join now</span>
                     </div>
                     <Button size="sm" className="bg-primary text-primary-foreground">
-                      Register
+                      Learn More
                     </Button>
                   </div>
                 </div>
