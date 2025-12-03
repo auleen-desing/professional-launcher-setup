@@ -17,7 +17,7 @@ router.post('/login', async (req, res) => {
     const result = await pool.request()
       .input('username', sql.VarChar, username)
       .query(`
-        SELECT AccountId, Name, Password, Authority, Email, RegistrationIP, Coins
+        SELECT AccountId, Name, Password, Authority, Email, Coins
         FROM account 
         WHERE Name = @username
       `);
@@ -28,8 +28,7 @@ router.post('/login', async (req, res) => {
 
     const user = result.recordset[0];
 
-    // Compare password (adjust based on your hash method)
-    // NosTale typically uses SHA512 or plain text
+    // Compare password (NosTale typically uses plain text or SHA512)
     const isValidPassword = password === user.Password || 
       await bcrypt.compare(password, user.Password);
 
@@ -46,7 +45,7 @@ router.post('/login', async (req, res) => {
         user: {
           id: user.AccountId,
           username: user.Name,
-          email: user.Email,
+          email: user.Email || '',
           coins: user.Coins || 0,
           authority: user.Authority || 0
         }
@@ -54,7 +53,7 @@ router.post('/login', async (req, res) => {
     });
   } catch (err) {
     console.error('Login error:', err);
-    res.status(500).json({ success: false, error: 'Server error' });
+    res.status(500).json({ success: false, error: 'Server error', details: err.message });
   }
 });
 
@@ -67,34 +66,47 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ success: false, error: 'All fields required' });
     }
 
+    // Validate input
+    if (username.length < 3 || username.length > 20) {
+      return res.status(400).json({ success: false, error: 'Username must be 3-20 characters' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ success: false, error: 'Password must be at least 6 characters' });
+    }
+
     const pool = await poolPromise;
     
     // Check if user exists
     const existing = await pool.request()
       .input('username', sql.VarChar, username)
-      .input('email', sql.VarChar, email)
-      .query('SELECT AccountId FROM account WHERE Name = @username OR Email = @email');
+      .query('SELECT AccountId FROM account WHERE Name = @username');
 
     if (existing.recordset.length > 0) {
-      return res.status(400).json({ success: false, error: 'Username or email already exists' });
+      return res.status(400).json({ success: false, error: 'Username already exists' });
     }
 
-    // Insert new user
-    const clientIP = req.ip || req.connection.remoteAddress;
+    // Insert new user - Adjusted for standard NosTale account table
+    // Most NosTale tables have: AccountId (identity), Name, Password, Authority
+    // Email and Coins columns may need to be added manually
     await pool.request()
       .input('username', sql.VarChar, username)
-      .input('password', sql.VarChar, password) // Hash if needed
+      .input('password', sql.VarChar, password)
       .input('email', sql.VarChar, email)
-      .input('ip', sql.VarChar, clientIP)
       .query(`
-        INSERT INTO account (Name, Password, Email, Authority, RegistrationIP, Coins)
-        VALUES (@username, @password, @email, 0, @ip, 0)
+        INSERT INTO account (Name, Password, Authority, Email)
+        VALUES (@username, @password, 0, @email)
       `);
 
     res.json({ success: true, message: 'Account created successfully' });
   } catch (err) {
     console.error('Register error:', err);
-    res.status(500).json({ success: false, error: 'Server error' });
+    // Return detailed error for debugging
+    res.status(500).json({ 
+      success: false, 
+      error: 'Server error', 
+      details: err.message 
+    });
   }
 });
 
@@ -117,7 +129,7 @@ router.get('/session', authMiddleware, async (req, res) => {
         user: {
           id: user.AccountId,
           username: user.Name,
-          email: user.Email,
+          email: user.Email || '',
           coins: user.Coins || 0,
           authority: user.Authority || 0
         }
