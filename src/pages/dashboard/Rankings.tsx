@@ -3,45 +3,22 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Trophy, Medal, Star, Swords, Users, Crown } from 'lucide-react';
+import { Trophy, Medal, Star, Swords, Users, Crown, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { API_CONFIG, buildApiUrl } from '@/config/api';
 
 interface RankingEntry {
   rank: number;
   name: string;
   class: string;
-  value: number;
-  guild?: string;
+  level?: number;
+  jobLevel?: number;
+  heroLevel?: number;
+  reputation?: number;
+  kills?: number;
+  deaths?: number;
+  account?: string;
 }
-
-// Mock rankings data
-const mockLevelRankings: RankingEntry[] = [
-  { rank: 1, name: 'LegendSlayer', class: 'Swordsman', value: 99, guild: 'Immortals' },
-  { rank: 2, name: 'ShadowMaster', class: 'Archer', value: 99, guild: 'DarkSide' },
-  { rank: 3, name: 'ArcaneWizard', class: 'Mage', value: 99, guild: 'MagicCircle' },
-  { rank: 4, name: 'NovaKnight', class: 'Swordsman', value: 98, guild: 'NovaEra' },
-  { rank: 5, name: 'StormArcher', class: 'Archer', value: 97, guild: 'Hunters' },
-  { rank: 6, name: 'IceQueen', class: 'Mage', value: 96 },
-  { rank: 7, name: 'BladeRunner', class: 'Swordsman', value: 95, guild: 'Speed' },
-  { rank: 8, name: 'EagleEye', class: 'Archer', value: 94, guild: 'Hunters' },
-  { rank: 9, name: 'FireMage', class: 'Mage', value: 93 },
-  { rank: 10, name: 'SteelGuard', class: 'Swordsman', value: 92, guild: 'Defenders' },
-];
-
-const mockReputationRankings: RankingEntry[] = [
-  { rank: 1, name: 'LegendSlayer', class: 'Swordsman', value: 125000, guild: 'Immortals' },
-  { rank: 2, name: 'NovaKnight', class: 'Swordsman', value: 98000, guild: 'NovaEra' },
-  { rank: 3, name: 'ShadowMaster', class: 'Archer', value: 87000, guild: 'DarkSide' },
-  { rank: 4, name: 'ArcaneWizard', class: 'Mage', value: 76000, guild: 'MagicCircle' },
-  { rank: 5, name: 'StormArcher', class: 'Archer', value: 65000, guild: 'Hunters' },
-];
-
-const mockPvPRankings: RankingEntry[] = [
-  { rank: 1, name: 'Destroyer', class: 'Swordsman', value: 2450, guild: 'Chaos' },
-  { rank: 2, name: 'SilentKiller', class: 'Archer', value: 2320, guild: 'Assassins' },
-  { rank: 3, name: 'ThunderMage', class: 'Mage', value: 2180 },
-  { rank: 4, name: 'IronFist', class: 'Swordsman', value: 2050, guild: 'Warriors' },
-  { rank: 5, name: 'DeadShot', class: 'Archer', value: 1980, guild: 'Assassins' },
-];
 
 const getRankIcon = (rank: number) => {
   switch (rank) {
@@ -69,22 +46,33 @@ const classColors: Record<string, string> = {
 
 export default function Rankings() {
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('level');
   const [levelRankings, setLevelRankings] = useState<RankingEntry[]>([]);
   const [reputationRankings, setReputationRankings] = useState<RankingEntry[]>([]);
   const [pvpRankings, setPvPRankings] = useState<RankingEntry[]>([]);
 
   useEffect(() => {
-    fetchRankings();
+    fetchAllRankings();
   }, []);
 
-  const fetchRankings = async () => {
+  const fetchAllRankings = async () => {
     setIsLoading(true);
     try {
-      // TODO: Replace with real API calls
-      await new Promise(resolve => setTimeout(resolve, 800));
-      setLevelRankings(mockLevelRankings);
-      setReputationRankings(mockReputationRankings);
-      setPvPRankings(mockPvPRankings);
+      const [levelRes, repRes, pvpRes] = await Promise.all([
+        fetch(buildApiUrl(API_CONFIG.ENDPOINTS.RANKINGS.LEVEL)),
+        fetch(buildApiUrl(API_CONFIG.ENDPOINTS.RANKINGS.REPUTATION)),
+        fetch(buildApiUrl(API_CONFIG.ENDPOINTS.RANKINGS.PVP)),
+      ]);
+
+      const [levelData, repData, pvpData] = await Promise.all([
+        levelRes.json(),
+        repRes.json(),
+        pvpRes.json(),
+      ]);
+
+      if (levelData.success) setLevelRankings(levelData.data);
+      if (repData.success) setReputationRankings(repData.data);
+      if (pvpData.success) setPvPRankings(pvpData.data);
     } catch (error) {
       console.error('Failed to fetch rankings:', error);
     } finally {
@@ -92,19 +80,14 @@ export default function Rankings() {
     }
   };
 
-  const formatValue = (value: number, type: string) => {
-    if (type === 'level') return `Lv. ${value}`;
-    if (type === 'reputation') return value.toLocaleString();
-    if (type === 'pvp') return `${value} pts`;
-    return value;
-  };
-
   const RankingList = ({ data, type }: { data: RankingEntry[]; type: string }) => (
     <div className="space-y-2">
       {isLoading ? (
-        Array(5).fill(0).map((_, i) => (
+        Array(10).fill(0).map((_, i) => (
           <Skeleton key={i} className="h-14 w-full" />
         ))
+      ) : data.length === 0 ? (
+        <p className="text-center text-muted-foreground py-8">No rankings available</p>
       ) : (
         data.map((entry) => (
           <div
@@ -119,21 +102,41 @@ export default function Rankings() {
                   <span className={classColors[entry.class] || 'text-muted-foreground'}>
                     {entry.class}
                   </span>
-                  {entry.guild && (
+                  {entry.account && (
                     <>
                       <span className="text-muted-foreground">•</span>
                       <span className="text-muted-foreground flex items-center gap-1">
                         <Users className="h-3 w-3" />
-                        {entry.guild}
+                        {entry.account}
                       </span>
                     </>
                   )}
                 </div>
               </div>
             </div>
-            <Badge variant="secondary" className="font-mono">
-              {formatValue(entry.value, type)}
-            </Badge>
+            <div className="flex items-center gap-2">
+              {type === 'level' && (
+                <div className="text-right">
+                  <Badge variant="secondary" className="font-mono">
+                    Lv. {entry.level}+{entry.heroLevel || 0}
+                  </Badge>
+                  <p className="text-xs text-muted-foreground mt-1">Job: {entry.jobLevel}</p>
+                </div>
+              )}
+              {type === 'reputation' && (
+                <Badge variant="secondary" className="font-mono">
+                  {entry.reputation?.toLocaleString()}
+                </Badge>
+              )}
+              {type === 'pvp' && (
+                <div className="text-right">
+                  <Badge variant="secondary" className="font-mono text-green-400">
+                    {entry.kills} kills
+                  </Badge>
+                  <p className="text-xs text-red-400 mt-1">{entry.deaths} deaths</p>
+                </div>
+              )}
+            </div>
           </div>
         ))
       )}
@@ -142,12 +145,18 @@ export default function Rankings() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Trophy className="h-8 w-8 text-primary" />
-        <h1 className="text-2xl font-bold">Rankings</h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Trophy className="h-8 w-8 text-primary" />
+          <h1 className="text-2xl font-bold">Rankings</h1>
+        </div>
+        <Button variant="outline" size="sm" onClick={fetchAllRankings}>
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Refresh
+        </Button>
       </div>
 
-      <Tabs defaultValue="level" className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
         <TabsList className="grid w-full grid-cols-3 max-w-md">
           <TabsTrigger value="level" className="flex items-center gap-2">
             <Star className="h-4 w-4" />
