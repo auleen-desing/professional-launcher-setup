@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Menu, X, Download, Users, Newspaper, ShoppingBag, MessageSquare } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Menu, X, Download, Users, Newspaper, ShoppingBag, MessageSquare, LayoutDashboard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import novaLogo from '@/assets/novaera-logo.png';
 
@@ -41,8 +42,14 @@ export function Header() {
             ))}
           </nav>
 
-          {/* CTA Button */}
-          <div className="hidden md:flex items-center gap-4">
+          {/* CTA Buttons */}
+          <div className="hidden md:flex items-center gap-3">
+            <Link to="/login">
+              <Button variant="outline" className="gap-2">
+                <LayoutDashboard className="w-4 h-4" />
+                Dashboard
+              </Button>
+            </Link>
             <Button className="bg-primary text-primary-foreground hover:bg-primary/90 glow-gold font-semibold">
               <Download className="w-4 h-4 mr-2" />
               Jugar Ahora
@@ -73,7 +80,13 @@ export function Header() {
                   {item.name}
                 </a>
               ))}
-              <Button className="mt-4 bg-primary text-primary-foreground">
+              <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                <Button variant="outline" className="w-full gap-2">
+                  <LayoutDashboard className="w-4 h-4" />
+                  Dashboard
+                </Button>
+              </Link>
+              <Button className="mt-2 w-full bg-primary text-primary-foreground">
                 <Download className="w-4 h-4 mr-2" />
                 Jugar Ahora
               </Button>
