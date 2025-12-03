@@ -1,6 +1,6 @@
 // API Configuration - Connect to your Node.js/IIS backend
 export const API_CONFIG = {
-  BASE_URL: 'http://localhost:3000/api', // Change to your API URL
+  BASE_URL: 'http://65.108.14.231:3000/api',
   
   // Server Configuration
   SERVER_IP: '127.0.0.1',
