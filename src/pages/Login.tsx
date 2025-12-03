@@ -11,11 +11,18 @@ import novaLogo from '@/assets/novaera-logo.png';
 import heroBg from '@/assets/hero-bg.jpg';
 
 export function Login() {
+  // Login state
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [email, setEmail] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Register state
+  const [regUsername, setRegUsername] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [isRegistering, setIsRegistering] = useState(false);
+  
   const navigate = useNavigate();
   const { login } = useAuth();
   const { toast } = useToast();
@@ -63,10 +70,77 @@ export function Login() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: 'Registration',
-      description: 'Registration is done through the game launcher.',
-    });
+    
+    if (!regUsername.trim() || !regEmail.trim() || !regPassword.trim()) {
+      toast({
+        title: 'Error',
+        description: 'Por favor completa todos los campos.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (regUsername.length < 3 || regUsername.length > 20) {
+      toast({
+        title: 'Error',
+        description: 'El nombre de usuario debe tener entre 3 y 20 caracteres.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (regPassword.length < 6) {
+      toast({
+        title: 'Error',
+        description: 'La contraseña debe tener al menos 6 caracteres.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsRegistering(true);
+
+    try {
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: regUsername,
+          password: regPassword,
+          email: regEmail,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast({
+          title: 'Cuenta creada',
+          description: 'Tu cuenta ha sido creada exitosamente. Ya puedes iniciar sesión.',
+        });
+        // Clear form and switch to login tab
+        setRegUsername('');
+        setRegEmail('');
+        setRegPassword('');
+      } else {
+        toast({
+          title: 'Error de registro',
+          description: data.error || 'No se pudo crear la cuenta.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Register error:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudo conectar con el servidor.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRegistering(false);
+    }
   };
 
   return (
@@ -163,6 +237,8 @@ export function Login() {
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         placeholder="Username"
+                        value={regUsername}
+                        onChange={(e) => setRegUsername(e.target.value)}
                         className="pl-10 bg-background/50"
                       />
                     </div>
@@ -171,6 +247,8 @@ export function Login() {
                       <Input
                         type="email"
                         placeholder="Email"
+                        value={regEmail}
+                        onChange={(e) => setRegEmail(e.target.value)}
                         className="pl-10 bg-background/50"
                       />
                     </div>
@@ -179,15 +257,14 @@ export function Login() {
                       <Input
                         type="password"
                         placeholder="Password"
+                        value={regPassword}
+                        onChange={(e) => setRegPassword(e.target.value)}
                         className="pl-10 bg-background/50"
                       />
                     </div>
-                    <Button type="submit" className="w-full gap-2">
-                      Register
+                    <Button type="submit" className="w-full gap-2" disabled={isRegistering}>
+                      {isRegistering ? 'Registrando...' : 'Registrarse'}
                     </Button>
-                    <p className="text-xs text-center text-muted-foreground">
-                      Registration is also available from the game launcher
-                    </p>
                   </form>
                 </TabsContent>
               </Tabs>
