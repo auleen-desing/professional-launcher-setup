@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { CreditCard, Wallet, Shield, Check } from 'lucide-react';
+import { CreditCard, Wallet, Shield, Check, Coins, Sparkles, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { CoinPackage } from '@/types/user';
+import { API_CONFIG } from '@/config/api';
 
 const coinPackages: CoinPackage[] = [
   { id: '1', name: 'Starter', coins: 1000, price: 5 },
@@ -16,38 +17,53 @@ const coinPackages: CoinPackage[] = [
 export function BuyCoins() {
   const [selectedPackage, setSelectedPackage] = useState<CoinPackage | null>(null);
   const [paymentMethod, setPaymentMethod] = useState('stripe');
+  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
   const handlePurchase = async () => {
     if (!selectedPackage) {
       toast({
         title: 'Selecciona un paquete',
-        description: 'Por favor selecciona un paquete de coins primero.',
+        description: 'Por favor selecciona un paquete de NovaCoins primero.',
         variant: 'destructive',
       });
       return;
     }
 
-    // TODO: Replace with your API endpoint
-    // const response = await fetch('http://localhost:3000/api/payments/create', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ 
-    //     packageId: selectedPackage.id, 
-    //     paymentMethod 
-    //   }),
-    // });
+    setIsProcessing(true);
 
-    toast({
-      title: 'Procesando pago...',
-      description: `Redirigiendo a ${paymentMethod}...`,
-    });
+    try {
+      // TODO: Replace with your API endpoint
+      // const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PAYMENTS.CREATE}`, {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ 
+      //     packageId: selectedPackage.id, 
+      //     paymentMethod 
+      //   }),
+      // });
+
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      toast({
+        title: 'Procesando pago...',
+        description: `Redirigiendo a ${paymentMethod}...`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'No se pudo procesar el pago.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-gradient-gold">Comprar Coins</h1>
+        <h1 className="text-3xl font-display font-bold text-gradient-cyan">Comprar NovaCoins</h1>
         <p className="text-muted-foreground mt-2">Selecciona un paquete y método de pago</p>
       </div>
 
@@ -56,81 +72,115 @@ export function BuyCoins() {
         {coinPackages.map((pkg) => (
           <Card 
             key={pkg.id}
-            className={`cursor-pointer transition-all duration-300 ${
+            className={`relative cursor-pointer transition-all duration-300 overflow-hidden group ${
               selectedPackage?.id === pkg.id 
-                ? 'border-primary ring-2 ring-primary/20' 
-                : 'hover:border-primary/50'
-            } ${pkg.popular ? 'relative' : ''}`}
+                ? 'border-primary ring-2 ring-primary/30 bg-primary/5' 
+                : 'border-border/50 hover:border-primary/50'
+            }`}
             onClick={() => setSelectedPackage(pkg)}
           >
             {pkg.popular && (
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs px-3 py-1 rounded-full font-medium">
-                Popular
+              <div className="absolute -right-8 top-4 rotate-45 bg-gradient-to-r from-accent to-primary text-primary-foreground text-xs px-10 py-1 font-bold">
+                POPULAR
               </div>
             )}
             <CardHeader className="text-center pb-2">
-              <CardTitle className="text-xl">{pkg.name}</CardTitle>
-              <CardDescription>{pkg.coins.toLocaleString()} Coins</CardDescription>
+              <div className={`mx-auto p-3 rounded-xl mb-2 ${
+                pkg.popular ? 'bg-gradient-to-br from-accent to-primary' : 'bg-primary/10'
+              }`}>
+                {pkg.popular ? <Sparkles className="h-6 w-6 text-white" /> : <Coins className="h-6 w-6 text-primary" />}
+              </div>
+              <CardTitle className="text-xl font-display">{pkg.name}</CardTitle>
+              <CardDescription className="text-lg font-semibold text-foreground">
+                {pkg.coins.toLocaleString()} NovaCoins
+              </CardDescription>
             </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-4xl font-bold text-primary">${pkg.price}</p>
+            <CardContent className="text-center space-y-3">
+              <p className="text-4xl font-display font-black text-primary">${pkg.price}</p>
               {pkg.bonus && (
-                <p className="text-sm text-green-500 mt-2">+{pkg.bonus.toLocaleString()} bonus</p>
+                <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-neon-green/20 text-neon-green text-sm font-medium">
+                  <Zap className="h-3 w-3" />
+                  +{pkg.bonus.toLocaleString()} bonus
+                </div>
               )}
               {selectedPackage?.id === pkg.id && (
-                <div className="mt-4 flex items-center justify-center gap-2 text-primary">
-                  <Check className="h-4 w-4" />
-                  <span className="text-sm">Seleccionado</span>
+                <div className="flex items-center justify-center gap-2 text-primary pt-2">
+                  <Check className="h-5 w-5" />
+                  <span className="font-medium">Seleccionado</span>
                 </div>
               )}
             </CardContent>
+            
+            {/* Hover effect */}
+            <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
           </Card>
         ))}
       </div>
 
       {/* Payment Methods */}
-      <Card>
+      <Card className="border-border/50">
         <CardHeader>
-          <CardTitle>Método de Pago</CardTitle>
+          <CardTitle className="font-display">Método de Pago</CardTitle>
           <CardDescription>Selecciona cómo deseas pagar</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={paymentMethod} onValueChange={setPaymentMethod}>
-            <TabsList className="grid grid-cols-3 w-full">
-              <TabsTrigger value="stripe" className="gap-2">
+            <TabsList className="grid grid-cols-3 w-full h-auto p-1">
+              <TabsTrigger value="stripe" className="gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <CreditCard className="h-4 w-4" />
-                Stripe
+                <span className="hidden sm:inline">Stripe</span>
               </TabsTrigger>
-              <TabsTrigger value="paypal" className="gap-2">
+              <TabsTrigger value="paypal" className="gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Wallet className="h-4 w-4" />
-                PayPal
+                <span className="hidden sm:inline">PayPal</span>
               </TabsTrigger>
-              <TabsTrigger value="paysafecard" className="gap-2">
+              <TabsTrigger value="paysafecard" className="gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
                 <Shield className="h-4 w-4" />
-                Paysafecard
+                <span className="hidden sm:inline">Paysafecard</span>
               </TabsTrigger>
             </TabsList>
             
-            <TabsContent value="stripe" className="mt-4">
-              <div className="bg-muted/50 rounded-lg p-4">
+            <TabsContent value="stripe" className="mt-6">
+              <div className="bg-card rounded-xl p-6 border border-border/50">
+                <div className="flex items-center gap-3 mb-3">
+                  <CreditCard className="h-8 w-8 text-primary" />
+                  <div>
+                    <h4 className="font-semibold">Tarjeta de Crédito/Débito</h4>
+                    <p className="text-sm text-muted-foreground">Visa, Mastercard, American Express</p>
+                  </div>
+                </div>
                 <p className="text-sm text-muted-foreground">
-                  Paga de forma segura con tarjeta de crédito o débito a través de Stripe.
+                  Paga de forma segura con tarjeta a través de Stripe. Transacción instantánea.
                 </p>
               </div>
             </TabsContent>
             
-            <TabsContent value="paypal" className="mt-4">
-              <div className="bg-muted/50 rounded-lg p-4">
+            <TabsContent value="paypal" className="mt-6">
+              <div className="bg-card rounded-xl p-6 border border-border/50">
+                <div className="flex items-center gap-3 mb-3">
+                  <Wallet className="h-8 w-8 text-[#0070ba]" />
+                  <div>
+                    <h4 className="font-semibold">PayPal</h4>
+                    <p className="text-sm text-muted-foreground">Paga con tu cuenta PayPal</p>
+                  </div>
+                </div>
                 <p className="text-sm text-muted-foreground">
-                  Paga con tu cuenta de PayPal de forma rápida y segura.
+                  Usa tu saldo de PayPal o tarjeta vinculada. Rápido y seguro.
                 </p>
               </div>
             </TabsContent>
             
-            <TabsContent value="paysafecard" className="mt-4">
-              <div className="bg-muted/50 rounded-lg p-4">
+            <TabsContent value="paysafecard" className="mt-6">
+              <div className="bg-card rounded-xl p-6 border border-border/50">
+                <div className="flex items-center gap-3 mb-3">
+                  <Shield className="h-8 w-8 text-[#00a3e0]" />
+                  <div>
+                    <h4 className="font-semibold">Paysafecard</h4>
+                    <p className="text-sm text-muted-foreground">Pago con código prepago</p>
+                  </div>
+                </div>
                 <p className="text-sm text-muted-foreground">
-                  Paga con un código de Paysafecard. Ideal si prefieres no usar datos bancarios.
+                  Compra una tarjeta Paysafecard en cualquier punto de venta y usa el código.
                 </p>
               </div>
             </TabsContent>
@@ -138,13 +188,20 @@ export function BuyCoins() {
 
           <Button 
             onClick={handlePurchase}
-            className="w-full mt-6"
+            className="w-full mt-6 gap-2 glow-cyan"
             size="lg"
-            disabled={!selectedPackage}
+            disabled={!selectedPackage || isProcessing}
           >
-            {selectedPackage 
-              ? `Pagar $${selectedPackage.price} con ${paymentMethod}` 
-              : 'Selecciona un paquete'}
+            {isProcessing ? (
+              'Procesando...'
+            ) : selectedPackage ? (
+              <>
+                <CreditCard className="h-4 w-4" />
+                Pagar ${selectedPackage.price} con {paymentMethod}
+              </>
+            ) : (
+              'Selecciona un paquete'
+            )}
           </Button>
         </CardContent>
       </Card>
