@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AdminProvider } from "@/contexts/AdminContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import { Login } from "./pages/Login";
@@ -18,6 +19,16 @@ import { Unbug } from "./pages/dashboard/Unbug";
 import { Avatar } from "./pages/dashboard/Avatar";
 import { Shop } from "./pages/dashboard/Shop";
 import { Password } from "./pages/dashboard/Password";
+
+// Admin imports
+import { AdminLayout } from "./components/admin/AdminLayout";
+import { AdminDashboard } from "./pages/admin/AdminDashboard";
+import { AdminUsers } from "./pages/admin/AdminUsers";
+import { AdminCoins } from "./pages/admin/AdminCoins";
+import { AdminAnnouncements } from "./pages/admin/AdminAnnouncements";
+import { AdminModeration } from "./pages/admin/AdminModeration";
+import { AdminStats } from "./pages/admin/AdminStats";
+import { AdminSettings } from "./pages/admin/AdminSettings";
 
 const queryClient = new QueryClient();
 
@@ -147,6 +158,15 @@ function AppRoutes() {
         }
       />
 
+      {/* Admin Routes */}
+      <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
+      <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
+      <Route path="/admin/coins" element={<AdminLayout><AdminCoins /></AdminLayout>} />
+      <Route path="/admin/announcements" element={<AdminLayout><AdminAnnouncements /></AdminLayout>} />
+      <Route path="/admin/moderation" element={<AdminLayout><AdminModeration /></AdminLayout>} />
+      <Route path="/admin/stats" element={<AdminLayout><AdminStats /></AdminLayout>} />
+      <Route path="/admin/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
+
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -155,13 +175,15 @@ function AppRoutes() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-        </BrowserRouter>
-      </TooltipProvider>
+      <AdminProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <AppRoutes />
+          </BrowserRouter>
+        </TooltipProvider>
+      </AdminProvider>
     </AuthProvider>
   </QueryClientProvider>
 );
