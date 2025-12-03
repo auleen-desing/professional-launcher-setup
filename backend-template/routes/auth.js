@@ -48,7 +48,7 @@ router.post('/login', async (req, res) => {
           username: user.Name,
           email: user.Email,
           coins: user.Coins || 0,
-          isAdmin: user.Authority >= 2
+          authority: user.Authority || 0
         }
       }
     });
@@ -114,11 +114,13 @@ router.get('/session', authMiddleware, async (req, res) => {
     res.json({
       success: true,
       data: {
-        id: user.AccountId,
-        username: user.Name,
-        email: user.Email,
-        coins: user.Coins || 0,
-        isAdmin: user.Authority >= 2
+        user: {
+          id: user.AccountId,
+          username: user.Name,
+          email: user.Email,
+          coins: user.Coins || 0,
+          authority: user.Authority || 0
+        }
       }
     });
   } catch (err) {

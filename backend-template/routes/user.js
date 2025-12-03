@@ -26,7 +26,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
         username: user.Name,
         email: user.Email,
         coins: user.Coins || 0,
-        isAdmin: user.Authority >= 2
+        authority: user.Authority || 0
       }
     });
   } catch (err) {

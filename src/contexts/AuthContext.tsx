@@ -24,7 +24,7 @@ const mockUser: User = {
   email: 'auleen@novaera.com',
   coins: 8000123,
   createdAt: new Date().toISOString(),
-  canUseCP: 2,
+  authority: 100,
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -56,7 +56,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               coins: response.data.user.coins,
               avatar: response.data.user.avatar,
               createdAt: response.data.user.createdAt,
-              canUseCP: response.data.user.canUseCP,
+              authority: response.data.user.authority || 0,
             };
             setUser(userData);
             localStorage.setItem('novaera_user', JSON.stringify(userData));
@@ -94,7 +94,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           coins: response.data.user.coins,
           avatar: response.data.user.avatar,
           createdAt: response.data.user.createdAt,
-          canUseCP: response.data.user.canUseCP,
+          authority: response.data.user.authority || 0,
         };
         setUser(userData);
         localStorage.setItem('novaera_user', JSON.stringify(userData));
@@ -151,7 +151,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const isAdmin = user ? user.canUseCP > 1 : false;
+  const isAdmin = user ? user.authority === 100 : false;
 
   return (
     <AuthContext.Provider value={{ user, isLoading, isAdmin, login, logout, updateCoins, refreshUser }}>
