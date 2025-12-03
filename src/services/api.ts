@@ -14,7 +14,7 @@ interface LoginResponse {
     username: string;
     email: string;
     coins: number;
-    canUseCP: number;
+    authority: number;
     avatar?: string;
     createdAt: string;
   };
