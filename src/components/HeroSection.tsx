@@ -1,8 +1,36 @@
-import { Download, Users, Gamepad2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Download, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import novaScreenshot from '@/assets/novaera-screenshot.png';
+import { API_CONFIG, buildApiUrl } from '@/config/api';
 
 export function HeroSection() {
+  const [serverStatus, setServerStatus] = useState<{ online: boolean; players: number }>({
+    online: false,
+    players: 0
+  });
+
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.SERVER.STATUS));
+        const data = await response.json();
+        if (data.success) {
+          const onlineChannels = data.data.channels.filter((ch: any) => ch.status === 'online');
+          setServerStatus({
+            online: onlineChannels.length > 0,
+            players: data.data.totalPlayers
+          });
+        }
+      } catch (err) {
+        console.error('Failed to fetch server status:', err);
+      }
+    };
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <section className="relative min-h-screen pt-20 overflow-hidden">
       {/* Background with overlay */}
@@ -25,8 +53,10 @@ export function HeroSection() {
           {/* Left Content */}
           <div className="flex-1 text-center lg:text-left">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-primary/10 border border-primary/30 rounded-full mb-6">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-sm font-medium text-primary">Server Online • 1,247 Players</span>
+              <span className={`w-2 h-2 rounded-full animate-pulse ${serverStatus.online ? 'bg-green-500' : 'bg-red-500'}`} />
+              <span className="text-sm font-medium text-primary">
+                {serverStatus.online ? `Server Online • ${serverStatus.players} Players` : 'Server Offline'}
+              </span>
             </div>
 
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-black mb-6 leading-tight">
