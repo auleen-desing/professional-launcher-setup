@@ -15,7 +15,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Development mode flag - set to false in production
-const DEV_MODE = true;
+const DEV_MODE = false;
 
 // Mock user for development only
 const mockUser: User = {

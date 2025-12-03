@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { AdminUser, Announcement, ServerStats, CoinTransaction, ModAction } from '@/types/admin';
+import { useAuth } from './AuthContext';
 
 interface AdminContextType {
   isAdmin: boolean;
@@ -55,6 +56,7 @@ const mockModActions: ModAction[] = [
 ];
 
 export function AdminProvider({ children }: { children: ReactNode }) {
+  const { isAdmin } = useAuth();
   const [stats] = useState<ServerStats>(mockStats);
   const [users, setUsers] = useState<AdminUser[]>(mockUsers);
   const [announcements, setAnnouncements] = useState<Announcement[]>(mockAnnouncements);
@@ -161,7 +163,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
   return (
     <AdminContext.Provider value={{
-      isAdmin: true,
+      isAdmin,
       stats,
       users,
       announcements,
