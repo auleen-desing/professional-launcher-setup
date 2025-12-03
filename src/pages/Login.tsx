@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { apiService } from '@/services/api';
 import novaLogo from '@/assets/novaera-logo.png';
 import heroBg from '@/assets/hero-bg.jpg';
 
@@ -101,33 +102,20 @@ export function Login() {
     setIsRegistering(true);
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: regUsername,
-          password: regPassword,
-          email: regEmail,
-        }),
-      });
+      const result = await apiService.register(regUsername, regEmail, regPassword);
 
-      const data = await response.json();
-
-      if (data.success) {
+      if (result.success) {
         toast({
           title: 'Cuenta creada',
           description: 'Tu cuenta ha sido creada exitosamente. Ya puedes iniciar sesión.',
         });
-        // Clear form and switch to login tab
         setRegUsername('');
         setRegEmail('');
         setRegPassword('');
       } else {
         toast({
           title: 'Error de registro',
-          description: data.error || 'No se pudo crear la cuenta.',
+          description: result.error || 'No se pudo crear la cuenta.',
           variant: 'destructive',
         });
       }
