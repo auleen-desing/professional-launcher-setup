@@ -18,7 +18,7 @@ const Index = () => {
         <section className="py-16 px-4 bg-card/30">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-3xl font-display font-bold text-center mb-8">
-              Estado del <span className="text-gradient-cyan">Servidor</span>
+              <span className="text-gradient-cyan">Server</span> Status
             </h2>
             <div className="grid md:grid-cols-2 gap-6">
               <ServerStatus />

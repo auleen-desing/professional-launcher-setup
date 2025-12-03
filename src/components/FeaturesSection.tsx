@@ -3,43 +3,43 @@ import { Swords, Shield, Users, Zap, Trophy, Gift, Sparkles, Target } from 'luci
 const features = [
   {
     icon: Swords,
-    title: 'PvP Intenso',
-    description: 'Sistema de combate optimizado con torneos semanales y rankings competitivos.',
+    title: 'Intense PvP',
+    description: 'Optimised combat system with weekly tournaments and competitive rankings.',
   },
   {
     icon: Shield,
-    title: 'Anti-Cheat Avanzado',
-    description: 'Protección de última generación para garantizar una experiencia justa para todos.',
+    title: 'Advanced Anti-Cheat',
+    description: 'State-of-the-art protection to guarantee a fair experience for everyone.',
   },
   {
     icon: Users,
-    title: 'Comunidad Activa',
-    description: 'Más de 15,000 jugadores activos con eventos diarios y soporte 24/7.',
+    title: 'Active Community',
+    description: 'Active players with daily events and 24/7 support.',
   },
   {
     icon: Zap,
-    title: 'Actualizaciones Constantes',
-    description: 'Nuevo contenido cada semana: dungeons, items, eventos y mejoras.',
+    title: 'Constant Updates',
+    description: 'New content every week: dungeons, items, events and improvements.',
   },
   {
     icon: Trophy,
-    title: 'Sistema de Ranks',
-    description: 'Escala en el ranking y desbloquea recompensas exclusivas y títulos únicos.',
+    title: 'Ranking System',
+    description: 'Climb the rankings and unlock exclusive rewards and unique titles.',
   },
   {
     icon: Gift,
-    title: 'Eventos Exclusivos',
-    description: 'Participa en eventos únicos con premios reales y items legendarios.',
+    title: 'Exclusive Events',
+    description: 'Participate in unique events with real prizes and legendary items.',
   },
   {
     icon: Sparkles,
-    title: 'Contenido Exclusivo',
-    description: 'Mazmorras, jefes y misiones diseñadas exclusivamente para NovaEra.',
+    title: 'Exclusive Content',
+    description: 'Dungeons, bosses and quests designed exclusively for NovaEra.',
   },
   {
     icon: Target,
-    title: 'Balance Perfecto',
-    description: 'Equilibrio constante entre clases para PvP y PvE competitivo.',
+    title: 'Perfect Balance',
+    description: 'Constant balance between classes for competitive PvP and PvE.',
   },
 ];
 
@@ -49,12 +49,12 @@ export function FeaturesSection() {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            <span className="text-foreground">¿Por qué elegir </span>
+            <span className="text-foreground">Why choose </span>
             <span className="text-gradient-gold">NovaEra</span>
             <span className="text-foreground">?</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Descubre todas las características que hacen de NovaEra el servidor definitivo para los fans de Metin2.
+            Discover all the features that make NovaEra the ultimate server for NosTale fans.
           </p>
         </div>
 

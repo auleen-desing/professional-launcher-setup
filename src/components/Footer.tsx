@@ -2,28 +2,28 @@ import { MessageSquare, Youtube, Instagram, Twitter } from 'lucide-react';
 import novaLogo from '@/assets/novaera-logo.png';
 
 const footerLinks = {
-  juego: [
-    { name: 'Descargar', href: '#download' },
-    { name: 'Guías', href: '#' },
+  game: [
+    { name: 'Download', href: '#download' },
+    { name: 'Guides', href: '#' },
     { name: 'Wiki', href: '#' },
-    { name: 'Ranking', href: '#' },
+    { name: 'Rankings', href: '#' },
   ],
-  comunidad: [
+  community: [
     { name: 'Discord', href: '#' },
-    { name: 'Foro', href: '#' },
-    { name: 'Eventos', href: '#' },
-    { name: 'Noticias', href: '#news' },
+    { name: 'Forum', href: '#' },
+    { name: 'Events', href: '#' },
+    { name: 'News', href: '#news' },
   ],
-  soporte: [
-    { name: 'Centro de Ayuda', href: '#' },
-    { name: 'Reportar Bug', href: '#' },
-    { name: 'Contacto', href: '#' },
+  support: [
+    { name: 'Help Centre', href: '#' },
+    { name: 'Report Bug', href: '#' },
+    { name: 'Contact', href: '#' },
     { name: 'FAQ', href: '#' },
   ],
   legal: [
-    { name: 'Términos de Uso', href: '#' },
-    { name: 'Privacidad', href: '#' },
-    { name: 'Reglas del Juego', href: '#' },
+    { name: 'Terms of Use', href: '#' },
+    { name: 'Privacy', href: '#' },
+    { name: 'Game Rules', href: '#' },
     { name: 'DMCA', href: '#' },
   ],
 };
@@ -47,7 +47,7 @@ export function Footer() {
               <span className="font-bold text-xl text-gradient-gold font-['Orbitron']">NOVAERA</span>
             </div>
             <p className="text-sm text-muted-foreground mb-6">
-              El servidor de Metin2 definitivo. Únete a miles de jugadores en la aventura más épica.
+              The ultimate NosTale private server. Join thousands of players in the most epic adventure.
             </p>
             <div className="flex gap-3">
               {socialLinks.map((social) => (
@@ -65,9 +65,9 @@ export function Footer() {
 
           {/* Links */}
           <div>
-            <h4 className="font-bold text-foreground mb-4">Juego</h4>
+            <h4 className="font-bold text-foreground mb-4">Game</h4>
             <ul className="space-y-2">
-              {footerLinks.juego.map((link) => (
+              {footerLinks.game.map((link) => (
                 <li key={link.name}>
                   <a href={link.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                     {link.name}
@@ -78,9 +78,9 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-bold text-foreground mb-4">Comunidad</h4>
+            <h4 className="font-bold text-foreground mb-4">Community</h4>
             <ul className="space-y-2">
-              {footerLinks.comunidad.map((link) => (
+              {footerLinks.community.map((link) => (
                 <li key={link.name}>
                   <a href={link.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                     {link.name}
@@ -91,9 +91,9 @@ export function Footer() {
           </div>
 
           <div>
-            <h4 className="font-bold text-foreground mb-4">Soporte</h4>
+            <h4 className="font-bold text-foreground mb-4">Support</h4>
             <ul className="space-y-2">
-              {footerLinks.soporte.map((link) => (
+              {footerLinks.support.map((link) => (
                 <li key={link.name}>
                   <a href={link.href} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                     {link.name}
@@ -120,10 +120,10 @@ export function Footer() {
         <div className="border-t border-border mt-12 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-muted-foreground">
-              © 2025 NovaEra. Todos los derechos reservados.
+              © 2025 NovaEra. All rights reserved.
             </p>
             <p className="text-xs text-muted-foreground">
-              NovaEra no está afiliado con Webzen Inc. o Ymir Entertainment Co., Ltd.
+              NovaEra is not affiliated with Entwell Co., Ltd.
             </p>
           </div>
         </div>

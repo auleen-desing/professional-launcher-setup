@@ -26,7 +26,7 @@ export function Login() {
     if (!username.trim() || !password.trim()) {
       toast({
         title: 'Error',
-        description: 'Por favor completa todos los campos.',
+        description: 'Please fill in all fields.',
         variant: 'destructive',
       });
       return;
@@ -39,21 +39,21 @@ export function Login() {
       
       if (result.success) {
         toast({
-          title: 'Bienvenido',
-          description: `Has iniciado sesión como ${username}`,
+          title: 'Welcome',
+          description: `You have logged in as ${username}`,
         });
         navigate('/dashboard');
       } else {
         toast({
-          title: 'Error de autenticación',
-          description: result.error || 'Usuario o contraseña incorrectos.',
+          title: 'Authentication Error',
+          description: result.error || 'Incorrect username or password.',
           variant: 'destructive',
         });
       }
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'No se pudo conectar con el servidor.',
+        description: 'Could not connect to the server.',
         variant: 'destructive',
       });
     } finally {
@@ -64,8 +64,8 @@ export function Login() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     toast({
-      title: 'Registro',
-      description: 'El registro se realiza desde el launcher del juego.',
+      title: 'Registration',
+      description: 'Registration is done through the game launcher.',
     });
   };
 
@@ -79,7 +79,7 @@ export function Login() {
           <img src={novaLogo} alt="NovaEra" className="h-24 mb-6" />
           <h1 className="text-5xl font-display font-black text-gradient-cyan mb-4">NOVAERA</h1>
           <p className="text-xl text-muted-foreground max-w-md">
-            La nueva era del gaming. Únete a miles de jugadores en la mejor experiencia de juego.
+            The new era of gaming. Join thousands of players in the best gaming experience.
           </p>
         </div>
       </div>
@@ -92,7 +92,7 @@ export function Login() {
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors mb-8"
           >
             <ArrowLeft className="h-4 w-4" />
-            Volver al inicio
+            Back to home
           </Link>
 
           {/* Mobile Logo */}
@@ -106,14 +106,14 @@ export function Login() {
               <div className="mx-auto w-16 h-16 bg-gradient-to-br from-primary to-accent rounded-2xl flex items-center justify-center mb-4">
                 <Gamepad2 className="h-8 w-8 text-primary-foreground" />
               </div>
-              <CardTitle className="text-2xl font-display">Panel de Usuario</CardTitle>
-              <CardDescription>Accede a tu cuenta para gestionar tu perfil</CardDescription>
+              <CardTitle className="text-2xl font-display">User Panel</CardTitle>
+              <CardDescription>Access your account to manage your profile</CardDescription>
             </CardHeader>
             <CardContent>
               <Tabs defaultValue="login" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6">
-                  <TabsTrigger value="login">Iniciar Sesión</TabsTrigger>
-                  <TabsTrigger value="register">Registrarse</TabsTrigger>
+                  <TabsTrigger value="login">Login</TabsTrigger>
+                  <TabsTrigger value="register">Register</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="login">
@@ -121,7 +121,7 @@ export function Login() {
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Usuario"
+                        placeholder="Username"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                         className="pl-10 bg-background/50"
@@ -131,7 +131,7 @@ export function Login() {
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         type={showPassword ? 'text' : 'password'}
-                        placeholder="Contraseña"
+                        placeholder="Password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="pl-10 pr-10 bg-background/50"
@@ -146,13 +146,13 @@ export function Login() {
                     </div>
                     <Button type="submit" className="w-full gap-2 glow-cyan" disabled={isLoading}>
                       <LogIn className="h-4 w-4" />
-                      {isLoading ? 'Iniciando sesión...' : 'Entrar'}
+                      {isLoading ? 'Logging in...' : 'Login'}
                     </Button>
                   </form>
 
                   <div className="mt-6 text-center">
                     <a href="#" className="text-sm text-primary hover:underline">
-                      ¿Olvidaste tu contraseña?
+                      Forgot your password?
                     </a>
                   </div>
                 </TabsContent>
@@ -162,7 +162,7 @@ export function Login() {
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="Usuario"
+                        placeholder="Username"
                         className="pl-10 bg-background/50"
                       />
                     </div>
@@ -178,15 +178,15 @@ export function Login() {
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
                         type="password"
-                        placeholder="Contraseña"
+                        placeholder="Password"
                         className="pl-10 bg-background/50"
                       />
                     </div>
                     <Button type="submit" className="w-full gap-2">
-                      Registrarse
+                      Register
                     </Button>
                     <p className="text-xs text-center text-muted-foreground">
-                      El registro también está disponible desde el launcher del juego
+                      Registration is also available from the game launcher
                     </p>
                   </form>
                 </TabsContent>

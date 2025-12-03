@@ -4,26 +4,26 @@ import { Button } from '@/components/ui/button';
 const newsItems = [
   {
     id: 1,
-    title: 'Actualización v3.5 - Nuevas Mazmorras',
-    excerpt: 'Explora las nuevas mazmorras del Reino Oscuro con enemigos desafiantes y recompensas únicas...',
-    date: '3 Dic 2025',
+    title: 'Update v3.5 - New Dungeons',
+    excerpt: 'Explore the new Dark Kingdom dungeons with challenging enemies and unique rewards...',
+    date: '3 Dec 2025',
     comments: 47,
-    category: 'Actualización',
+    category: 'Update',
     hot: true,
   },
   {
     id: 2,
-    title: 'Evento de Navidad 2025',
-    excerpt: 'Celebra las fiestas con eventos especiales, misiones temáticas y premios exclusivos...',
-    date: '1 Dic 2025',
+    title: 'Christmas Event 2025',
+    excerpt: 'Celebrate the holidays with special events, themed quests and exclusive prizes...',
+    date: '1 Dec 2025',
     comments: 89,
-    category: 'Evento',
+    category: 'Event',
     hot: true,
   },
   {
     id: 3,
-    title: 'Balance de Clases - Guerrero',
-    excerpt: 'Ajustes importantes en las habilidades del guerrero para mejorar el equilibrio PvP...',
+    title: 'Class Balance - Swordsman',
+    excerpt: 'Important adjustments to swordsman skills to improve PvP balance...',
     date: '28 Nov 2025',
     comments: 124,
     category: 'Balance',
@@ -31,21 +31,21 @@ const newsItems = [
   },
   {
     id: 4,
-    title: 'Nuevo Sistema de Misiones Diarias',
-    excerpt: 'Completa misiones cada día para obtener recompensas exclusivas y experiencia bonus...',
+    title: 'New Daily Quest System',
+    excerpt: 'Complete quests every day to earn exclusive rewards and bonus experience...',
     date: '25 Nov 2025',
     comments: 56,
-    category: 'Sistema',
+    category: 'System',
     hot: false,
   },
 ];
 
 const hotTopics = [
-  { id: 1, title: 'Guía completa Guerrero Cuerpo', views: 12453, author: 'ProPlayer99' },
-  { id: 2, title: 'Mejores builds Ninja PvP', views: 9876, author: 'ShadowMaster' },
-  { id: 3, title: 'Farmeo eficiente nivel 100+', views: 8234, author: 'GoldHunter' },
-  { id: 4, title: 'Tier list armas legendarias', views: 7654, author: 'WeaponExpert' },
-  { id: 5, title: 'Consejos para principiantes', views: 6543, author: 'NovaHelper' },
+  { id: 1, title: 'Complete Swordsman Guide', views: 12453, author: 'ProPlayer99' },
+  { id: 2, title: 'Best Archer PvP Builds', views: 9876, author: 'ShadowMaster' },
+  { id: 3, title: 'Efficient Level 100+ Farming', views: 8234, author: 'GoldHunter' },
+  { id: 4, title: 'Legendary Weapons Tier List', views: 7654, author: 'WeaponExpert' },
+  { id: 5, title: 'Tips for Beginners', views: 6543, author: 'NovaHelper' },
 ];
 
 export function NewsSection() {
@@ -58,10 +58,10 @@ export function NewsSection() {
             <div className="flex items-center justify-between mb-8">
               <h2 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-3">
                 <span className="w-1 h-8 bg-primary rounded-full" />
-                Últimas Noticias
+                Latest News
               </h2>
               <Button variant="ghost" className="text-primary hover:text-primary/80">
-                Ver todas <ArrowRight className="w-4 h-4 ml-2" />
+                View all <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
 
@@ -96,7 +96,7 @@ export function NewsSection() {
                         </span>
                         <span className="flex items-center gap-1">
                           <MessageSquare className="w-3 h-3" />
-                          {news.comments} comentarios
+                          {news.comments} comments
                         </span>
                       </div>
                     </div>
@@ -152,9 +152,9 @@ export function NewsSection() {
               <div className="p-4">
                 <div className="text-center">
                   <div className="text-3xl font-bold text-foreground mb-1">3,842</div>
-                  <div className="text-sm text-muted-foreground mb-4">miembros online</div>
+                  <div className="text-sm text-muted-foreground mb-4">members online</div>
                   <Button className="w-full bg-[#5865F2] hover:bg-[#5865F2]/90 text-white">
-                    Unirse al Discord
+                    Join Discord
                   </Button>
                 </div>
               </div>
@@ -164,24 +164,24 @@ export function NewsSection() {
             <div className="bg-card border border-border rounded-xl p-4">
               <h3 className="font-bold text-foreground mb-4 flex items-center gap-2">
                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                Estado del Servidor
+                Server Status
               </h3>
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Canal 1</span>
+                  <span className="text-sm text-muted-foreground">Channel 1</span>
                   <span className="text-sm font-medium text-green-500">Online</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Canal 2</span>
+                  <span className="text-sm text-muted-foreground">Channel 2</span>
                   <span className="text-sm font-medium text-green-500">Online</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Canal 3</span>
+                  <span className="text-sm text-muted-foreground">Channel 3</span>
                   <span className="text-sm font-medium text-green-500">Online</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-muted-foreground">Canal PvP</span>
-                  <span className="text-sm font-medium text-yellow-500">Alto tráfico</span>
+                  <span className="text-sm text-muted-foreground">PvP Channel</span>
+                  <span className="text-sm font-medium text-yellow-500">High traffic</span>
                 </div>
               </div>
             </div>

@@ -2,18 +2,18 @@ import { Download, Monitor, HardDrive, Cpu, MemoryStick, Check } from 'lucide-re
 import { Button } from '@/components/ui/button';
 
 const requirements = [
-  { icon: Monitor, label: 'Sistema Operativo', value: 'Windows 7/8/10/11' },
-  { icon: Cpu, label: 'Procesador', value: 'Intel Core i3 o superior' },
-  { icon: MemoryStick, label: 'Memoria RAM', value: '4 GB mínimo' },
-  { icon: HardDrive, label: 'Almacenamiento', value: '5 GB de espacio libre' },
+  { icon: Monitor, label: 'Operating System', value: 'Windows 7/8/10/11' },
+  { icon: Cpu, label: 'Processor', value: 'Intel Core i3 or higher' },
+  { icon: MemoryStick, label: 'Memory', value: '4 GB minimum' },
+  { icon: HardDrive, label: 'Storage', value: '5 GB free space' },
 ];
 
 const downloadSteps = [
-  'Descarga el launcher oficial',
-  'Ejecuta el instalador como administrador',
-  'Selecciona la carpeta de instalación',
-  'Espera a que se descargue el cliente',
-  '¡Crea tu cuenta y empieza a jugar!',
+  'Download the official launcher',
+  'Run the installer as administrator',
+  'Select the installation folder',
+  'Wait for the client to download',
+  'Create your account and start playing!',
 ];
 
 export function DownloadSection() {
@@ -25,11 +25,11 @@ export function DownloadSection() {
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            <span className="text-foreground">Descarga el </span>
+            <span className="text-foreground">Download the </span>
             <span className="text-gradient-gold">Launcher</span>
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Instalación rápida y sencilla. En menos de 5 minutos estarás listo para comenzar tu aventura.
+            Quick and easy installation. In less than 5 minutes you will be ready to start your adventure.
           </p>
         </div>
 
@@ -43,7 +43,7 @@ export function DownloadSection() {
                   <Download className="w-10 h-10 text-primary" />
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-2">NovaEra Launcher</h3>
-                <p className="text-muted-foreground">Versión 2.5.1 • 125 MB</p>
+                <p className="text-muted-foreground">Version 2.5.1 • 125 MB</p>
               </div>
 
               <Button 
@@ -51,7 +51,7 @@ export function DownloadSection() {
                 className="w-full bg-primary text-primary-foreground hover:bg-primary/90 glow-gold-strong text-lg py-6 font-bold mb-6"
               >
                 <Download className="w-5 h-5 mr-2" />
-                Descargar Launcher
+                Download Launcher
               </Button>
 
               <div className="space-y-3">
@@ -71,7 +71,7 @@ export function DownloadSection() {
           <div>
             <h3 className="text-xl font-bold text-foreground mb-6 flex items-center gap-3">
               <span className="w-1 h-6 bg-primary rounded-full" />
-              Requisitos del Sistema
+              System Requirements
             </h3>
 
             <div className="grid sm:grid-cols-2 gap-4 mb-8">
@@ -90,12 +90,12 @@ export function DownloadSection() {
             </div>
 
             <div className="bg-card border border-border rounded-xl p-6">
-              <h4 className="font-bold text-foreground mb-3">📝 Notas Importantes</h4>
+              <h4 className="font-bold text-foreground mb-3">📝 Important Notes</h4>
               <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>• Desactiva el antivirus temporalmente durante la instalación</li>
-                <li>• Ejecuta siempre el launcher como administrador</li>
-                <li>• Se requiere conexión a internet estable</li>
-                <li>• Para mejor rendimiento, usa DirectX 11</li>
+                <li>• Temporarily disable your antivirus during installation</li>
+                <li>• Always run the launcher as administrator</li>
+                <li>• A stable internet connection is required</li>
+                <li>• For best performance, use DirectX 11</li>
               </ul>
             </div>
           </div>

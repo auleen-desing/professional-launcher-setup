@@ -40,15 +40,6 @@ export function ServerStatus() {
     // return () => clearInterval(interval);
   }, [channels]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'online': return 'bg-green-500';
-      case 'offline': return 'bg-red-500';
-      case 'maintenance': return 'bg-yellow-500';
-      default: return 'bg-muted';
-    }
-  };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'online': return <Badge className="bg-green-500/20 text-green-400 border-green-500/30">Online</Badge>;
