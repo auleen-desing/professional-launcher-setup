@@ -1,10 +1,11 @@
 const sql = require('mssql');
 
 const config = {
-  server: 'localhost',
-  database: 'opennos',
+  server: '127.0.0.1',
+  database: 'Novaera',
   user: 'sa',
   password: 'prueba1298@',
+  port: 1433,
   options: {
     encrypt: false,
     trustServerCertificate: true,
