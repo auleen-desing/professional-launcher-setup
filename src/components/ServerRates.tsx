@@ -25,8 +25,8 @@ const rates = [
     bg: 'bg-green-500/10'
   },
   { 
-    label: 'Fairy EXP', 
-    value: `x${API_CONFIG.RATES.FAIRY_EXP}`, 
+    label: 'Rep Rate', 
+    value: `x${API_CONFIG.RATES.REP}`, 
     icon: Wand2,
     color: 'text-pink-400',
     bg: 'bg-pink-500/10'

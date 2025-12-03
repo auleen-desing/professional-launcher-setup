@@ -1,7 +1,7 @@
 // API Configuration - Connect to your Node.js/IIS backend
 export const API_CONFIG = {
-  // Full URL to your IIS backend
-  BASE_URL: 'https://novaerasite.com/api',
+  // Use relative URL for IIS deployment
+  BASE_URL: '/api',
   
   // Server Configuration
   SERVER_IP: '127.0.0.1',
@@ -20,10 +20,10 @@ export const API_CONFIG = {
   SERVER_VERSION: '1.0.0',
   MAX_LEVEL: 99,
   RATES: {
-    EXP: 50,
-    GOLD: 20,
-    DROP: 15,
-    FAIRY_EXP: 10,
+    EXP: 20,
+    GOLD: 3,
+    DROP: 5,
+    REP: 2,
   },
   
   // Shop Configuration
