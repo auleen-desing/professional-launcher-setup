@@ -17,7 +17,7 @@ export function Password() {
     if (!currentPassword || !newPassword || !confirmPassword) {
       toast({
         title: 'Error',
-        description: 'Por favor completa todos los campos.',
+        description: 'Please fill in all fields.',
         variant: 'destructive',
       });
       return;
@@ -26,7 +26,7 @@ export function Password() {
     if (newPassword !== confirmPassword) {
       toast({
         title: 'Error',
-        description: 'Las contraseñas no coinciden.',
+        description: 'Passwords do not match.',
         variant: 'destructive',
       });
       return;
@@ -35,7 +35,7 @@ export function Password() {
     if (newPassword.length < 8) {
       toast({
         title: 'Error',
-        description: 'La contraseña debe tener al menos 8 caracteres.',
+        description: 'Password must be at least 8 characters long.',
         variant: 'destructive',
       });
       return;
@@ -45,17 +45,11 @@ export function Password() {
 
     try {
       // TODO: Replace with your API endpoint
-      // const response = await fetch('http://localhost:3000/api/user/password', {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ currentPassword, newPassword }),
-      // });
-
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       toast({
-        title: 'Contraseña actualizada',
-        description: 'Tu contraseña ha sido cambiada correctamente.',
+        title: 'Password updated',
+        description: 'Your password has been changed successfully.',
       });
 
       setCurrentPassword('');
@@ -64,7 +58,7 @@ export function Password() {
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'La contraseña actual es incorrecta.',
+        description: 'Current password is incorrect.',
         variant: 'destructive',
       });
     } finally {
@@ -75,8 +69,8 @@ export function Password() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gradient-gold">Cambiar Contraseña</h1>
-        <p className="text-muted-foreground mt-2">Actualiza tu contraseña de acceso</p>
+        <h1 className="text-3xl font-bold text-gradient-gold">Change Password</h1>
+        <p className="text-muted-foreground mt-2">Update your access password</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -87,8 +81,8 @@ export function Password() {
                 <Lock className="h-6 w-6 text-primary" />
               </div>
               <div>
-                <CardTitle>Nueva Contraseña</CardTitle>
-                <CardDescription>Ingresa tu contraseña actual y la nueva</CardDescription>
+                <CardTitle>New Password</CardTitle>
+                <CardDescription>Enter your current and new password</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -96,7 +90,7 @@ export function Password() {
             <div className="relative">
               <Input
                 type={showPasswords ? 'text' : 'password'}
-                placeholder="Contraseña actual"
+                placeholder="Current password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
               />
@@ -104,7 +98,7 @@ export function Password() {
             <div className="relative">
               <Input
                 type={showPasswords ? 'text' : 'password'}
-                placeholder="Nueva contraseña"
+                placeholder="New password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
               />
@@ -112,7 +106,7 @@ export function Password() {
             <div className="relative">
               <Input
                 type={showPasswords ? 'text' : 'password'}
-                placeholder="Confirmar nueva contraseña"
+                placeholder="Confirm new password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
               />
@@ -130,7 +124,7 @@ export function Password() {
               className="w-full"
               disabled={isLoading}
             >
-              {isLoading ? 'Actualizando...' : 'Cambiar Contraseña'}
+              {isLoading ? 'Updating...' : 'Change Password'}
             </Button>
           </CardContent>
         </Card>
@@ -139,17 +133,17 @@ export function Password() {
           <CardHeader>
             <div className="flex items-center gap-3">
               <Shield className="h-6 w-6 text-primary" />
-              <CardTitle>Recomendaciones</CardTitle>
+              <CardTitle>Recommendations</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-muted-foreground">
-            <p>Para una contraseña segura:</p>
+            <p>For a secure password:</p>
             <ul className="list-disc list-inside space-y-1">
-              <li>Usa al menos 8 caracteres</li>
-              <li>Combina mayúsculas y minúsculas</li>
-              <li>Incluye números y símbolos</li>
-              <li>No uses información personal</li>
-              <li>No reutilices contraseñas de otros sitios</li>
+              <li>Use at least 8 characters</li>
+              <li>Mix uppercase and lowercase letters</li>
+              <li>Include numbers and symbols</li>
+              <li>Do not use personal information</li>
+              <li>Do not reuse passwords from other sites</li>
             </ul>
           </CardContent>
         </Card>

@@ -6,13 +6,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import novaLogo from '@/assets/novaera-logo.png';
 
 const navItems = [
-  { name: 'Home', href: '#', icon: Home },
-  { name: 'Download', href: '#download', icon: Download },
-  { name: 'Community', href: '#community', icon: Users },
-  { name: 'News', href: '#news', icon: Newspaper },
-  { name: 'Shop', href: '#shop', icon: ShoppingBag },
-  { name: 'Discord', href: 'https://discord.gg/', icon: MessageSquare },
-  { name: 'EPVP', href: 'https://www.elitepvpers.com/forum/nostale-pserver-advertising/5331213-novaera-international-pserver-release.html', icon: ArrowUpRight },
+  { name: 'Home', href: '#', icon: Home, external: false },
+  { name: 'Download', href: '#download', icon: Download, external: false },
+  { name: 'Community', href: '#community', icon: Users, external: false },
+  { name: 'News', href: '#news', icon: Newspaper, external: false },
+  { name: 'Shop', href: '#shop', icon: ShoppingBag, external: false },
+  { name: 'Discord', href: 'https://discord.gg/TrcxcJrMzQ', icon: MessageSquare, external: true },
+  { name: 'EPVP', href: 'https://www.elitepvpers.com/forum/nostale-pserver-advertising/5331213-novaera-international-pserver-release.html', icon: ArrowUpRight, external: true },
 ];
 
 export function Header() {
@@ -40,6 +40,8 @@ export function Header() {
               <a
                 key={item.name}
                 href={item.href}
+                target={item.external ? '_blank' : undefined}
+                rel={item.external ? 'noopener noreferrer' : undefined}
                 className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-muted-foreground hover:text-primary transition-all duration-200 rounded-lg hover:bg-primary/5"
               >
                 <item.icon className="w-4 h-4" />
@@ -87,6 +89,8 @@ export function Header() {
                 <a
                   key={item.name}
                   href={item.href}
+                  target={item.external ? '_blank' : undefined}
+                  rel={item.external ? 'noopener noreferrer' : undefined}
                   className="flex items-center gap-3 px-4 py-3 text-foreground hover:bg-primary/10 hover:text-primary rounded-lg transition-colors"
                   onClick={() => setMobileMenuOpen(false)}
                 >

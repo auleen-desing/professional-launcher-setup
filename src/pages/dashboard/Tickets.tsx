@@ -10,15 +10,15 @@ import { useToast } from '@/hooks/use-toast';
 import { Ticket } from '@/types/user';
 
 const mockTickets: Ticket[] = [
-  { id: '1', subject: 'Problema con compra de coins', status: 'open', createdAt: '2024-01-15', lastUpdate: '2024-01-15' },
-  { id: '2', subject: 'Bug en el inventario', status: 'pending', createdAt: '2024-01-10', lastUpdate: '2024-01-12' },
-  { id: '3', subject: 'Consulta sobre evento', status: 'closed', createdAt: '2024-01-05', lastUpdate: '2024-01-06' },
+  { id: '1', subject: 'Issue with coin purchase', status: 'open', createdAt: '2024-01-15', lastUpdate: '2024-01-15' },
+  { id: '2', subject: 'Inventory bug', status: 'pending', createdAt: '2024-01-10', lastUpdate: '2024-01-12' },
+  { id: '3', subject: 'Event question', status: 'closed', createdAt: '2024-01-05', lastUpdate: '2024-01-06' },
 ];
 
 const statusConfig = {
-  open: { label: 'Abierto', color: 'bg-green-500', icon: AlertCircle },
-  pending: { label: 'Pendiente', color: 'bg-yellow-500', icon: Clock },
-  closed: { label: 'Cerrado', color: 'bg-gray-500', icon: CheckCircle },
+  open: { label: 'Open', color: 'bg-green-500', icon: AlertCircle },
+  pending: { label: 'Pending', color: 'bg-yellow-500', icon: Clock },
+  closed: { label: 'Closed', color: 'bg-gray-500', icon: CheckCircle },
 };
 
 export function Tickets() {
@@ -32,18 +32,11 @@ export function Tickets() {
     if (!subject.trim() || !message.trim()) {
       toast({
         title: 'Error',
-        description: 'Por favor completa todos los campos.',
+        description: 'Please fill in all fields.',
         variant: 'destructive',
       });
       return;
     }
-
-    // TODO: Replace with your API endpoint
-    // const response = await fetch('http://localhost:3000/api/tickets/create', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({ subject, message }),
-    // });
 
     const newTicket: Ticket = {
       id: String(tickets.length + 1),
@@ -59,8 +52,8 @@ export function Tickets() {
     setIsOpen(false);
 
     toast({
-      title: 'Ticket creado',
-      description: 'Tu ticket ha sido enviado correctamente.',
+      title: 'Ticket created',
+      description: 'Your ticket has been submitted successfully.',
     });
   };
 
@@ -68,44 +61,44 @@ export function Tickets() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gradient-gold">Tickets de Soporte</h1>
-          <p className="text-muted-foreground mt-2">Gestiona tus solicitudes de ayuda</p>
+          <h1 className="text-3xl font-bold text-gradient-gold">Support Tickets</h1>
+          <p className="text-muted-foreground mt-2">Manage your support requests</p>
         </div>
         
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <Button className="gap-2">
               <Plus className="h-4 w-4" />
-              Nuevo Ticket
+              New Ticket
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Crear Nuevo Ticket</DialogTitle>
+              <DialogTitle>Create New Ticket</DialogTitle>
               <DialogDescription>
-                Describe tu problema y te responderemos lo antes posible.
+                Describe your issue and we will respond as soon as possible.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium">Asunto</label>
+                <label className="text-sm font-medium">Subject</label>
                 <Input 
-                  placeholder="Ej: Problema con mi cuenta"
+                  placeholder="E.g. Issue with my account"
                   value={subject}
                   onChange={(e) => setSubject(e.target.value)}
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Mensaje</label>
+                <label className="text-sm font-medium">Message</label>
                 <Textarea 
-                  placeholder="Describe tu problema detalladamente..."
+                  placeholder="Describe your issue in detail..."
                   rows={5}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                 />
               </div>
               <Button onClick={handleCreateTicket} className="w-full">
-                Enviar Ticket
+                Submit Ticket
               </Button>
             </div>
           </DialogContent>
@@ -118,7 +111,7 @@ export function Tickets() {
           <Card>
             <CardContent className="pt-6 text-center">
               <MessageSquare className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No tienes tickets abiertos</p>
+              <p className="text-muted-foreground">You have no open tickets</p>
             </CardContent>
           </Card>
         ) : (
@@ -140,8 +133,8 @@ export function Tickets() {
                       </div>
                       <h3 className="text-lg font-medium mt-2">{ticket.subject}</h3>
                       <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                        <span>Creado: {ticket.createdAt}</span>
-                        <span>Actualizado: {ticket.lastUpdate}</span>
+                        <span>Created: {ticket.createdAt}</span>
+                        <span>Updated: {ticket.lastUpdate}</span>
                       </div>
                     </div>
                     <StatusIcon className={`h-5 w-5 ${

@@ -11,7 +11,7 @@ const prizes = [
   { id: 3, name: '200 Coins', value: 200, color: 'bg-yellow-500' },
   { id: 4, name: '500 Coins', value: 500, color: 'bg-orange-500' },
   { id: 5, name: '1000 Coins', value: 1000, color: 'bg-red-500' },
-  { id: 6, name: 'Item Especial', value: 0, color: 'bg-purple-500', special: true },
+  { id: 6, name: 'Special Item', value: 0, color: 'bg-purple-500', special: true },
 ];
 
 export function Roulette() {
@@ -26,8 +26,8 @@ export function Roulette() {
   const handleSpin = async () => {
     if ((user?.coins || 0) < spinCost) {
       toast({
-        title: 'Coins insuficientes',
-        description: `Necesitas ${spinCost} coins para girar la ruleta.`,
+        title: 'Insufficient coins',
+        description: `You need ${spinCost} coins to spin the roulette.`,
         variant: 'destructive',
       });
       return;
@@ -55,10 +55,10 @@ export function Roulette() {
       }
 
       toast({
-        title: '¡Resultado de la Ruleta!',
+        title: 'Roulette Result!',
         description: randomPrize.special 
-          ? `¡Has ganado un ${randomPrize.name}!` 
-          : `¡Has ganado ${randomPrize.value} coins!`,
+          ? `You won a ${randomPrize.name}!` 
+          : `You won ${randomPrize.value} coins!`,
       });
     }, 3000);
   };
@@ -66,8 +66,8 @@ export function Roulette() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gradient-gold">Ruleta de la Suerte</h1>
-        <p className="text-muted-foreground mt-2">Prueba tu suerte y gana premios</p>
+        <h1 className="text-3xl font-bold text-gradient-gold">Lucky Roulette</h1>
+        <p className="text-muted-foreground mt-2">Try your luck and win prizes</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -76,9 +76,9 @@ export function Roulette() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Dices className="h-5 w-5 text-primary" />
-              Ruleta
+              Roulette
             </CardTitle>
-            <CardDescription>Costo por giro: {spinCost} coins</CardDescription>
+            <CardDescription>Cost per spin: {spinCost} coins</CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-6">
             {/* Wheel */}
@@ -109,12 +109,12 @@ export function Roulette() {
               disabled={isSpinning}
             >
               <Sparkles className="h-5 w-5" />
-              {isSpinning ? 'Girando...' : `Girar (${spinCost} coins)`}
+              {isSpinning ? 'Spinning...' : `Spin (${spinCost} coins)`}
             </Button>
 
             {result && !isSpinning && (
               <div className="text-center p-4 bg-primary/20 rounded-lg border border-primary/30 w-full">
-                <p className="text-sm text-muted-foreground">¡Has ganado!</p>
+                <p className="text-sm text-muted-foreground">You won!</p>
                 <p className="text-2xl font-bold text-primary">{result.name}</p>
               </div>
             )}
@@ -126,7 +126,7 @@ export function Roulette() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Gift className="h-5 w-5 text-primary" />
-              Premios Disponibles
+              Available Prizes
             </CardTitle>
           </CardHeader>
           <CardContent>

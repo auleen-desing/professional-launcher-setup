@@ -16,7 +16,7 @@ export function Coupon() {
     if (!couponCode.trim()) {
       toast({
         title: 'Error',
-        description: 'Por favor ingresa un código de cupón.',
+        description: 'Please enter a coupon code.',
         variant: 'destructive',
       });
       return;
@@ -26,35 +26,27 @@ export function Coupon() {
 
     try {
       // TODO: Replace with your API endpoint
-      // const response = await fetch('http://localhost:3000/api/coupons/redeem', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ code: couponCode }),
-      // });
-      // const data = await response.json();
-
-      // Mock response for development
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       if (couponCode.toUpperCase() === 'NOVAERA2024') {
         const bonus = 500;
         updateCoins((user?.coins || 0) + bonus);
         toast({
-          title: '¡Cupón canjeado!',
-          description: `Has recibido ${bonus} coins.`,
+          title: 'Coupon redeemed!',
+          description: `You received ${bonus} coins.`,
         });
         setCouponCode('');
       } else {
         toast({
-          title: 'Cupón inválido',
-          description: 'El código ingresado no es válido o ya ha expirado.',
+          title: 'Invalid coupon',
+          description: 'The code entered is not valid or has expired.',
           variant: 'destructive',
         });
       }
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Hubo un error al canjear el cupón. Intenta de nuevo.',
+        description: 'There was an error redeeming the coupon. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -65,8 +57,8 @@ export function Coupon() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gradient-gold">Canjear Cupón</h1>
-        <p className="text-muted-foreground mt-2">Ingresa tu código promocional</p>
+        <h1 className="text-3xl font-bold text-gradient-gold">Redeem Coupon</h1>
+        <p className="text-muted-foreground mt-2">Enter your promotional code</p>
       </div>
 
       <Card className="max-w-md">
@@ -76,14 +68,14 @@ export function Coupon() {
               <Ticket className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <CardTitle>Código de Cupón</CardTitle>
-              <CardDescription>Ingresa el código para recibir tus recompensas</CardDescription>
+              <CardTitle>Coupon Code</CardTitle>
+              <CardDescription>Enter the code to receive your rewards</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <Input
-            placeholder="Ingresa tu código aquí..."
+            placeholder="Enter your code here..."
             value={couponCode}
             onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
             className="text-center text-lg tracking-widest"
@@ -94,7 +86,7 @@ export function Coupon() {
             disabled={isLoading}
           >
             <Gift className="h-4 w-4" />
-            {isLoading ? 'Canjeando...' : 'Canjear Cupón'}
+            {isLoading ? 'Redeeming...' : 'Redeem Coupon'}
           </Button>
         </CardContent>
       </Card>
@@ -102,8 +94,8 @@ export function Coupon() {
       <Card className="max-w-md bg-muted/30">
         <CardContent className="pt-6">
           <p className="text-sm text-muted-foreground">
-            <strong>Tip:</strong> Los cupones pueden obtenerse en eventos especiales, 
-            redes sociales o promociones del servidor. Cada cupón solo puede usarse una vez por cuenta.
+            <strong>Tip:</strong> Coupons can be obtained from special events, 
+            social media or server promotions. Each coupon can only be used once per account.
           </p>
         </CardContent>
       </Card>
