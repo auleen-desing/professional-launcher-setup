@@ -6,11 +6,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import novaLogo from '@/assets/novaera-logo.png';
 
 const navItems = [
-  { name: 'Inicio', href: '#', icon: Home },
-  { name: 'Descargar', href: '#download', icon: Download },
-  { name: 'Comunidad', href: '#community', icon: Users },
-  { name: 'Noticias', href: '#news', icon: Newspaper },
-  { name: 'Tienda', href: '#shop', icon: ShoppingBag },
+  { name: 'Home', href: '#', icon: Home },
+  { name: 'Download', href: '#download', icon: Download },
+  { name: 'Community', href: '#community', icon: Users },
+  { name: 'News', href: '#news', icon: Newspaper },
+  { name: 'Shop', href: '#shop', icon: ShoppingBag },
   { name: 'Discord', href: 'https://discord.gg/', icon: MessageSquare },
 ];
 
@@ -65,7 +65,7 @@ export function Header() {
             </Link>
             <Button className="gap-2 glow-cyan">
               <Gamepad2 className="w-4 h-4" />
-              Jugar Ahora
+              Play Now
             </Button>
           </div>
 
@@ -98,7 +98,7 @@ export function Header() {
                   <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>
                     <Button variant="outline" className="w-full gap-2 border-destructive/50 text-destructive hover:bg-destructive/10">
                       <Shield className="w-4 h-4" />
-                      Panel Admin
+                      Admin Panel
                     </Button>
                   </Link>
                 )}
@@ -110,7 +110,7 @@ export function Header() {
                 </Link>
                 <Button className="w-full gap-2">
                   <Gamepad2 className="w-4 h-4" />
-                  Jugar Ahora
+                  Play Now
                 </Button>
               </div>
             </nav>

@@ -80,7 +80,6 @@ export default function Characters() {
     setIsLoading(true);
     try {
       // TODO: Replace with real API call
-      // const response = await apiService.getCharacters();
       await new Promise(resolve => setTimeout(resolve, 1000));
       setCharacters(mockCharacters);
     } catch (error) {
@@ -102,7 +101,7 @@ export default function Characters() {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-ES', {
+    return new Date(dateString).toLocaleDateString('en-GB', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
@@ -192,7 +191,7 @@ export default function Characters() {
                     </div>
                     {character.sp && (
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">SP Active</span>
+                        <span className="text-muted-foreground">Active SP</span>
                         <Badge variant="secondary">{character.sp}</Badge>
                       </div>
                     )}

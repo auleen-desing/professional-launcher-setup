@@ -34,13 +34,13 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { name: 'Resumen', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Mis Personajes', href: '/dashboard/characters', icon: Users },
+  { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'My Characters', href: '/dashboard/characters', icon: Users },
   { name: 'Rankings', href: '/dashboard/rankings', icon: Trophy },
-  { name: 'Comprar NovaCoins', href: '/dashboard/buy-coins', icon: Coins },
-  { name: 'Cupón', href: '/dashboard/coupon', icon: Ticket },
-  { name: 'Diaria', href: '/dashboard/daily', icon: Calendar },
-  { name: 'Ruleta', href: '/dashboard/roulette', icon: Dices },
+  { name: 'Buy NovaCoins', href: '/dashboard/buy-coins', icon: Coins },
+  { name: 'Coupon', href: '/dashboard/coupon', icon: Ticket },
+  { name: 'Daily Reward', href: '/dashboard/daily', icon: Calendar },
+  { name: 'Roulette', href: '/dashboard/roulette', icon: Dices },
   { name: 'Shop', href: '/dashboard/shop', icon: ShoppingCart },
   { name: 'Tickets', href: '/dashboard/tickets', icon: MessageSquare },
   { name: 'Unbug', href: '/dashboard/unbug', icon: Bug },
@@ -86,7 +86,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <nav className="hidden md:flex items-center gap-4">
             <Link to="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
               <Home className="h-4 w-4" />
-              Inicio
+              Home
             </Link>
             <Link to="/dashboard" className="flex items-center gap-2 text-sm text-primary">
               <LayoutDashboard className="h-4 w-4" />
@@ -97,7 +97,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-primary">
               <RefreshCw className="h-4 w-4" />
-              <span className="hidden sm:inline">Actualizar</span>
+              <span className="hidden sm:inline">Refresh</span>
             </Button>
             
             {/* Coins Display */}
@@ -113,7 +113,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </div>
               <div className="hidden sm:block">
                 <p className="text-sm font-medium text-foreground">{user?.username}</p>
-                <p className="text-xs text-muted-foreground">Usuario</p>
+                <p className="text-xs text-muted-foreground">User</p>
               </div>
             </div>
           </div>
@@ -157,14 +157,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <Button variant="outline" className="w-full gap-2 justify-start border-primary/30 text-primary hover:bg-primary/10" asChild>
                 <Link to="/admin">
                   <Shield className="h-4 w-4" />
-                  Panel Admin
+                  Admin Panel
                 </Link>
               </Button>
             )}
             <Button variant="outline" className="w-full gap-2 justify-start" asChild>
               <a href="#">
                 <Gamepad2 className="h-4 w-4" />
-                Jugar Ahora
+                Play Now
               </a>
             </Button>
             <button
@@ -172,7 +172,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               className="flex items-center gap-3 px-4 py-3 rounded-xl text-destructive hover:bg-destructive/10 w-full transition-colors"
             >
               <LogOut className="h-5 w-5" />
-              Cerrar sesión
+              Log Out
             </button>
           </div>
         </nav>
