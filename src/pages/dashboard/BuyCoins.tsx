@@ -23,8 +23,8 @@ export function BuyCoins() {
   const handlePurchase = async () => {
     if (!selectedPackage) {
       toast({
-        title: 'Selecciona un paquete',
-        description: 'Por favor selecciona un paquete de NovaCoins primero.',
+        title: 'Select a package',
+        description: 'Please select a NovaCoins package first.',
         variant: 'destructive',
       });
       return;
@@ -34,25 +34,16 @@ export function BuyCoins() {
 
     try {
       // TODO: Replace with your API endpoint
-      // const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PAYMENTS.CREATE}`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ 
-      //     packageId: selectedPackage.id, 
-      //     paymentMethod 
-      //   }),
-      // });
-
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       toast({
-        title: 'Procesando pago...',
-        description: `Redirigiendo a ${paymentMethod}...`,
+        title: 'Processing payment...',
+        description: `Redirecting to ${paymentMethod}...`,
       });
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'No se pudo procesar el pago.',
+        description: 'Could not process the payment.',
         variant: 'destructive',
       });
     } finally {
@@ -63,8 +54,8 @@ export function BuyCoins() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-display font-bold text-gradient-cyan">Comprar NovaCoins</h1>
-        <p className="text-muted-foreground mt-2">Selecciona un paquete y método de pago</p>
+        <h1 className="text-3xl font-display font-bold text-gradient-cyan">Buy NovaCoins</h1>
+        <p className="text-muted-foreground mt-2">Select a package and payment method</p>
       </div>
 
       {/* Packages */}
@@ -106,7 +97,7 @@ export function BuyCoins() {
               {selectedPackage?.id === pkg.id && (
                 <div className="flex items-center justify-center gap-2 text-primary pt-2">
                   <Check className="h-5 w-5" />
-                  <span className="font-medium">Seleccionado</span>
+                  <span className="font-medium">Selected</span>
                 </div>
               )}
             </CardContent>
@@ -120,8 +111,8 @@ export function BuyCoins() {
       {/* Payment Methods */}
       <Card className="border-border/50">
         <CardHeader>
-          <CardTitle className="font-display">Método de Pago</CardTitle>
-          <CardDescription>Selecciona cómo deseas pagar</CardDescription>
+          <CardTitle className="font-display">Payment Method</CardTitle>
+          <CardDescription>Select how you want to pay</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs value={paymentMethod} onValueChange={setPaymentMethod}>
@@ -145,12 +136,12 @@ export function BuyCoins() {
                 <div className="flex items-center gap-3 mb-3">
                   <CreditCard className="h-8 w-8 text-primary" />
                   <div>
-                    <h4 className="font-semibold">Tarjeta de Crédito/Débito</h4>
+                    <h4 className="font-semibold">Credit/Debit Card</h4>
                     <p className="text-sm text-muted-foreground">Visa, Mastercard, American Express</p>
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Paga de forma segura con tarjeta a través de Stripe. Transacción instantánea.
+                  Pay securely by card through Stripe. Instant transaction.
                 </p>
               </div>
             </TabsContent>
@@ -161,11 +152,11 @@ export function BuyCoins() {
                   <Wallet className="h-8 w-8 text-[#0070ba]" />
                   <div>
                     <h4 className="font-semibold">PayPal</h4>
-                    <p className="text-sm text-muted-foreground">Paga con tu cuenta PayPal</p>
+                    <p className="text-sm text-muted-foreground">Pay with your PayPal account</p>
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Usa tu saldo de PayPal o tarjeta vinculada. Rápido y seguro.
+                  Use your PayPal balance or linked card. Fast and secure.
                 </p>
               </div>
             </TabsContent>
@@ -176,11 +167,11 @@ export function BuyCoins() {
                   <Shield className="h-8 w-8 text-[#00a3e0]" />
                   <div>
                     <h4 className="font-semibold">Paysafecard</h4>
-                    <p className="text-sm text-muted-foreground">Pago con código prepago</p>
+                    <p className="text-sm text-muted-foreground">Prepaid code payment</p>
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Compra una tarjeta Paysafecard en cualquier punto de venta y usa el código.
+                  Buy a Paysafecard at any point of sale and use the code.
                 </p>
               </div>
             </TabsContent>
@@ -193,14 +184,14 @@ export function BuyCoins() {
             disabled={!selectedPackage || isProcessing}
           >
             {isProcessing ? (
-              'Procesando...'
+              'Processing...'
             ) : selectedPackage ? (
               <>
                 <CreditCard className="h-4 w-4" />
-                Pagar ${selectedPackage.price} con {paymentMethod}
+                Pay ${selectedPackage.price} with {paymentMethod}
               </>
             ) : (
-              'Selecciona un paquete'
+              'Select a package'
             )}
           </Button>
         </CardContent>

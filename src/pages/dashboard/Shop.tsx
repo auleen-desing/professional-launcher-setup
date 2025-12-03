@@ -17,19 +17,19 @@ interface ShopItem {
 }
 
 const shopItems: ShopItem[] = [
-  { id: '1', name: 'Espada Legendaria', description: '+50 ATK', price: 5000, icon: Sword, category: 'weapon' },
-  { id: '2', name: 'Armadura Divina', description: '+100 DEF', price: 7500, icon: Shield, category: 'armor', discount: 20 },
-  { id: '3', name: 'Elixir de Poder', description: '+20% DMG por 1h', price: 500, icon: Sparkles, category: 'consumable' },
-  { id: '4', name: 'Corona Real', description: 'Cosmético exclusivo', price: 10000, icon: Crown, category: 'special' },
-  { id: '5', name: 'Daga Sombría', description: '+30 ATK, +10 CRIT', price: 3500, icon: Sword, category: 'weapon' },
-  { id: '6', name: 'Escudo del Dragón', description: '+80 DEF, +Fire Resist', price: 6000, icon: Shield, category: 'armor' },
+  { id: '1', name: 'Legendary Sword', description: '+50 ATK', price: 5000, icon: Sword, category: 'weapon' },
+  { id: '2', name: 'Divine Armour', description: '+100 DEF', price: 7500, icon: Shield, category: 'armor', discount: 20 },
+  { id: '3', name: 'Power Elixir', description: '+20% DMG for 1h', price: 500, icon: Sparkles, category: 'consumable' },
+  { id: '4', name: 'Royal Crown', description: 'Exclusive cosmetic', price: 10000, icon: Crown, category: 'special' },
+  { id: '5', name: 'Shadow Dagger', description: '+30 ATK, +10 CRIT', price: 3500, icon: Sword, category: 'weapon' },
+  { id: '6', name: 'Dragon Shield', description: '+80 DEF, +Fire Resist', price: 6000, icon: Shield, category: 'armor' },
 ];
 
 const categoryLabels = {
-  weapon: { label: 'Arma', color: 'bg-red-500' },
-  armor: { label: 'Armadura', color: 'bg-blue-500' },
-  consumable: { label: 'Consumible', color: 'bg-green-500' },
-  special: { label: 'Especial', color: 'bg-purple-500' },
+  weapon: { label: 'Weapon', color: 'bg-red-500' },
+  armor: { label: 'Armour', color: 'bg-blue-500' },
+  consumable: { label: 'Consumable', color: 'bg-green-500' },
+  special: { label: 'Special', color: 'bg-purple-500' },
 };
 
 export function Shop() {
@@ -42,8 +42,8 @@ export function Shop() {
 
     if ((user?.coins || 0) < finalPrice) {
       toast({
-        title: 'Coins insuficientes',
-        description: `Necesitas ${finalPrice.toLocaleString()} coins para comprar este item.`,
+        title: 'Insufficient coins',
+        description: `You need ${finalPrice.toLocaleString()} coins to buy this item.`,
         variant: 'destructive',
       });
       return;
@@ -53,24 +53,18 @@ export function Shop() {
 
     try {
       // TODO: Replace with your API endpoint
-      // const response = await fetch('http://localhost:3000/api/shop/purchase', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ itemId: item.id }),
-      // });
-
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       updateCoins((user?.coins || 0) - finalPrice);
 
       toast({
-        title: '¡Compra exitosa!',
-        description: `Has comprado ${item.name}.`,
+        title: 'Purchase successful!',
+        description: `You bought ${item.name}.`,
       });
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'No se pudo completar la compra.',
+        description: 'Could not complete the purchase.',
         variant: 'destructive',
       });
     } finally {
@@ -81,8 +75,8 @@ export function Shop() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gradient-gold">Tienda</h1>
-        <p className="text-muted-foreground mt-2">Compra items con tus coins</p>
+        <h1 className="text-3xl font-bold text-gradient-gold">Shop</h1>
+        <p className="text-muted-foreground mt-2">Buy items with your coins</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -128,7 +122,7 @@ export function Shop() {
                     disabled={purchasing === item.id}
                   >
                     <ShoppingCart className="h-4 w-4 mr-1" />
-                    {purchasing === item.id ? 'Comprando...' : 'Comprar'}
+                    {purchasing === item.id ? 'Buying...' : 'Buy'}
                   </Button>
                 </div>
               </CardContent>

@@ -28,25 +28,20 @@ export function DailyReward() {
 
     try {
       // TODO: Replace with your API endpoint
-      // const response = await fetch('http://localhost:3000/api/daily/claim', {
-      //   method: 'POST',
-      // });
-      // const data = await response.json();
-
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       if (currentReward) {
         updateCoins((user?.coins || 0) + currentReward.coins);
         setClaimed(true);
         toast({
-          title: '¡Recompensa reclamada!',
-          description: `Has recibido ${currentReward.coins} coins.`,
+          title: 'Reward claimed!',
+          description: `You received ${currentReward.coins} coins.`,
         });
       }
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Ya has reclamado tu recompensa hoy.',
+        description: 'You have already claimed your reward today.',
         variant: 'destructive',
       });
     } finally {
@@ -57,8 +52,8 @@ export function DailyReward() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gradient-gold">Recompensa Diaria</h1>
-        <p className="text-muted-foreground mt-2">Reclama tu recompensa cada día</p>
+        <h1 className="text-3xl font-bold text-gradient-gold">Daily Reward</h1>
+        <p className="text-muted-foreground mt-2">Claim your reward every day</p>
       </div>
 
       {/* Weekly Progress */}
@@ -66,9 +61,9 @@ export function DailyReward() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-primary" />
-            Progreso Semanal
+            Weekly Progress
           </CardTitle>
-          <CardDescription>Entra cada día para aumentar tus recompensas</CardDescription>
+          <CardDescription>Log in every day to increase your rewards</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-7 gap-2">
@@ -86,7 +81,7 @@ export function DailyReward() {
                 {reward.claimed && (
                   <CheckCircle className="absolute -top-2 -right-2 h-5 w-5 text-primary bg-background rounded-full" />
                 )}
-                <p className="text-xs text-muted-foreground">Día {reward.day}</p>
+                <p className="text-xs text-muted-foreground">Day {reward.day}</p>
                 <p className={`text-lg font-bold ${reward.special ? 'text-yellow-500' : 'text-foreground'}`}>
                   {reward.coins}
                 </p>
@@ -105,17 +100,17 @@ export function DailyReward() {
           {claimed ? (
             <div className="space-y-2">
               <CheckCircle className="h-16 w-16 text-primary mx-auto" />
-              <p className="text-lg font-medium">¡Recompensa reclamada!</p>
+              <p className="text-lg font-medium">Reward claimed!</p>
               <div className="flex items-center justify-center gap-2 text-muted-foreground">
                 <Clock className="h-4 w-4" />
-                <span>Vuelve mañana para tu próxima recompensa</span>
+                <span>Come back tomorrow for your next reward</span>
               </div>
             </div>
           ) : (
             <>
               <div className="space-y-2">
                 <Gift className="h-16 w-16 text-primary mx-auto animate-bounce" />
-                <p className="text-lg font-medium">¡Tu recompensa está lista!</p>
+                <p className="text-lg font-medium">Your reward is ready!</p>
                 <p className="text-3xl font-bold text-primary">{currentReward?.coins} Coins</p>
               </div>
               <Button 
@@ -124,7 +119,7 @@ export function DailyReward() {
                 className="w-full"
                 disabled={isLoading}
               >
-                {isLoading ? 'Reclamando...' : 'Reclamar Recompensa'}
+                {isLoading ? 'Claiming...' : 'Claim Reward'}
               </Button>
             </>
           )}

@@ -100,8 +100,17 @@ export function NewsSection() {
                 <div className="text-center">
                   <div className="text-3xl font-bold text-foreground mb-1">3,842</div>
                   <div className="text-sm text-muted-foreground mb-4">members online</div>
-                  <Button className="w-full bg-[#5865F2] hover:bg-[#5865F2]/90 text-white">
-                    Join Discord
+                  <Button 
+                    className="w-full bg-[#5865F2] hover:bg-[#5865F2]/90 text-white"
+                    asChild
+                  >
+                    <a 
+                      href="https://discord.gg/TrcxcJrMzQ" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                    >
+                      Join Discord
+                    </a>
                   </Button>
                 </div>
               </div>

@@ -22,7 +22,7 @@ export function Avatar() {
     if (!selectedAvatar) {
       toast({
         title: 'Error',
-        description: 'Por favor selecciona un avatar.',
+        description: 'Please select an avatar.',
         variant: 'destructive',
       });
       return;
@@ -32,22 +32,16 @@ export function Avatar() {
 
     try {
       // TODO: Replace with your API endpoint
-      // const response = await fetch('http://localhost:3000/api/user/avatar', {
-      //   method: 'PUT',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ avatar: selectedAvatar }),
-      // });
-
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       toast({
-        title: 'Avatar actualizado',
-        description: 'Tu avatar ha sido cambiado correctamente.',
+        title: 'Avatar updated',
+        description: 'Your avatar has been changed successfully.',
       });
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'No se pudo actualizar el avatar.',
+        description: 'Could not update the avatar.',
         variant: 'destructive',
       });
     } finally {
@@ -58,15 +52,15 @@ export function Avatar() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gradient-gold">Cambiar Avatar</h1>
-        <p className="text-muted-foreground mt-2">Personaliza tu imagen de perfil</p>
+        <h1 className="text-3xl font-bold text-gradient-gold">Change Avatar</h1>
+        <p className="text-muted-foreground mt-2">Customise your profile picture</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Current Avatar */}
         <Card>
           <CardHeader>
-            <CardTitle>Avatar Actual</CardTitle>
+            <CardTitle>Current Avatar</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4">
             <div className="w-32 h-32 rounded-full bg-primary/20 flex items-center justify-center border-4 border-primary/30">
@@ -74,7 +68,7 @@ export function Avatar() {
             </div>
             <Button variant="outline" className="gap-2">
               <Upload className="h-4 w-4" />
-              Subir imagen
+              Upload image
             </Button>
           </CardContent>
         </Card>
@@ -82,8 +76,8 @@ export function Avatar() {
         {/* Avatar Selection */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Avatares Disponibles</CardTitle>
-            <CardDescription>Selecciona uno de los avatares predefinidos</CardDescription>
+            <CardTitle>Available Avatars</CardTitle>
+            <CardDescription>Select one of the preset avatars</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
@@ -112,7 +106,7 @@ export function Avatar() {
               className="w-full mt-6"
               disabled={!selectedAvatar || isLoading}
             >
-              {isLoading ? 'Guardando...' : 'Guardar Avatar'}
+              {isLoading ? 'Saving...' : 'Save Avatar'}
             </Button>
           </CardContent>
         </Card>
