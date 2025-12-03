@@ -19,6 +19,8 @@ import { Unbug } from "./pages/dashboard/Unbug";
 import { Avatar } from "./pages/dashboard/Avatar";
 import { Shop } from "./pages/dashboard/Shop";
 import { Password } from "./pages/dashboard/Password";
+import Characters from "./pages/dashboard/Characters";
+import Rankings from "./pages/dashboard/Rankings";
 
 // Admin imports
 import { AdminLayout } from "./components/admin/AdminLayout";
@@ -175,6 +177,26 @@ function AppRoutes() {
           <ProtectedRoute>
             <DashboardLayout>
               <Password />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/characters"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Characters />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/rankings"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <Rankings />
             </DashboardLayout>
           </ProtectedRoute>
         }

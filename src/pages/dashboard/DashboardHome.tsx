@@ -11,20 +11,23 @@ import {
   Lock,
   TrendingUp,
   Clock,
-  Gift
+  Gift,
+  Users,
+  Trophy
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { ServerStatus } from '@/components/ServerStatus';
+import { ServerRates } from '@/components/ServerRates';
 
 const features = [
+  { name: 'Mis Personajes', href: '/dashboard/characters', icon: Users, description: 'Ver tus personajes', color: 'from-indigo-500 to-purple-500' },
+  { name: 'Rankings', href: '/dashboard/rankings', icon: Trophy, description: 'Top jugadores', color: 'from-yellow-500 to-amber-500' },
   { name: 'Comprar NovaCoins', href: '/dashboard/buy-coins', icon: Coins, description: 'Stripe, PayPal, Paysafecard', color: 'from-cyan-500 to-blue-500' },
   { name: 'Cupón', href: '/dashboard/coupon', icon: Ticket, description: 'Canjea códigos', color: 'from-purple-500 to-pink-500' },
   { name: 'Diaria', href: '/dashboard/daily', icon: Calendar, description: 'Recompensa diaria', color: 'from-green-500 to-emerald-500' },
   { name: 'Ruleta', href: '/dashboard/roulette', icon: Dices, description: 'Prueba tu suerte', color: 'from-orange-500 to-red-500' },
   { name: 'Tickets', href: '/dashboard/tickets', icon: MessageSquare, description: 'Soporte técnico', color: 'from-blue-500 to-indigo-500' },
-  { name: 'Unbug', href: '/dashboard/unbug', icon: Bug, description: 'Resetear personaje', color: 'from-red-500 to-pink-500' },
-  { name: 'Avatar', href: '/dashboard/avatar', icon: User, description: 'Cambiar imagen', color: 'from-pink-500 to-rose-500' },
   { name: 'Shop', href: '/dashboard/shop', icon: ShoppingCart, description: 'Tienda de items', color: 'from-amber-500 to-orange-500' },
-  { name: 'Password', href: '/dashboard/password', icon: Lock, description: 'Cambiar contraseña', color: 'from-slate-500 to-gray-500' },
 ];
 
 const quickStats = [
@@ -100,7 +103,7 @@ export function DashboardHome() {
       {/* Feature Grid */}
       <div>
         <h2 className="text-xl font-display font-semibold text-foreground mb-4">Acceso Rápido</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {features.map((feature) => (
             <Link
               key={feature.name}
@@ -124,6 +127,12 @@ export function DashboardHome() {
             </Link>
           ))}
         </div>
+      </div>
+
+      {/* Server Status */}
+      <div className="grid md:grid-cols-2 gap-6">
+        <ServerStatus />
+        <ServerRates />
       </div>
     </div>
   );

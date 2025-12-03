@@ -35,9 +35,9 @@ export function Login() {
     setIsLoading(true);
 
     try {
-      const success = await login(username, password);
+      const result = await login(username, password);
       
-      if (success) {
+      if (result.success) {
         toast({
           title: 'Bienvenido',
           description: `Has iniciado sesión como ${username}`,
@@ -46,7 +46,7 @@ export function Login() {
       } else {
         toast({
           title: 'Error de autenticación',
-          description: 'Usuario o contraseña incorrectos.',
+          description: result.error || 'Usuario o contraseña incorrectos.',
           variant: 'destructive',
         });
       }

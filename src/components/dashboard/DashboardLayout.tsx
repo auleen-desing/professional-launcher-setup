@@ -17,7 +17,10 @@ import {
   Home,
   RefreshCw,
   ChevronRight,
-  Gamepad2
+  Gamepad2,
+  Users,
+  Trophy,
+  Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,14 +35,16 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { name: 'Resumen', href: '/dashboard', icon: LayoutDashboard },
+  { name: 'Mis Personajes', href: '/dashboard/characters', icon: Users },
+  { name: 'Rankings', href: '/dashboard/rankings', icon: Trophy },
   { name: 'Comprar NovaCoins', href: '/dashboard/buy-coins', icon: Coins },
   { name: 'Cupón', href: '/dashboard/coupon', icon: Ticket },
   { name: 'Diaria', href: '/dashboard/daily', icon: Calendar },
   { name: 'Ruleta', href: '/dashboard/roulette', icon: Dices },
+  { name: 'Shop', href: '/dashboard/shop', icon: ShoppingCart },
   { name: 'Tickets', href: '/dashboard/tickets', icon: MessageSquare },
   { name: 'Unbug', href: '/dashboard/unbug', icon: Bug },
   { name: 'Avatar', href: '/dashboard/avatar', icon: User },
-  { name: 'Shop', href: '/dashboard/shop', icon: ShoppingCart },
   { name: 'Password', href: '/dashboard/password', icon: Lock },
 ];
 
@@ -51,7 +56,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -148,6 +153,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
           
           <div className="pt-4 border-t border-border/50 space-y-2">
+            {isAdmin && (
+              <Button variant="outline" className="w-full gap-2 justify-start border-primary/30 text-primary hover:bg-primary/10" asChild>
+                <Link to="/admin">
+                  <Shield className="h-4 w-4" />
+                  Panel Admin
+                </Link>
+              </Button>
+            )}
             <Button variant="outline" className="w-full gap-2 justify-start" asChild>
               <a href="#">
                 <Gamepad2 className="h-4 w-4" />

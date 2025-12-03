@@ -1,25 +1,30 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '@/types/user';
+import { apiService } from '@/services/api';
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAdmin: boolean;
-  login: (username: string, password: string) => Promise<boolean>;
+  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
   updateCoins: (newCoins: number) => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user for development - replace with your API calls
+// Development mode flag - set to false in production
+const DEV_MODE = true;
+
+// Mock user for development only
 const mockUser: User = {
   id: '1',
   username: 'Auleen',
   email: 'auleen@novaera.com',
   coins: 8000123,
   createdAt: new Date().toISOString(),
-  canUseCP: 2, // Admin for testing - your API should return this from DB
+  canUseCP: 2,
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -27,56 +32,100 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session - replace with your API call
-    const checkAuth = async () => {
-      try {
-        // TODO: Replace with your API endpoint
-        // const response = await fetch('http://localhost:3000/api/auth/session');
-        // const data = await response.json();
-        // setUser(data.user);
-        
-        // Mock: Auto-login for development
+    checkAuth();
+  }, []);
+
+  const checkAuth = async () => {
+    try {
+      if (DEV_MODE) {
+        // Development: check localStorage
         const savedUser = localStorage.getItem('novaera_user');
         if (savedUser) {
           setUser(JSON.parse(savedUser));
         }
-      } catch (error) {
-        console.error('Auth check failed:', error);
-      } finally {
-        setIsLoading(false);
+      } else {
+        // Production: verify session with API
+        const token = localStorage.getItem('novaera_token');
+        if (token) {
+          const response = await apiService.getSession();
+          if (response.success && response.data?.user) {
+            const userData: User = {
+              id: response.data.user.id,
+              username: response.data.user.username,
+              email: response.data.user.email,
+              coins: response.data.user.coins,
+              avatar: response.data.user.avatar,
+              createdAt: response.data.user.createdAt,
+              canUseCP: response.data.user.canUseCP,
+            };
+            setUser(userData);
+            localStorage.setItem('novaera_user', JSON.stringify(userData));
+          } else {
+            // Token invalid, clear storage
+            localStorage.removeItem('novaera_token');
+            localStorage.removeItem('novaera_user');
+          }
+        }
       }
-    };
-    checkAuth();
-  }, []);
-
-  const login = async (username: string, password: string): Promise<boolean> => {
-    try {
-      // TODO: Replace with your API endpoint
-      // const response = await fetch('http://localhost:3000/api/auth/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ username, password }),
-      // });
-      // const data = await response.json();
-      // if (data.success) {
-      //   setUser(data.user);
-      //   return true;
-      // }
-      
-      // Mock login for development
-      setUser(mockUser);
-      localStorage.setItem('novaera_user', JSON.stringify(mockUser));
-      return true;
     } catch (error) {
-      console.error('Login failed:', error);
-      return false;
+      console.error('Auth check failed:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    // TODO: Call your logout API endpoint
-    setUser(null);
-    localStorage.removeItem('novaera_user');
+  const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      if (DEV_MODE) {
+        // Development: mock login
+        setUser(mockUser);
+        localStorage.setItem('novaera_user', JSON.stringify(mockUser));
+        return { success: true };
+      }
+
+      // Production: real API call
+      const response = await apiService.login(username, password);
+      
+      if (response.success && response.data?.user) {
+        const userData: User = {
+          id: response.data.user.id,
+          username: response.data.user.username,
+          email: response.data.user.email,
+          coins: response.data.user.coins,
+          avatar: response.data.user.avatar,
+          createdAt: response.data.user.createdAt,
+          canUseCP: response.data.user.canUseCP,
+        };
+        setUser(userData);
+        localStorage.setItem('novaera_user', JSON.stringify(userData));
+        return { success: true };
+      }
+
+      return { 
+        success: false, 
+        error: response.error || 'Login failed. Please check your credentials.' 
+      };
+    } catch (error) {
+      console.error('Login failed:', error);
+      return { 
+        success: false, 
+        error: 'Connection error. Please try again later.' 
+      };
+    }
+  };
+
+  const logout = async () => {
+    try {
+      if (!DEV_MODE) {
+        await apiService.logout();
+      }
+    } catch (error) {
+      console.error('Logout API call failed:', error);
+    } finally {
+      setUser(null);
+      localStorage.removeItem('novaera_user');
+      localStorage.removeItem('novaera_token');
+    }
   };
 
   const updateCoins = (newCoins: number) => {
@@ -87,11 +136,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Check if user has admin access (CanUseCP > 1)
+  const refreshUser = async () => {
+    if (!DEV_MODE && user) {
+      const response = await apiService.getProfile();
+      if (response.success && response.data) {
+        const updatedUser: User = {
+          ...user,
+          coins: response.data.coins,
+          avatar: response.data.avatar,
+        };
+        setUser(updatedUser);
+        localStorage.setItem('novaera_user', JSON.stringify(updatedUser));
+      }
+    }
+  };
+
   const isAdmin = user ? user.canUseCP > 1 : false;
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, isAdmin, login, logout, updateCoins }}>
+    <AuthContext.Provider value={{ user, isLoading, isAdmin, login, logout, updateCoins, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
