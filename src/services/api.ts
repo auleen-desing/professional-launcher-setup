@@ -71,18 +71,28 @@ class ApiService {
         headers,
       });
 
-      const data = await response.json();
+      const json = await response.json();
 
       if (!response.ok) {
         return {
           success: false,
-          error: data.message || data.error || 'Request failed',
+          error: json.message || json.error || 'Request failed',
         };
       }
 
+      // Backend returns { success, data, error } - pass through directly
+      if (json.success !== undefined) {
+        return {
+          success: json.success,
+          data: json.data,
+          error: json.error,
+        };
+      }
+
+      // Fallback for endpoints that don't follow the standard format
       return {
         success: true,
-        data,
+        data: json,
       };
     } catch (error) {
       console.error('API Request failed:', error);
