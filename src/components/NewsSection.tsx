@@ -1,51 +1,16 @@
-import { Clock, MessageSquare, ArrowRight, Flame } from 'lucide-react';
+import { Clock, MessageSquare, ArrowRight, Flame, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const newsItems = [
   {
     id: 1,
-    title: 'Update v3.5 - New Dungeons',
-    excerpt: 'Explore the new Dark Kingdom dungeons with challenging enemies and unique rewards...',
+    title: 'Welcome to NovaEra!',
+    excerpt: 'Your new adventure begins here. Check out all the features and start your journey...',
     date: '3 Dec 2025',
-    comments: 47,
-    category: 'Update',
+    comments: 0,
+    category: 'Announcement',
     hot: true,
   },
-  {
-    id: 2,
-    title: 'Christmas Event 2025',
-    excerpt: 'Celebrate the holidays with special events, themed quests and exclusive prizes...',
-    date: '1 Dec 2025',
-    comments: 89,
-    category: 'Event',
-    hot: true,
-  },
-  {
-    id: 3,
-    title: 'Class Balance - Swordsman',
-    excerpt: 'Important adjustments to swordsman skills to improve PvP balance...',
-    date: '28 Nov 2025',
-    comments: 124,
-    category: 'Balance',
-    hot: false,
-  },
-  {
-    id: 4,
-    title: 'New Daily Quest System',
-    excerpt: 'Complete quests every day to earn exclusive rewards and bonus experience...',
-    date: '25 Nov 2025',
-    comments: 56,
-    category: 'System',
-    hot: false,
-  },
-];
-
-const hotTopics = [
-  { id: 1, title: 'Complete Swordsman Guide', views: 12453, author: 'ProPlayer99' },
-  { id: 2, title: 'Best Archer PvP Builds', views: 9876, author: 'ShadowMaster' },
-  { id: 3, title: 'Efficient Level 100+ Farming', views: 8234, author: 'GoldHunter' },
-  { id: 4, title: 'Legendary Weapons Tier List', views: 7654, author: 'WeaponExpert' },
-  { id: 5, title: 'Tips for Beginners', views: 6543, author: 'NovaHelper' },
 ];
 
 export function NewsSection() {
@@ -108,7 +73,7 @@ export function NewsSection() {
 
           {/* Sidebar */}
           <div className="space-y-6">
-            {/* Hot Topics */}
+            {/* Hot Topics - Empty */}
             <div className="bg-card border border-border rounded-xl overflow-hidden">
               <div className="bg-gradient-to-r from-primary/20 to-transparent p-4 border-b border-border">
                 <h3 className="font-bold text-foreground flex items-center gap-2">
@@ -117,27 +82,9 @@ export function NewsSection() {
                 </h3>
               </div>
               <div className="p-4">
-                <div className="space-y-3">
-                  {hotTopics.map((topic, index) => (
-                    <a
-                      key={topic.id}
-                      href="#"
-                      className="flex items-start gap-3 group"
-                    >
-                      <span className="flex-shrink-0 w-6 h-6 bg-primary/10 text-primary text-xs font-bold rounded flex items-center justify-center">
-                        {index + 1}
-                      </span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors truncate">
-                          {topic.title}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {topic.views.toLocaleString()} views • {topic.author}
-                        </p>
-                      </div>
-                    </a>
-                  ))}
-                </div>
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No topics yet
+                </p>
               </div>
             </div>
 
@@ -155,6 +102,33 @@ export function NewsSection() {
                   <div className="text-sm text-muted-foreground mb-4">members online</div>
                   <Button className="w-full bg-[#5865F2] hover:bg-[#5865F2]/90 text-white">
                     Join Discord
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* EPVP Link */}
+            <div className="bg-card border border-border rounded-xl overflow-hidden">
+              <div className="bg-gradient-to-r from-orange-500/20 to-transparent p-4 border-b border-border">
+                <h3 className="font-bold text-foreground flex items-center gap-2">
+                  <ExternalLink className="w-5 h-5 text-orange-500" />
+                  EPVP
+                </h3>
+              </div>
+              <div className="p-4">
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground mb-4">Check our official thread</p>
+                  <Button 
+                    className="w-full bg-orange-500 hover:bg-orange-500/90 text-white"
+                    asChild
+                  >
+                    <a 
+                      href="https://www.elitepvpers.com/forum/nostale-pserver-advertising/5331213-novaera-international-pserver-release.html" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                    >
+                      Visit EPVP Thread
+                    </a>
                   </Button>
                 </div>
               </div>
