@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Download, Users, Newspaper, ShoppingBag, MessageSquare, LayoutDashboard, Home, Gamepad2 } from 'lucide-react';
+import { Menu, X, Download, Users, Newspaper, ShoppingBag, MessageSquare, LayoutDashboard, Home, Gamepad2, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 import novaLogo from '@/assets/novaera-logo.png';
 
 const navItems = [
@@ -15,6 +16,7 @@ const navItems = [
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, isAdmin } = useAuth();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
@@ -47,7 +49,15 @@ export function Header() {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/login">
+            {isAdmin && (
+              <Link to="/admin">
+                <Button variant="ghost" className="gap-2 text-destructive hover:text-destructive hover:bg-destructive/10">
+                  <Shield className="w-4 h-4" />
+                  Admin
+                </Button>
+              </Link>
+            )}
+            <Link to={user ? "/dashboard" : "/login"}>
               <Button variant="ghost" className="gap-2 text-muted-foreground hover:text-primary">
                 <LayoutDashboard className="w-4 h-4" />
                 Dashboard
@@ -84,7 +94,15 @@ export function Header() {
                 </a>
               ))}
               <div className="flex flex-col gap-2 mt-4 pt-4 border-t border-border/50">
-                <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                {isAdmin && (
+                  <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>
+                    <Button variant="outline" className="w-full gap-2 border-destructive/50 text-destructive hover:bg-destructive/10">
+                      <Shield className="w-4 h-4" />
+                      Panel Admin
+                    </Button>
+                  </Link>
+                )}
+                <Link to={user ? "/dashboard" : "/login"} onClick={() => setMobileMenuOpen(false)}>
                   <Button variant="outline" className="w-full gap-2">
                     <LayoutDashboard className="w-4 h-4" />
                     Dashboard

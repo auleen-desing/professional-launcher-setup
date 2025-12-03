@@ -5,6 +5,7 @@ export interface User {
   coins: number;
   avatar?: string;
   createdAt: string;
+  canUseCP: number; // 0 = user, 1+ = admin access
 }
 
 export interface CoinPackage {

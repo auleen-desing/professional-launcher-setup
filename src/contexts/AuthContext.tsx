@@ -4,6 +4,7 @@ import { User } from '@/types/user';
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
+  isAdmin: boolean;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   updateCoins: (newCoins: number) => void;
@@ -18,6 +19,7 @@ const mockUser: User = {
   email: 'auleen@novaera.com',
   coins: 8000123,
   createdAt: new Date().toISOString(),
+  canUseCP: 2, // Admin for testing - your API should return this from DB
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -85,8 +87,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  // Check if user has admin access (CanUseCP > 1)
+  const isAdmin = user ? user.canUseCP > 1 : false;
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, updateCoins }}>
+    <AuthContext.Provider value={{ user, isLoading, isAdmin, login, logout, updateCoins }}>
       {children}
     </AuthContext.Provider>
   );

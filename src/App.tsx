@@ -50,6 +50,28 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function ProtectedAdminRoute({ children }: { children: React.ReactNode }) {
+  const { user, isLoading, isAdmin } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
+}
+
 function AppRoutes() {
   return (
     <Routes>
@@ -158,14 +180,14 @@ function AppRoutes() {
         }
       />
 
-      {/* Admin Routes */}
-      <Route path="/admin" element={<AdminLayout><AdminDashboard /></AdminLayout>} />
-      <Route path="/admin/users" element={<AdminLayout><AdminUsers /></AdminLayout>} />
-      <Route path="/admin/coins" element={<AdminLayout><AdminCoins /></AdminLayout>} />
-      <Route path="/admin/announcements" element={<AdminLayout><AdminAnnouncements /></AdminLayout>} />
-      <Route path="/admin/moderation" element={<AdminLayout><AdminModeration /></AdminLayout>} />
-      <Route path="/admin/stats" element={<AdminLayout><AdminStats /></AdminLayout>} />
-      <Route path="/admin/settings" element={<AdminLayout><AdminSettings /></AdminLayout>} />
+      {/* Admin Routes - Protected by CanUseCP > 1 */}
+      <Route path="/admin" element={<ProtectedAdminRoute><AdminLayout><AdminDashboard /></AdminLayout></ProtectedAdminRoute>} />
+      <Route path="/admin/users" element={<ProtectedAdminRoute><AdminLayout><AdminUsers /></AdminLayout></ProtectedAdminRoute>} />
+      <Route path="/admin/coins" element={<ProtectedAdminRoute><AdminLayout><AdminCoins /></AdminLayout></ProtectedAdminRoute>} />
+      <Route path="/admin/announcements" element={<ProtectedAdminRoute><AdminLayout><AdminAnnouncements /></AdminLayout></ProtectedAdminRoute>} />
+      <Route path="/admin/moderation" element={<ProtectedAdminRoute><AdminLayout><AdminModeration /></AdminLayout></ProtectedAdminRoute>} />
+      <Route path="/admin/stats" element={<ProtectedAdminRoute><AdminLayout><AdminStats /></AdminLayout></ProtectedAdminRoute>} />
+      <Route path="/admin/settings" element={<ProtectedAdminRoute><AdminLayout><AdminSettings /></AdminLayout></ProtectedAdminRoute>} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
