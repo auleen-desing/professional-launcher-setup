@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Download, Users, Newspaper, ShoppingBag, MessageSquare, LayoutDashboard, Home, Gamepad2, Shield, ExternalLink } from 'lucide-react';
+import { Menu, X, Download, Users, Newspaper, ShoppingBag, MessageSquare, LayoutDashboard, Home, Gamepad2, Shield, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import novaLogo from '@/assets/novaera-logo.png';
@@ -12,7 +12,7 @@ const navItems = [
   { name: 'News', href: '#news', icon: Newspaper },
   { name: 'Shop', href: '#shop', icon: ShoppingBag },
   { name: 'Discord', href: 'https://discord.gg/', icon: MessageSquare },
-  { name: 'EPVP', href: 'https://www.elitepvpers.com/forum/nostale-pserver-advertising/5331213-novaera-international-pserver-release.html', icon: ExternalLink },
+  { name: 'EPVP', href: 'https://www.elitepvpers.com/forum/nostale-pserver-advertising/5331213-novaera-international-pserver-release.html', icon: ArrowUpRight },
 ];
 
 export function Header() {
