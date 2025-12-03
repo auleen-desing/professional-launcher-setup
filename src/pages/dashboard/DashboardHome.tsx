@@ -8,52 +8,122 @@ import {
   Bug, 
   User, 
   ShoppingCart, 
-  Lock 
+  Lock,
+  TrendingUp,
+  Clock,
+  Gift
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 
 const features = [
-  { name: 'Comprar Coins', href: '/dashboard/buy-coins', icon: Coins, description: 'Adquiere coins para el juego' },
-  { name: 'Cupón', href: '/dashboard/coupon', icon: Ticket, description: 'Canjea códigos promocionales' },
-  { name: 'Diaria', href: '/dashboard/daily', icon: Calendar, description: 'Reclama tu recompensa diaria' },
-  { name: 'Ruleta', href: '/dashboard/roulette', icon: Dices, description: 'Prueba tu suerte' },
-  { name: 'Tickets', href: '/dashboard/tickets', icon: MessageSquare, description: 'Soporte técnico' },
-  { name: 'Unbug', href: '/dashboard/unbug', icon: Bug, description: 'Desbuguea tu personaje' },
-  { name: 'Avatar', href: '/dashboard/avatar', icon: User, description: 'Personaliza tu avatar' },
-  { name: 'Shop', href: '/dashboard/shop', icon: ShoppingCart, description: 'Tienda de items' },
-  { name: 'Password', href: '/dashboard/password', icon: Lock, description: 'Cambia tu contraseña' },
+  { name: 'Comprar NovaCoins', href: '/dashboard/buy-coins', icon: Coins, description: 'Stripe, PayPal, Paysafecard', color: 'from-cyan-500 to-blue-500' },
+  { name: 'Cupón', href: '/dashboard/coupon', icon: Ticket, description: 'Canjea códigos', color: 'from-purple-500 to-pink-500' },
+  { name: 'Diaria', href: '/dashboard/daily', icon: Calendar, description: 'Recompensa diaria', color: 'from-green-500 to-emerald-500' },
+  { name: 'Ruleta', href: '/dashboard/roulette', icon: Dices, description: 'Prueba tu suerte', color: 'from-orange-500 to-red-500' },
+  { name: 'Tickets', href: '/dashboard/tickets', icon: MessageSquare, description: 'Soporte técnico', color: 'from-blue-500 to-indigo-500' },
+  { name: 'Unbug', href: '/dashboard/unbug', icon: Bug, description: 'Resetear personaje', color: 'from-red-500 to-pink-500' },
+  { name: 'Avatar', href: '/dashboard/avatar', icon: User, description: 'Cambiar imagen', color: 'from-pink-500 to-rose-500' },
+  { name: 'Shop', href: '/dashboard/shop', icon: ShoppingCart, description: 'Tienda de items', color: 'from-amber-500 to-orange-500' },
+  { name: 'Password', href: '/dashboard/password', icon: Lock, description: 'Cambiar contraseña', color: 'from-slate-500 to-gray-500' },
+];
+
+const quickStats = [
+  { label: 'Compras este mes', value: '3', icon: ShoppingCart },
+  { label: 'Tickets abiertos', value: '1', icon: MessageSquare },
+  { label: 'Días consecutivos', value: '7', icon: Calendar },
 ];
 
 export function DashboardHome() {
   const { user } = useAuth();
 
   return (
-    <div className="space-y-6">
-      {/* Coins Display */}
-      <div className="bg-gradient-to-r from-primary/20 to-primary/10 border border-primary/30 rounded-2xl p-6 text-center">
-        <span className="text-muted-foreground text-lg">Coins</span>
-        <p className="text-5xl font-bold text-primary mt-2">{user?.coins.toLocaleString()}</p>
+    <div className="space-y-8">
+      {/* Welcome & Coins */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Coins Card */}
+        <div className="lg:col-span-2 relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-card to-accent/20 border border-primary/30 p-8">
+          <div className="relative z-10">
+            <p className="text-muted-foreground mb-1">Bienvenido de vuelta,</p>
+            <h1 className="text-3xl font-display font-bold text-foreground mb-6">{user?.username}</h1>
+            
+            <div className="flex items-end gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Tus NovaCoins</p>
+                <p className="text-5xl sm:text-6xl font-display font-black text-gradient-cyan">
+                  {user?.coins.toLocaleString()}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 text-neon-green mb-2">
+                <TrendingUp className="h-5 w-5" />
+                <span className="text-sm font-medium">+500 esta semana</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Decorative */}
+          <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-primary/10 rounded-full blur-3xl" />
+          <Coins className="absolute right-8 bottom-8 h-24 w-24 text-primary/20" />
+        </div>
+
+        {/* Quick Stats */}
+        <div className="space-y-4">
+          {quickStats.map((stat) => (
+            <div key={stat.label} className="flex items-center gap-4 p-4 rounded-xl bg-card border border-border/50 hover:border-primary/30 transition-colors">
+              <div className="p-3 rounded-lg bg-primary/10">
+                <stat.icon className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-2xl font-display font-bold text-foreground">{stat.value}</p>
+                <p className="text-sm text-muted-foreground">{stat.label}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Quick Actions Banner */}
+      <div className="flex flex-wrap gap-4 p-4 rounded-xl bg-gradient-to-r from-accent/20 to-primary/20 border border-accent/30">
+        <div className="flex items-center gap-3">
+          <Gift className="h-6 w-6 text-accent" />
+          <div>
+            <p className="font-medium text-foreground">¡Reclama tu recompensa diaria!</p>
+            <p className="text-sm text-muted-foreground">Hoy puedes ganar hasta 150 NovaCoins</p>
+          </div>
+        </div>
+        <Link to="/dashboard/daily" className="ml-auto">
+          <button className="px-4 py-2 rounded-lg bg-accent text-accent-foreground font-medium hover:bg-accent/90 transition-colors">
+            Reclamar
+          </button>
+        </Link>
       </div>
 
       {/* Feature Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {features.map((feature) => (
-          <Link
-            key={feature.name}
-            to={feature.href}
-            className="group bg-card hover:bg-card/80 border border-border hover:border-primary/50 rounded-xl p-6 transition-all duration-300 hover:shadow-lg hover:shadow-primary/10"
-          >
-            <div className="flex flex-col items-start gap-4">
-              <div className="p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
-                <feature.icon className="h-8 w-8 text-primary" />
+      <div>
+        <h2 className="text-xl font-display font-semibold text-foreground mb-4">Acceso Rápido</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {features.map((feature) => (
+            <Link
+              key={feature.name}
+              to={feature.href}
+              className="group relative overflow-hidden rounded-xl bg-card border border-border/50 p-6 hover:border-primary/50 transition-all duration-300 hover:-translate-y-1"
+            >
+              <div className="flex items-start gap-4">
+                <div className={`p-3 rounded-xl bg-gradient-to-br ${feature.color} group-hover:scale-110 transition-transform duration-300`}>
+                  <feature.icon className="h-6 w-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-display font-semibold text-foreground group-hover:text-primary transition-colors">
+                    {feature.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">{feature.description}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">{feature.name}</h3>
-                <p className="text-sm text-muted-foreground mt-1">{feature.description}</p>
-              </div>
-            </div>
-          </Link>
-        ))}
+              
+              {/* Hover glow */}
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   );

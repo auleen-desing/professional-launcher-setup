@@ -15,11 +15,14 @@ import {
   X,
   LogOut,
   Home,
-  RefreshCw
+  RefreshCw,
+  ChevronRight,
+  Gamepad2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import novaLogo from '@/assets/novaera-logo.png';
 
 interface NavItem {
   name: string;
@@ -29,7 +32,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { name: 'Resumen', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'Comprar Coins', href: '/dashboard/buy-coins', icon: Coins },
+  { name: 'Comprar NovaCoins', href: '/dashboard/buy-coins', icon: Coins },
   { name: 'Cupón', href: '/dashboard/coupon', icon: Ticket },
   { name: 'Diaria', href: '/dashboard/daily', icon: Calendar },
   { name: 'Ruleta', href: '/dashboard/roulette', icon: Dices },
@@ -58,8 +61,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
-        <div className="flex items-center justify-between px-4 h-16">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-xl border-b border-border/50 h-16">
+        <div className="flex items-center justify-between px-4 h-full">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -70,37 +73,42 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
             <Link to="/" className="flex items-center gap-2">
-              <span className="text-2xl font-bold text-gradient-gold font-display">Novaera</span>
+              <img src={novaLogo} alt="NovaEra" className="h-8 w-auto" />
+              <span className="text-xl font-display font-bold text-gradient-cyan hidden sm:block">NOVAERA</span>
             </Link>
           </div>
 
-          <nav className="hidden md:flex items-center gap-6">
-            <Link to="/" className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
+          <nav className="hidden md:flex items-center gap-4">
+            <Link to="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors">
               <Home className="h-4 w-4" />
               Inicio
             </Link>
-            <Link to="/dashboard" className="flex items-center gap-2 text-primary">
+            <Link to="/dashboard" className="flex items-center gap-2 text-sm text-primary">
               <LayoutDashboard className="h-4 w-4" />
               Dashboard
             </Link>
           </nav>
 
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm" className="gap-2">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-primary">
               <RefreshCw className="h-4 w-4" />
-              <span className="hidden sm:inline">Actualizar datos</span>
+              <span className="hidden sm:inline">Actualizar</span>
             </Button>
-            <div className="bg-primary/20 border border-primary/30 rounded-lg px-4 py-2">
-              <span className="text-muted-foreground text-sm">Coins</span>
-              <span className="text-primary font-bold ml-2">{user?.coins.toLocaleString()}</span>
+            
+            {/* Coins Display */}
+            <div className="flex items-center gap-2 bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30 rounded-lg px-4 py-2">
+              <Coins className="h-4 w-4 text-primary" />
+              <span className="font-display font-bold text-primary">{user?.coins.toLocaleString()}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                <User className="h-4 w-4 text-primary" />
+            
+            {/* User */}
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-card border border-border/50">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                <User className="h-4 w-4 text-primary-foreground" />
               </div>
               <div className="hidden sm:block">
-                <p className="text-sm font-medium">{user?.username}</p>
-                <p className="text-xs text-muted-foreground">User</p>
+                <p className="text-sm font-medium text-foreground">{user?.username}</p>
+                <p className="text-xs text-muted-foreground">Usuario</p>
               </div>
             </div>
           </div>
@@ -109,34 +117,46 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Sidebar */}
       <aside className={cn(
-        "fixed top-16 left-0 bottom-0 w-64 bg-card border-r border-border z-40 transform transition-transform duration-200 ease-in-out lg:translate-x-0",
+        "fixed top-16 left-0 bottom-0 w-64 bg-card/95 backdrop-blur-xl border-r border-border/50 z-40 transform transition-transform duration-300 ease-out lg:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
-        <nav className="p-4 space-y-1">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.href;
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                onClick={() => setSidebarOpen(false)}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200",
-                  isActive 
-                    ? "bg-primary/20 text-primary border border-primary/30" 
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
-                <item.icon className="h-5 w-5" />
-                {item.name}
-              </Link>
-            );
-          })}
+        <nav className="p-4 space-y-1 h-full flex flex-col">
+          <div className="flex-1 space-y-1">
+            {navItems.map((item) => {
+              const isActive = location.pathname === item.href;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  onClick={() => setSidebarOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group",
+                    isActive 
+                      ? "bg-gradient-to-r from-primary/20 to-accent/10 text-primary border border-primary/30" 
+                      : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                  )}
+                >
+                  <item.icon className={cn(
+                    "h-5 w-5 transition-transform group-hover:scale-110",
+                    isActive && "text-primary"
+                  )} />
+                  <span className="font-medium">{item.name}</span>
+                  {isActive && <ChevronRight className="h-4 w-4 ml-auto" />}
+                </Link>
+              );
+            })}
+          </div>
           
-          <div className="pt-4 border-t border-border mt-4">
+          <div className="pt-4 border-t border-border/50 space-y-2">
+            <Button variant="outline" className="w-full gap-2 justify-start" asChild>
+              <a href="#">
+                <Gamepad2 className="h-4 w-4" />
+                Jugar Ahora
+              </a>
+            </Button>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-3 px-4 py-3 rounded-lg text-destructive hover:bg-destructive/10 w-full transition-colors"
+              className="flex items-center gap-3 px-4 py-3 rounded-xl text-destructive hover:bg-destructive/10 w-full transition-colors"
             >
               <LogOut className="h-5 w-5" />
               Cerrar sesión
@@ -148,14 +168,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Overlay */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-background/80 z-30 lg:hidden"
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-30 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Main Content */}
       <main className="lg:ml-64 pt-16 min-h-screen">
-        <div className="p-6">
+        <div className="p-6 max-w-7xl mx-auto">
           {children}
         </div>
       </main>
