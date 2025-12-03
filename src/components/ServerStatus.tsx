@@ -2,43 +2,48 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Users, Server, Wifi, WifiOff } from 'lucide-react';
-import { API_CONFIG } from '@/config/api';
+import { Users, Server, Wifi, WifiOff, Loader2 } from 'lucide-react';
+import { API_CONFIG, buildApiUrl } from '@/config/api';
 
 interface ChannelStatus {
   id: string;
   name: string;
   port: number;
   players: number;
-  maxPlayers: number;
   status: 'online' | 'offline' | 'maintenance';
 }
 
-// Mock data for development - replace with real API
-const mockChannels: ChannelStatus[] = Object.entries(API_CONFIG.CHANNELS).map(([key, value]) => ({
-  id: key,
-  name: value.name,
-  port: value.port,
-  players: Math.floor(Math.random() * 150) + 50,
-  maxPlayers: 200,
-  status: Math.random() > 0.1 ? 'online' : 'maintenance',
-}));
-
 export function ServerStatus() {
-  const [channels, setChannels] = useState<ChannelStatus[]>(mockChannels);
+  const [channels, setChannels] = useState<ChannelStatus[]>([]);
   const [totalPlayers, setTotalPlayers] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchServerStatus = async () => {
+    try {
+      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.SERVER.STATUS));
+      const data = await response.json();
+      
+      if (data.success) {
+        setChannels(data.data.channels);
+        setTotalPlayers(data.data.totalPlayers);
+        setError(null);
+      } else {
+        setError('Failed to fetch server status');
+      }
+    } catch (err) {
+      console.error('Server status error:', err);
+      setError('Could not connect to server');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    // Calculate total online players
-    const total = channels
-      .filter(ch => ch.status === 'online')
-      .reduce((sum, ch) => sum + ch.players, 0);
-    setTotalPlayers(total);
-
-    // TODO: Replace with real API polling
-    // const interval = setInterval(fetchServerStatus, 30000);
-    // return () => clearInterval(interval);
-  }, [channels]);
+    fetchServerStatus();
+    const interval = setInterval(fetchServerStatus, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -48,6 +53,26 @@ export function ServerStatus() {
       default: return <Badge variant="secondary">Unknown</Badge>;
     }
   };
+
+  if (loading) {
+    return (
+      <Card className="bg-card/50 backdrop-blur border-primary/20">
+        <CardContent className="flex items-center justify-center py-8">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card className="bg-card/50 backdrop-blur border-primary/20">
+        <CardContent className="flex items-center justify-center py-8 text-muted-foreground">
+          {error}
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className="bg-card/50 backdrop-blur border-primary/20">
@@ -85,11 +110,11 @@ export function ServerStatus() {
               {channel.status === 'online' && (
                 <div className="flex items-center gap-2 min-w-[120px]">
                   <Progress 
-                    value={(channel.players / channel.maxPlayers) * 100} 
+                    value={(channel.players / 200) * 100} 
                     className="h-2 w-16"
                   />
                   <span className="text-xs text-muted-foreground">
-                    {channel.players}/{channel.maxPlayers}
+                    {channel.players}/200
                   </span>
                 </div>
               )}
