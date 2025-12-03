@@ -1,10 +1,11 @@
 import { useState } from 'react';
-import { Ticket, Gift } from 'lucide-react';
+import { Ticket, Gift, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { API_CONFIG, buildApiUrl } from '@/config/api';
 
 export function Coupon() {
   const [couponCode, setCouponCode] = useState('');
@@ -25,28 +26,37 @@ export function Coupon() {
     setIsLoading(true);
 
     try {
-      // TODO: Replace with your API endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (couponCode.toUpperCase() === 'NOVAERA2024') {
-        const bonus = 500;
-        updateCoins((user?.coins || 0) + bonus);
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.COUPONS.REDEEM), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ code: couponCode }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        const newBalance = (user?.coins || 0) + data.data.coins;
+        updateCoins(newBalance);
         toast({
-          title: 'Coupon redeemed!',
-          description: `You received ${bonus} coins.`,
+          title: '🎉 Coupon redeemed!',
+          description: data.message || `You received ${data.data.coins} coins!`,
         });
         setCouponCode('');
       } else {
         toast({
           title: 'Invalid coupon',
-          description: 'The code entered is not valid or has expired.',
+          description: data.error || 'The code entered is not valid or has expired.',
           variant: 'destructive',
         });
       }
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'There was an error redeeming the coupon. Please try again.',
+        description: 'Could not connect to server. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -78,6 +88,7 @@ export function Coupon() {
             placeholder="Enter your code here..."
             value={couponCode}
             onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+            onKeyDown={(e) => e.key === 'Enter' && handleRedeem()}
             className="text-center text-lg tracking-widest"
           />
           <Button 
@@ -85,7 +96,11 @@ export function Coupon() {
             className="w-full gap-2"
             disabled={isLoading}
           >
-            <Gift className="h-4 w-4" />
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Gift className="h-4 w-4" />
+            )}
             {isLoading ? 'Redeeming...' : 'Redeem Coupon'}
           </Button>
         </CardContent>
