@@ -1,22 +1,40 @@
-import { useState } from 'react';
-import { User, Upload, Check } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { User, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
+// Avatares predefinidos (puedes añadir más en public/avatars/)
 const defaultAvatars = [
-  '/placeholder.svg',
-  '/placeholder.svg',
-  '/placeholder.svg',
-  '/placeholder.svg',
-  '/placeholder.svg',
-  '/placeholder.svg',
+  '/avatars/1.png',
+  '/avatars/2.png',
+  '/avatars/3.png',
+  '/avatars/4.png',
+  '/avatars/5.png',
+  '/avatars/6.png',
+  '/avatars/7.png',
+  '/avatars/8.png',
+  '/avatars/9.png',
+  '/avatars/10.png',
+  '/avatars/11.png',
+  '/avatars/12.png',
 ];
 
 export function Avatar() {
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
+  const [currentAvatar, setCurrentAvatar] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  useEffect(() => {
+    // Cargar avatar guardado localmente
+    const savedAvatar = localStorage.getItem(`avatar_${user?.id}`);
+    if (savedAvatar) {
+      setCurrentAvatar(savedAvatar);
+    }
+  }, [user]);
 
   const handleSave = async () => {
     if (!selectedAvatar) {
@@ -31,13 +49,16 @@ export function Avatar() {
     setIsLoading(true);
 
     try {
-      // TODO: Replace with your API endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Guardar avatar localmente (o puedes crear un endpoint en el backend)
+      localStorage.setItem(`avatar_${user?.id}`, selectedAvatar);
+      setCurrentAvatar(selectedAvatar);
 
       toast({
-        title: 'Avatar updated',
+        title: '✅ Avatar updated',
         description: 'Your avatar has been changed successfully.',
       });
+      
+      setSelectedAvatar(null);
     } catch (error) {
       toast({
         title: 'Error',
@@ -63,13 +84,23 @@ export function Avatar() {
             <CardTitle>Current Avatar</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center gap-4">
-            <div className="w-32 h-32 rounded-full bg-primary/20 flex items-center justify-center border-4 border-primary/30">
-              <User className="h-16 w-16 text-primary" />
+            <div className="w-32 h-32 rounded-full bg-primary/20 flex items-center justify-center border-4 border-primary/30 overflow-hidden">
+              {currentAvatar ? (
+                <img 
+                  src={currentAvatar} 
+                  alt="Current avatar" 
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              ) : (
+                <User className="h-16 w-16 text-primary" />
+              )}
             </div>
-            <Button variant="outline" className="gap-2">
-              <Upload className="h-4 w-4" />
-              Upload image
-            </Button>
+            <p className="text-sm text-muted-foreground text-center">
+              {user?.username || 'User'}
+            </p>
           </CardContent>
         </Card>
 
@@ -80,7 +111,7 @@ export function Avatar() {
             <CardDescription>Select one of the preset avatars</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-4">
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-4">
               {defaultAvatars.map((avatar, index) => (
                 <button
                   key={index}
@@ -91,7 +122,14 @@ export function Avatar() {
                       : 'border-border hover:border-primary/50'
                   }`}
                 >
-                  <img src={avatar} alt={`Avatar ${index + 1}`} className="w-full h-full object-cover" />
+                  <img 
+                    src={avatar} 
+                    alt={`Avatar ${index + 1}`} 
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder.svg';
+                    }}
+                  />
                   {selectedAvatar === avatar && (
                     <div className="absolute inset-0 bg-primary/50 flex items-center justify-center">
                       <Check className="h-6 w-6 text-white" />
@@ -106,7 +144,14 @@ export function Avatar() {
               className="w-full mt-6"
               disabled={!selectedAvatar || isLoading}
             >
-              {isLoading ? 'Saving...' : 'Save Avatar'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                'Save Avatar'
+              )}
             </Button>
           </CardContent>
         </Card>

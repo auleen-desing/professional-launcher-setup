@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Lock, Eye, EyeOff, Shield } from 'lucide-react';
+import { Lock, Eye, EyeOff, Shield, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
+import { API_CONFIG, buildApiUrl } from '@/config/api';
 
 export function Password() {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -32,10 +33,10 @@ export function Password() {
       return;
     }
 
-    if (newPassword.length < 8) {
+    if (newPassword.length < 6) {
       toast({
         title: 'Error',
-        description: 'Password must be at least 8 characters long.',
+        description: 'Password must be at least 6 characters long.',
         variant: 'destructive',
       });
       return;
@@ -44,21 +45,40 @@ export function Password() {
     setIsLoading(true);
 
     try {
-      // TODO: Replace with your API endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      toast({
-        title: 'Password updated',
-        description: 'Your password has been changed successfully.',
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.USER.PASSWORD), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ 
+          currentPassword, 
+          newPassword 
+        }),
       });
 
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
+      const data = await response.json();
+
+      if (data.success) {
+        toast({
+          title: '✅ Password updated',
+          description: 'Your password has been changed successfully.',
+        });
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      } else {
+        toast({
+          title: 'Error',
+          description: data.error || 'Current password is incorrect.',
+          variant: 'destructive',
+        });
+      }
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Current password is incorrect.',
+        description: 'Could not connect to server.',
         variant: 'destructive',
       });
     } finally {
@@ -124,7 +144,14 @@ export function Password() {
               className="w-full"
               disabled={isLoading}
             >
-              {isLoading ? 'Updating...' : 'Change Password'}
+              {isLoading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                'Change Password'
+              )}
             </Button>
           </CardContent>
         </Card>
@@ -139,7 +166,7 @@ export function Password() {
           <CardContent className="space-y-3 text-sm text-muted-foreground">
             <p>For a secure password:</p>
             <ul className="list-disc list-inside space-y-1">
-              <li>Use at least 8 characters</li>
+              <li>Use at least 6 characters</li>
               <li>Mix uppercase and lowercase letters</li>
               <li>Include numbers and symbols</li>
               <li>Do not use personal information</li>
