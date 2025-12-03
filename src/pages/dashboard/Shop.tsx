@@ -1,44 +1,80 @@
-import { useState } from 'react';
-import { ShoppingCart, Sparkles, Shield, Sword, Crown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ShoppingCart, Sparkles, Shield, Sword, Crown, Package, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { API_CONFIG, buildApiUrl } from '@/config/api';
 
 interface ShopItem {
-  id: string;
+  id: number;
   name: string;
   description: string;
   price: number;
-  icon: React.ElementType;
-  category: 'weapon' | 'armor' | 'consumable' | 'special';
+  itemVNum: number;
+  quantity: number;
+  category: string;
   discount?: number;
 }
 
-const shopItems: ShopItem[] = [
-  { id: '1', name: 'Legendary Sword', description: '+50 ATK', price: 5000, icon: Sword, category: 'weapon' },
-  { id: '2', name: 'Divine Armour', description: '+100 DEF', price: 7500, icon: Shield, category: 'armor', discount: 20 },
-  { id: '3', name: 'Power Elixir', description: '+20% DMG for 1h', price: 500, icon: Sparkles, category: 'consumable' },
-  { id: '4', name: 'Royal Crown', description: 'Exclusive cosmetic', price: 10000, icon: Crown, category: 'special' },
-  { id: '5', name: 'Shadow Dagger', description: '+30 ATK, +10 CRIT', price: 3500, icon: Sword, category: 'weapon' },
-  { id: '6', name: 'Dragon Shield', description: '+80 DEF, +Fire Resist', price: 6000, icon: Shield, category: 'armor' },
-];
+const categoryIcons: Record<string, any> = {
+  weapon: Sword,
+  armor: Shield,
+  consumable: Sparkles,
+  special: Crown,
+  default: Package,
+};
 
-const categoryLabels = {
-  weapon: { label: 'Weapon', color: 'bg-red-500' },
-  armor: { label: 'Armour', color: 'bg-blue-500' },
-  consumable: { label: 'Consumable', color: 'bg-green-500' },
-  special: { label: 'Special', color: 'bg-purple-500' },
+const categoryColors: Record<string, string> = {
+  weapon: 'bg-red-500',
+  armor: 'bg-blue-500',
+  consumable: 'bg-green-500',
+  special: 'bg-purple-500',
+  default: 'bg-gray-500',
 };
 
 export function Shop() {
-  const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [items, setItems] = useState<ShopItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [purchasing, setPurchasing] = useState<number | null>(null);
   const { toast } = useToast();
-  const { user, updateCoins } = useAuth();
+  const { user, updateCoins, refreshUser } = useAuth();
+
+  useEffect(() => {
+    fetchItems();
+  }, []);
+
+  const fetchItems = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.SHOP.ITEMS));
+      const data = await response.json();
+      
+      if (data.success) {
+        setItems(data.data);
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to load shop items',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Shop error:', error);
+      toast({
+        title: 'Error',
+        description: 'Could not connect to server',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handlePurchase = async (item: ShopItem) => {
-    const finalPrice = item.discount ? item.price * (1 - item.discount / 100) : item.price;
+    const finalPrice = item.discount ? Math.floor(item.price * (1 - item.discount / 100)) : item.price;
 
     if ((user?.coins || 0) < finalPrice) {
       toast({
@@ -52,25 +88,61 @@ export function Shop() {
     setPurchasing(item.id);
 
     try {
-      // TODO: Replace with your API endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      updateCoins((user?.coins || 0) - finalPrice);
-
-      toast({
-        title: 'Purchase successful!',
-        description: `You bought ${item.name}.`,
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.SHOP.PURCHASE), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ itemId: item.id }),
       });
+
+      const data = await response.json();
+
+      if (data.success) {
+        updateCoins(data.data.newBalance);
+        toast({
+          title: 'Purchase successful!',
+          description: `You bought ${item.name}. Check your in-game mail!`,
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: data.error || 'Could not complete the purchase.',
+          variant: 'destructive',
+        });
+      }
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'Could not complete the purchase.',
+        description: 'Could not connect to server',
         variant: 'destructive',
       });
     } finally {
       setPurchasing(null);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold text-gradient-gold">Shop</h1>
+          <p className="text-muted-foreground mt-2">Buy items with your coins</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <Skeleton className="h-32 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -79,57 +151,76 @@ export function Shop() {
         <p className="text-muted-foreground mt-2">Buy items with your coins</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {shopItems.map((item) => {
-          const category = categoryLabels[item.category];
-          const finalPrice = item.discount ? item.price * (1 - item.discount / 100) : item.price;
+      {items.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <Package className="h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">No items available</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {items.map((item) => {
+            const IconComponent = categoryIcons[item.category] || categoryIcons.default;
+            const categoryColor = categoryColors[item.category] || categoryColors.default;
+            const finalPrice = item.discount ? Math.floor(item.price * (1 - item.discount / 100)) : item.price;
 
-          return (
-            <Card key={item.id} className="hover:border-primary/50 transition-all">
-              <CardHeader className="pb-2">
-                <div className="flex items-start justify-between">
-                  <div className="p-3 bg-primary/10 rounded-lg">
-                    <item.icon className="h-8 w-8 text-primary" />
+            return (
+              <Card key={item.id} className="hover:border-primary/50 transition-all">
+                <CardHeader className="pb-2">
+                  <div className="flex items-start justify-between">
+                    <div className="p-3 bg-primary/10 rounded-lg">
+                      <IconComponent className="h-8 w-8 text-primary" />
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <Badge className={`${categoryColor} text-white`}>
+                        {item.category}
+                      </Badge>
+                      {item.discount && item.discount > 0 && (
+                        <Badge variant="destructive">-{item.discount}%</Badge>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <Badge className={`${category.color} text-white`}>
-                      {category.label}
-                    </Badge>
-                    {item.discount && (
-                      <Badge variant="destructive">-{item.discount}%</Badge>
-                    )}
-                  </div>
-                </div>
-                <CardTitle className="mt-3">{item.name}</CardTitle>
-                <CardDescription>{item.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <div>
-                    {item.discount && (
-                      <span className="text-sm text-muted-foreground line-through mr-2">
-                        {item.price.toLocaleString()}
+                  <CardTitle className="mt-3">{item.name}</CardTitle>
+                  <CardDescription>{item.description}</CardDescription>
+                  {item.quantity > 1 && (
+                    <p className="text-xs text-muted-foreground">Quantity: x{item.quantity}</p>
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      {item.discount && item.discount > 0 && (
+                        <span className="text-sm text-muted-foreground line-through mr-2">
+                          {item.price.toLocaleString()}
+                        </span>
+                      )}
+                      <span className="text-2xl font-bold text-primary">
+                        {finalPrice.toLocaleString()}
                       </span>
-                    )}
-                    <span className="text-2xl font-bold text-primary">
-                      {finalPrice.toLocaleString()}
-                    </span>
-                    <span className="text-sm text-muted-foreground ml-1">coins</span>
+                      <span className="text-sm text-muted-foreground ml-1">coins</span>
+                    </div>
+                    <Button 
+                      size="sm" 
+                      onClick={() => handlePurchase(item)}
+                      disabled={purchasing === item.id}
+                    >
+                      {purchasing === item.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <>
+                          <ShoppingCart className="h-4 w-4 mr-1" />
+                          Buy
+                        </>
+                      )}
+                    </Button>
                   </div>
-                  <Button 
-                    size="sm" 
-                    onClick={() => handlePurchase(item)}
-                    disabled={purchasing === item.id}
-                  >
-                    <ShoppingCart className="h-4 w-4 mr-1" />
-                    {purchasing === item.id ? 'Buying...' : 'Buy'}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
