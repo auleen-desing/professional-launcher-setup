@@ -1,8 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const { sql, poolPromise } = require('../config/database');
 const { generateToken, authMiddleware } = require('../middleware/auth');
+
+// SHA512 hash function (NosTale standard)
+function sha512(password) {
+  return crypto.createHash('sha512').update(password, 'utf8').digest('hex');
+}
 
 // POST /api/auth/login
 router.post('/login', async (req, res) => {
@@ -15,10 +20,10 @@ router.post('/login', async (req, res) => {
 
     const pool = await poolPromise;
     const result = await pool.request()
-      .input('username', sql.VarChar, username)
+      .input('username', sql.NVarChar, username)
       .query(`
-        SELECT AccountId, Name, Password, Authority, Email, Coins
-        FROM account 
+        SELECT AccountId, Name, Password, Authority, Email, coins
+        FROM Account 
         WHERE Name = @username
       `);
 
@@ -28,9 +33,9 @@ router.post('/login', async (req, res) => {
 
     const user = result.recordset[0];
 
-    // Compare password (NosTale typically uses plain text or SHA512)
-    const isValidPassword = password === user.Password || 
-      await bcrypt.compare(password, user.Password);
+    // Compare SHA512 hashed password
+    const hashedPassword = sha512(password);
+    const isValidPassword = hashedPassword.toLowerCase() === user.Password.toLowerCase();
 
     if (!isValidPassword) {
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
@@ -46,7 +51,7 @@ router.post('/login', async (req, res) => {
           id: user.AccountId,
           username: user.Name,
           email: user.Email || '',
-          coins: user.Coins || 0,
+          coins: user.coins || 0,
           authority: user.Authority || 0
         }
       }
@@ -66,7 +71,6 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ success: false, error: 'All fields required' });
     }
 
-    // Validate input
     if (username.length < 3 || username.length > 20) {
       return res.status(400).json({ success: false, error: 'Username must be 3-20 characters' });
     }
@@ -79,29 +83,29 @@ router.post('/register', async (req, res) => {
     
     // Check if user exists
     const existing = await pool.request()
-      .input('username', sql.VarChar, username)
-      .query('SELECT AccountId FROM account WHERE Name = @username');
+      .input('username', sql.NVarChar, username)
+      .query('SELECT AccountId FROM Account WHERE Name = @username');
 
     if (existing.recordset.length > 0) {
       return res.status(400).json({ success: false, error: 'Username already exists' });
     }
 
-    // Insert new user - Adjusted for standard NosTale account table
-    // Most NosTale tables have: AccountId (identity), Name, Password, Authority
-    // Email and Coins columns may need to be added manually
+    // Hash password with SHA512
+    const hashedPassword = sha512(password);
+
+    // Insert new user - matching your exact schema
     await pool.request()
-      .input('username', sql.VarChar, username)
-      .input('password', sql.VarChar, password)
-      .input('email', sql.VarChar, email)
+      .input('username', sql.NVarChar, username)
+      .input('password', sql.VarChar, hashedPassword)
+      .input('email', sql.NVarChar, email)
       .query(`
-        INSERT INTO account (Name, Password, Authority, Email)
-        VALUES (@username, @password, 0, @email)
+        INSERT INTO Account (Name, Password, Email, Authority, ReferrerId, IsConnected, coins, DailyRewardSent, CanUseCP)
+        VALUES (@username, @password, @email, 0, 0, 0, 0, 0, 0)
       `);
 
     res.json({ success: true, message: 'Account created successfully' });
   } catch (err) {
     console.error('Register error:', err);
-    // Return detailed error for debugging
     res.status(500).json({ 
       success: false, 
       error: 'Server error', 
@@ -115,8 +119,8 @@ router.get('/session', authMiddleware, async (req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
-      .input('id', sql.Int, req.user.id)
-      .query('SELECT AccountId, Name, Email, Authority, Coins FROM account WHERE AccountId = @id');
+      .input('id', sql.BigInt, req.user.id)
+      .query('SELECT AccountId, Name, Email, Authority, coins FROM Account WHERE AccountId = @id');
 
     if (result.recordset.length === 0) {
       return res.status(404).json({ success: false, error: 'User not found' });
@@ -130,7 +134,7 @@ router.get('/session', authMiddleware, async (req, res) => {
           id: user.AccountId,
           username: user.Name,
           email: user.Email || '',
-          coins: user.Coins || 0,
+          coins: user.coins || 0,
           authority: user.Authority || 0
         }
       }
