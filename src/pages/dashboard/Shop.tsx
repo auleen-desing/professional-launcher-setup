@@ -170,7 +170,16 @@ export function Shop() {
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between">
                     <div className="p-3 bg-primary/10 rounded-lg">
-                      <IconComponent className="h-8 w-8 text-primary" />
+                      <img 
+                        src={`/items/${item.itemVNum}.png`} 
+                        alt={item.name}
+                        className="h-12 w-12 object-contain"
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none';
+                          e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                      <IconComponent className="h-8 w-8 text-primary hidden" />
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <Badge className={`${categoryColor} text-white`}>
