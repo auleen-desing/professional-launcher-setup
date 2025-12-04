@@ -111,14 +111,15 @@ export function BuyCoins() {
       const transactionId = data.transactionId;
       const totalCoins = selectedPackage.coins + (selectedPackage.bonus || 0);
 
-      // Build PayPal donation URL
+      // Build PayPal payment URL (using _xclick for personal accounts)
       const paypalUrl = new URL('https://www.paypal.com/cgi-bin/webscr');
-      paypalUrl.searchParams.set('cmd', '_donations');
+      paypalUrl.searchParams.set('cmd', '_xclick');
       paypalUrl.searchParams.set('business', PAYPAL_EMAIL);
-      paypalUrl.searchParams.set('item_name', `NovaEra Donation - ${totalCoins.toLocaleString()} NovaCoins`);
+      paypalUrl.searchParams.set('item_name', `NovaEra - ${totalCoins.toLocaleString()} NovaCoins`);
+      paypalUrl.searchParams.set('item_number', transactionId);
       paypalUrl.searchParams.set('amount', selectedPackage.price.toString());
       paypalUrl.searchParams.set('currency_code', 'EUR');
-      paypalUrl.searchParams.set('custom', transactionId); // Used by IPN to identify transaction
+      paypalUrl.searchParams.set('custom', transactionId);
       paypalUrl.searchParams.set('return', RETURN_URL);
       paypalUrl.searchParams.set('cancel_return', CANCEL_URL);
       paypalUrl.searchParams.set('notify_url', IPN_URL);
