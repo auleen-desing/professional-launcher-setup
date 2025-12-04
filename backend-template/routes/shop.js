@@ -3,125 +3,224 @@ const router = express.Router();
 const { sql, poolPromise } = require('../config/database');
 const { authMiddleware } = require('../middleware/auth');
 
-// GET /api/shop/items
+// GET /api/shop/items - Get all shop items with categories
 router.get('/items', async (req, res) => {
   try {
     const pool = await poolPromise;
-    const result = await pool.request()
-      .query(`
-        SELECT Id, ItemVNum, Name, Description, Price, Category, Stock, ImageUrl
-        FROM web_shop_items 
-        WHERE IsActive = 1
-        ORDER BY Category, Name
-      `);
+    
+    // Get items with category names from web_item_shop_items
+    const result = await pool.request().query(`
+      SELECT 
+        i.id,
+        i.vnum,
+        i.amount,
+        i.price,
+        i.description,
+        i.unique_purchase,
+        i.show_in_home,
+        i.upgrade,
+        i.rarity,
+        i.category_id,
+        i.speed,
+        i.level,
+        c.name as category_name
+      FROM web_item_shop_items i
+      LEFT JOIN web_item_shop_categories c ON i.category_id = c.id
+      ORDER BY c.name, i.price
+    `);
 
-    res.json({ success: true, data: result.recordset });
+    const items = result.recordset.map(item => ({
+      id: item.id,
+      name: `Item ${item.vnum}`,
+      itemVNum: item.vnum,
+      quantity: parseInt(item.amount) || 1,
+      price: item.price,
+      description: item.description || '',
+      category: item.category_name || 'General',
+      categoryId: item.category_id,
+      upgrade: item.upgrade,
+      rarity: item.rarity,
+      speed: item.speed,
+      level: item.level,
+      uniquePurchase: item.unique_purchase,
+      showInHome: item.show_in_home
+    }));
+
+    res.json({ success: true, data: items });
   } catch (err) {
-    // Return mock data if table doesn't exist
-    res.json({ 
-      success: true, 
-      data: [
-        { Id: 1, ItemVNum: 1012, Name: 'Wings of Death', Price: 5000, Category: 'wings' },
-        { Id: 2, ItemVNum: 4099, Name: 'SP Card Box', Price: 2500, Category: 'sp' },
-        { Id: 3, ItemVNum: 1030, Name: 'Rare Pet Bead', Price: 3000, Category: 'pets' }
-      ]
-    });
+    console.error('Shop items error:', err);
+    res.status(500).json({ success: false, error: 'Failed to load shop items' });
   }
 });
 
-// GET /api/shop/categories
+// GET /api/shop/categories - Get all categories from web_item_shop_categories
 router.get('/categories', async (req, res) => {
-  res.json({
-    success: true,
-    data: [
-      { id: 'wings', name: 'Wings', icon: '🦋' },
-      { id: 'sp', name: 'SP Cards', icon: '🃏' },
-      { id: 'pets', name: 'Pets', icon: '🐾' },
-      { id: 'costumes', name: 'Costumes', icon: '👗' },
-      { id: 'consumables', name: 'Consumables', icon: '🧪' },
-      { id: 'equipment', name: 'Equipment', icon: '⚔️' }
-    ]
-  });
+  try {
+    const pool = await poolPromise;
+    
+    const result = await pool.request().query(`
+      SELECT id, name, master_category
+      FROM web_item_shop_categories
+      ORDER BY name
+    `);
+
+    res.json({ success: true, data: result.recordset });
+  } catch (err) {
+    console.error('Categories error:', err);
+    res.status(500).json({ success: false, error: 'Failed to load categories' });
+  }
 });
 
-// POST /api/shop/purchase
-router.post('/purchase', authMiddleware, async (req, res) => {
+// GET /api/shop/packages - Get coin packages from web_item_shop_coin_prices
+router.get('/packages', async (req, res) => {
   try {
-    const { itemId, characterId, quantity = 1 } = req.body;
+    const pool = await poolPromise;
+    
+    const result = await pool.request().query(`
+      SELECT id, coins, payment_method, price
+      FROM web_item_shop_coin_prices
+      WHERE payment_method = 'paypal'
+      ORDER BY price
+    `);
+
+    const packages = result.recordset.map(pkg => ({
+      id: pkg.id,
+      coins: pkg.coins,
+      price: pkg.price,
+      bonus: 0
+    }));
+
+    res.json({ success: true, data: packages });
+  } catch (err) {
+    console.error('Packages error:', err);
+    res.status(500).json({ success: false, error: 'Failed to load packages' });
+  }
+});
+
+// POST /api/shop/purchase - Purchase an item
+router.post('/purchase', authMiddleware, async (req, res) => {
+  const { itemId, characterId } = req.body;
+
+  if (!itemId) {
+    return res.status(400).json({ success: false, error: 'Item ID is required' });
+  }
+
+  try {
     const pool = await poolPromise;
 
-    // Get item info
+    // Get item details from web_item_shop_items
     const itemResult = await pool.request()
       .input('itemId', sql.Int, itemId)
-      .query('SELECT * FROM web_shop_items WHERE Id = @itemId AND IsActive = 1');
+      .query('SELECT * FROM web_item_shop_items WHERE id = @itemId');
 
     if (itemResult.recordset.length === 0) {
       return res.status(404).json({ success: false, error: 'Item not found' });
     }
 
     const item = itemResult.recordset[0];
-    const totalPrice = item.Price * quantity;
 
-    // Check user coins
+    // Get user's current coins
     const userResult = await pool.request()
-      .input('id', sql.Int, req.user.id)
-      .query('SELECT Coins FROM account WHERE AccountId = @id');
+      .input('accountId', sql.BigInt, req.user.id)
+      .query('SELECT Coins FROM account WHERE AccountId = @accountId');
 
-    const userCoins = userResult.recordset[0]?.Coins || 0;
-    if (userCoins < totalPrice) {
-      return res.status(400).json({ success: false, error: 'Insufficient coins' });
+    if (userResult.recordset.length === 0) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    const userCoins = userResult.recordset[0].Coins || 0;
+
+    if (userCoins < item.price) {
+      return res.status(400).json({ 
+        success: false, 
+        error: `Insufficient coins. You need ${item.price} coins.` 
+      });
+    }
+
+    // Check if unique purchase and already purchased
+    if (item.unique_purchase) {
+      const purchaseCheck = await pool.request()
+        .input('accountId', sql.BigInt, req.user.id)
+        .input('itemId', sql.Int, itemId)
+        .query(`
+          SELECT COUNT(*) as count 
+          FROM web_shop_logs 
+          WHERE AccountId = @accountId AND ItemId = @itemId
+        `);
+      
+      if (purchaseCheck.recordset[0].count > 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'You have already purchased this unique item' 
+        });
+      }
+    }
+
+    // Get a character to send the item to
+    let targetCharId = characterId;
+    if (!targetCharId) {
+      const charResult = await pool.request()
+        .input('accountId', sql.BigInt, req.user.id)
+        .query('SELECT TOP 1 CharacterId FROM character WHERE AccountId = @accountId');
+      
+      if (charResult.recordset.length === 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'No character found. Create a character first.' 
+        });
+      }
+      targetCharId = charResult.recordset[0].CharacterId;
     }
 
     // Deduct coins
     await pool.request()
-      .input('id', sql.Int, req.user.id)
-      .input('price', sql.Int, totalPrice)
-      .query('UPDATE account SET Coins = Coins - @price WHERE AccountId = @id');
+      .input('accountId', sql.BigInt, req.user.id)
+      .input('price', sql.Int, item.price)
+      .query('UPDATE account SET Coins = Coins - @price WHERE AccountId = @accountId');
 
-    // Add item to character (insert into mail or inventory)
+    // Send item to character mail
     await pool.request()
-      .input('charId', sql.Int, characterId)
-      .input('vnum', sql.Int, item.ItemVNum)
-      .input('amount', sql.Int, quantity)
+      .input('characterId', sql.BigInt, targetCharId)
+      .input('vnum', sql.Int, item.vnum)
+      .input('amount', sql.Int, parseInt(item.amount) || 1)
+      .input('upgrade', sql.Int, item.upgrade || 0)
+      .input('rarity', sql.Int, item.rarity || 0)
       .query(`
-        INSERT INTO mail (ReceiverId, SenderName, Title, Message, ItemVNum, ItemAmount, Date)
-        VALUES (@charId, 'WebShop', 'Shop Purchase', 'Your item from the web shop!', @vnum, @amount, GETDATE())
+        INSERT INTO mail (ReceiverId, SenderId, Date, Header, Body, IsSenderCopy, ItemVNum, Amount, Upgrade, Rarity)
+        VALUES (@characterId, 0, GETDATE(), 'Web Shop', 'Thank you for your purchase!', 0, @vnum, @amount, @upgrade, @rarity)
       `);
 
-    // Log purchase
-    await pool.request()
-      .input('accountId', sql.Int, req.user.id)
-      .input('itemId', sql.Int, itemId)
-      .input('charId', sql.Int, characterId)
-      .input('price', sql.Int, totalPrice)
-      .query(`
-        INSERT INTO web_shop_logs (AccountId, ItemId, CharacterId, Price, Date)
-        VALUES (@accountId, @itemId, @charId, @price, GETDATE())
-      `);
+    // Log the purchase (optional - table may not exist)
+    try {
+      await pool.request()
+        .input('accountId', sql.BigInt, req.user.id)
+        .input('itemId', sql.Int, itemId)
+        .input('price', sql.Int, item.price)
+        .query(`
+          INSERT INTO web_shop_logs (AccountId, ItemId, Price, PurchaseDate)
+          VALUES (@accountId, @itemId, @price, GETDATE())
+        `);
+    } catch (logError) {
+      console.log('Shop log table may not exist:', logError.message);
+    }
+
+    // Get new balance
+    const newBalanceResult = await pool.request()
+      .input('accountId', sql.BigInt, req.user.id)
+      .query('SELECT Coins FROM account WHERE AccountId = @accountId');
 
     res.json({ 
       success: true, 
-      message: 'Purchase successful! Check your in-game mail.',
-      data: { newBalance: userCoins - totalPrice }
+      data: { 
+        newBalance: newBalanceResult.recordset[0].Coins,
+        message: 'Item purchased successfully! Check your in-game mail.'
+      } 
     });
+
   } catch (err) {
     console.error('Purchase error:', err);
-    res.status(500).json({ success: false, error: 'Server error' });
+    res.status(500).json({ success: false, error: 'Purchase failed' });
   }
-});
-
-// GET /api/shop/packages (coin packages)
-router.get('/packages', async (req, res) => {
-  res.json({
-    success: true,
-    data: [
-      { id: 1, name: 'Starter Pack', coins: 1000, price: 5, bonus: 0 },
-      { id: 2, name: 'Explorer Pack', coins: 2500, price: 10, bonus: 250 },
-      { id: 3, name: 'Adventurer Pack', coins: 5500, price: 20, bonus: 500 },
-      { id: 4, name: 'Hero Pack', coins: 12000, price: 40, bonus: 1200 },
-      { id: 5, name: 'Legend Pack', coins: 30000, price: 80, bonus: 5000 }
-    ]
-  });
 });
 
 module.exports = router;
