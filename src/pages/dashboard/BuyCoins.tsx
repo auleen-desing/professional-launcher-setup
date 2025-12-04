@@ -134,6 +134,9 @@ export function BuyCoins() {
         item_number: String(selectedPackage.id),
         return: RETURN_URL,
         cancel_return: CANCEL_URL,
+        rm: '2', // Return method - POST data and auto-redirect
+        no_shipping: '1', // No shipping address required
+        no_note: '1', // No note field
       };
 
       Object.entries(fields).forEach(([name, value]) => {
