@@ -42,9 +42,16 @@ router.post('/create-donation', authMiddleware, async (req, res) => {
   }
 });
 
-// PayPal IPN handler
+// PayPal IPN handler - needs raw body for verification
 router.post('/ipn', async (req, res) => {
-  console.log('[PayPal IPN] Received notification:', req.body);
+  // Get raw body for verification - req.body is already parsed
+  const rawBody = Object.keys(req.body)
+    .map(key => `${key}=${encodeURIComponent(req.body[key])}`)
+    .join('&');
+  
+  console.log('[PayPal IPN] Received notification');
+  console.log('[PayPal IPN] Payment status:', req.body.payment_status);
+  console.log('[PayPal IPN] Custom (transaction ID):', req.body.custom);
 
   // Immediately respond to PayPal
   res.status(200).send('OK');
@@ -52,8 +59,8 @@ router.post('/ipn', async (req, res) => {
   try {
     const params = req.body;
 
-    // Verify IPN with PayPal
-    const verifyBody = 'cmd=_notify-validate&' + new URLSearchParams(params).toString();
+    // Verify IPN with PayPal using the raw body
+    const verifyBody = 'cmd=_notify-validate&' + rawBody;
     
     const verified = await verifyWithPayPal(verifyBody);
     
