@@ -27,7 +27,7 @@ export function BuyCoins() {
   const PAYPAL_EMAIL = 'novaeranostale@gmail.com';
   const RETURN_URL = `${window.location.origin}/dashboard/coins?donation=success`;
   const CANCEL_URL = `${window.location.origin}/dashboard/coins?donation=canceled`;
-  const IPN_URL = buildApiUrl('/api/payments/paypal/ipn');
+  const IPN_URL = buildApiUrl('/payments/paypal/ipn');
 
   useEffect(() => {
     fetchPackages();
@@ -89,7 +89,7 @@ export function BuyCoins() {
     try {
       // Create pending donation in database
       const token = localStorage.getItem('novaera_token');
-      const response = await fetch(buildApiUrl('/api/payments/paypal/create-donation'), {
+      const response = await fetch(buildApiUrl('/payments/paypal/create-donation'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
