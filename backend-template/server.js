@@ -11,6 +11,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
 }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // For PayPal IPN
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
@@ -23,6 +24,7 @@ app.use('/api/daily', require('./routes/daily'));
 app.use('/api/roulette', require('./routes/roulette'));
 app.use('/api/coupons', require('./routes/coupons'));
 app.use('/api/character', require('./routes/character'));
+app.use('/api/payments/paypal', require('./routes/paypal'));
 
 // Health check
 app.get('/api/health', (req, res) => {

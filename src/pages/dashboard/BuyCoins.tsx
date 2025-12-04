@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Wallet, Check, Coins, Sparkles, Zap, Loader2, CreditCard } from 'lucide-react';
+import { Wallet, Check, Coins, Sparkles, Zap, Loader2, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -23,6 +23,12 @@ export function BuyCoins() {
   const { toast } = useToast();
   const { user, refreshUser } = useAuth();
 
+  // PayPal donation config
+  const PAYPAL_EMAIL = 'novaeranostale@gmail.com';
+  const RETURN_URL = `${window.location.origin}/dashboard/coins?donation=success`;
+  const CANCEL_URL = `${window.location.origin}/dashboard/coins?donation=canceled`;
+  const IPN_URL = buildApiUrl('/api/payments/paypal/ipn');
+
   useEffect(() => {
     fetchPackages();
   }, []);
@@ -39,7 +45,6 @@ export function BuyCoins() {
         }));
         setPackages(packagesWithPopular);
       } else {
-        // Fallback to default packages if API fails
         setPackages([
           { id: '1', name: 'Starter', coins: 1000, price: 5 },
           { id: '2', name: 'Popular', coins: 5000, price: 20, bonus: 500, popular: true },
@@ -49,7 +54,6 @@ export function BuyCoins() {
       }
     } catch (error) {
       console.error('Error fetching packages:', error);
-      // Fallback packages
       setPackages([
         { id: '1', name: 'Starter', coins: 1000, price: 5 },
         { id: '2', name: 'Popular', coins: 5000, price: 20, bonus: 500, popular: true },
@@ -61,7 +65,7 @@ export function BuyCoins() {
     }
   };
 
-  const handlePayPalCheckout = async () => {
+  const handleDonation = async () => {
     if (!selectedPackage) {
       toast({
         title: 'Select a package',
@@ -74,118 +78,101 @@ export function BuyCoins() {
     if (!user) {
       toast({
         title: 'Login required',
-        description: 'Please login to purchase coins.',
+        description: 'Please login to donate.',
         variant: 'destructive',
       });
       return;
     }
 
-    const token = localStorage.getItem('novaera_token');
-
     setIsProcessing(true);
 
     try {
-      // Create PayPal order
-      const response = await fetch(buildApiUrl('/api/payments/paypal/create-order'), {
+      // Create pending donation in database
+      const token = localStorage.getItem('novaera_token');
+      const response = await fetch(buildApiUrl('/api/payments/paypal/create-donation'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ packageId: String(selectedPackage.id) }),
+        body: JSON.stringify({ 
+          packageId: String(selectedPackage.id),
+          coins: selectedPackage.coins + (selectedPackage.bonus || 0),
+          amount: selectedPackage.price
+        }),
       });
 
       const data = await response.json();
 
-      if (data.success && data.approveUrl) {
-        // Store order ID for capture after return
-        localStorage.setItem('pendingPayPalOrder', JSON.stringify({
-          orderId: data.orderId,
-          packageId: selectedPackage.id,
-          coins: selectedPackage.coins + (selectedPackage.bonus || 0),
-        }));
-        
-        // Redirect to PayPal
-        window.location.href = data.approveUrl;
-      } else {
-        throw new Error(data.error || 'Failed to create PayPal order');
+      if (!data.success || !data.transactionId) {
+        throw new Error(data.error || 'Failed to create donation record');
       }
+
+      const transactionId = data.transactionId;
+      const totalCoins = selectedPackage.coins + (selectedPackage.bonus || 0);
+
+      // Build PayPal donation URL
+      const paypalUrl = new URL('https://www.paypal.com/cgi-bin/webscr');
+      paypalUrl.searchParams.set('cmd', '_donations');
+      paypalUrl.searchParams.set('business', PAYPAL_EMAIL);
+      paypalUrl.searchParams.set('item_name', `NovaEra Donation - ${totalCoins.toLocaleString()} NovaCoins`);
+      paypalUrl.searchParams.set('amount', selectedPackage.price.toString());
+      paypalUrl.searchParams.set('currency_code', 'EUR');
+      paypalUrl.searchParams.set('custom', transactionId); // Used by IPN to identify transaction
+      paypalUrl.searchParams.set('return', RETURN_URL);
+      paypalUrl.searchParams.set('cancel_return', CANCEL_URL);
+      paypalUrl.searchParams.set('notify_url', IPN_URL);
+      paypalUrl.searchParams.set('no_shipping', '1');
+      paypalUrl.searchParams.set('no_note', '1');
+
+      // Store pending donation info locally
+      localStorage.setItem('pendingDonation', JSON.stringify({
+        transactionId,
+        coins: totalCoins,
+        amount: selectedPackage.price,
+      }));
+
+      // Redirect to PayPal
+      window.location.href = paypalUrl.toString();
     } catch (error) {
-      console.error('PayPal checkout error:', error);
+      console.error('Donation error:', error);
       toast({
         title: 'Error',
-        description: 'Could not initiate PayPal checkout. Please try again.',
+        description: 'Could not initiate donation. Please try again.',
         variant: 'destructive',
       });
-    } finally {
       setIsProcessing(false);
     }
   };
 
-  // Check for PayPal return
+  // Check for donation return
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const paypalSuccess = urlParams.get('paypal_success');
-    const paypalCanceled = urlParams.get('paypal_canceled');
+    const donationStatus = urlParams.get('donation');
 
-    if (paypalSuccess === '1') {
-      capturePayPalOrder();
-    } else if (paypalCanceled === '1') {
+    if (donationStatus === 'success') {
+      const pendingDonation = localStorage.getItem('pendingDonation');
+      if (pendingDonation) {
+        const { coins } = JSON.parse(pendingDonation);
+        toast({
+          title: 'Thank you for your donation!',
+          description: `Your ${coins.toLocaleString()} NovaCoins will be credited once PayPal confirms the payment.`,
+        });
+        localStorage.removeItem('pendingDonation');
+      }
+      // Refresh user to check if coins were already credited
+      refreshUser();
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (donationStatus === 'canceled') {
       toast({
-        title: 'Payment Canceled',
-        description: 'Your PayPal payment was canceled.',
+        title: 'Donation Canceled',
+        description: 'Your donation was canceled.',
         variant: 'destructive',
       });
-      // Clean URL
+      localStorage.removeItem('pendingDonation');
       window.history.replaceState({}, '', window.location.pathname);
     }
   }, []);
-
-  const capturePayPalOrder = async () => {
-    const pendingOrder = localStorage.getItem('pendingPayPalOrder');
-    if (!pendingOrder) return;
-
-    const { orderId, coins } = JSON.parse(pendingOrder);
-    const token = localStorage.getItem('novaera_token');
-    setIsProcessing(true);
-
-    try {
-      const response = await fetch(buildApiUrl('/api/payments/paypal/capture-order'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({ orderId }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast({
-          title: 'Payment Successful!',
-          description: `${coins.toLocaleString()} NovaCoins have been added to your account!`,
-        });
-        
-        // Refresh user profile to update coin balance
-        await refreshUser();
-      } else {
-        throw new Error(data.error || 'Payment capture failed');
-      }
-    } catch (error) {
-      console.error('Capture error:', error);
-      toast({
-        title: 'Error',
-        description: 'Could not complete payment. Please contact support.',
-        variant: 'destructive',
-      });
-    } finally {
-      localStorage.removeItem('pendingPayPalOrder');
-      setIsProcessing(false);
-      // Clean URL
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  };
 
   const getPackageName = (pkg: CoinPackage): string => {
     if (pkg.name) return pkg.name;
@@ -206,8 +193,8 @@ export function BuyCoins() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-display font-bold text-gradient-cyan">Buy NovaCoins</h1>
-        <p className="text-muted-foreground mt-2">Select a package and pay securely with PayPal</p>
+        <h1 className="text-3xl font-display font-bold text-gradient-cyan">Support NovaEra</h1>
+        <p className="text-muted-foreground mt-2">Donate to receive NovaCoins - PayPal donations only</p>
       </div>
 
       {/* Packages */}
@@ -239,7 +226,7 @@ export function BuyCoins() {
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center space-y-3">
-              <p className="text-4xl font-display font-black text-primary">${pkg.price}</p>
+              <p className="text-4xl font-display font-black text-primary">€{pkg.price}</p>
               {pkg.bonus && pkg.bonus > 0 && (
                 <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-neon-green/20 text-neon-green text-sm font-medium">
                   <Zap className="h-3 w-3" />
@@ -254,37 +241,36 @@ export function BuyCoins() {
               )}
             </CardContent>
             
-            {/* Hover effect */}
             <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
           </Card>
         ))}
       </div>
 
-      {/* PayPal Checkout */}
+      {/* Donation Info */}
       <Card className="border-border/50">
         <CardHeader>
           <CardTitle className="font-display flex items-center gap-2">
-            <CreditCard className="h-5 w-5" />
-            Secure Payment
+            <Heart className="h-5 w-5 text-red-500" />
+            PayPal Donation
           </CardTitle>
-          <CardDescription>Pay securely with PayPal - coins are credited instantly!</CardDescription>
+          <CardDescription>Support the server with a donation and receive NovaCoins</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="bg-card rounded-xl p-6 border border-border/50">
             <div className="flex items-center gap-3 mb-3">
               <Wallet className="h-8 w-8 text-[#0070ba]" />
               <div>
-                <h4 className="font-semibold">PayPal Checkout</h4>
-                <p className="text-sm text-muted-foreground">Instant delivery of NovaCoins</p>
+                <h4 className="font-semibold">PayPal Donation</h4>
+                <p className="text-sm text-muted-foreground">Secure donation via PayPal</p>
               </div>
             </div>
             <p className="text-sm text-muted-foreground">
-              Your NovaCoins will be credited automatically after payment confirmation.
+              Your NovaCoins will be credited automatically once PayPal confirms your donation (usually within a few minutes).
             </p>
           </div>
 
           <Button 
-            onClick={handlePayPalCheckout}
+            onClick={handleDonation}
             className="w-full mt-6 gap-2 glow-cyan"
             size="lg"
             disabled={!selectedPackage || isProcessing}
@@ -296,8 +282,8 @@ export function BuyCoins() {
               </>
             ) : selectedPackage ? (
               <>
-                <Wallet className="h-4 w-4" />
-                Pay ${selectedPackage.price} with PayPal
+                <Heart className="h-4 w-4" />
+                Donate €{selectedPackage.price} via PayPal
               </>
             ) : (
               'Select a package'
