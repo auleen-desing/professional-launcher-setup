@@ -111,21 +111,6 @@ export function BuyCoins() {
       const transactionId = data.transactionId;
       const totalCoins = selectedPackage.coins + (selectedPackage.bonus || 0);
 
-      // Build PayPal payment URL (using _xclick for personal accounts)
-      const paypalUrl = new URL('https://www.paypal.com/cgi-bin/webscr');
-      paypalUrl.searchParams.set('cmd', '_xclick');
-      paypalUrl.searchParams.set('business', PAYPAL_EMAIL);
-      paypalUrl.searchParams.set('item_name', `NovaEra - ${totalCoins.toLocaleString()} NovaCoins`);
-      paypalUrl.searchParams.set('item_number', transactionId);
-      paypalUrl.searchParams.set('amount', selectedPackage.price.toString());
-      paypalUrl.searchParams.set('currency_code', 'EUR');
-      paypalUrl.searchParams.set('custom', transactionId);
-      paypalUrl.searchParams.set('return', RETURN_URL);
-      paypalUrl.searchParams.set('cancel_return', CANCEL_URL);
-      paypalUrl.searchParams.set('notify_url', IPN_URL);
-      paypalUrl.searchParams.set('no_shipping', '1');
-      paypalUrl.searchParams.set('no_note', '1');
-
       // Store pending donation info locally
       localStorage.setItem('pendingDonation', JSON.stringify({
         transactionId,
@@ -133,8 +118,34 @@ export function BuyCoins() {
         amount: selectedPackage.price,
       }));
 
-      // Redirect to PayPal
-      window.location.href = paypalUrl.toString();
+      // Create and submit PayPal form (POST method like the working PHP version)
+      const form = document.createElement('form');
+      form.method = 'POST';
+      form.action = 'https://www.paypal.com/cgi-bin/webscr';
+
+      const fields = {
+        cmd: '_donations',
+        business: PAYPAL_EMAIL,
+        item_name: 'Server donation',
+        amount: selectedPackage.price.toString(),
+        custom: transactionId,
+        currency_code: 'EUR',
+        notify_url: IPN_URL,
+        item_number: String(selectedPackage.id),
+        return: RETURN_URL,
+        cancel_return: CANCEL_URL,
+      };
+
+      Object.entries(fields).forEach(([name, value]) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
     } catch (error) {
       console.error('Donation error:', error);
       toast({
