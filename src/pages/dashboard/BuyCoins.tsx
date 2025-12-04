@@ -24,7 +24,7 @@ export function BuyCoins() {
   const { user, refreshUser } = useAuth();
 
   // PayPal donation config
-  const PAYPAL_EMAIL = 'novaeranostale@gmail.com';
+  const PAYPAL_EMAIL = 'pincjx771@gmail.com';
   const RETURN_URL = `${window.location.origin}/dashboard/coins?donation=success`;
   const CANCEL_URL = `${window.location.origin}/dashboard/coins?donation=canceled`;
   const IPN_URL = buildApiUrl('/payments/paypal/ipn');
