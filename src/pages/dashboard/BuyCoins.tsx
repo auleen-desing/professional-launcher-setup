@@ -33,13 +33,24 @@ export function BuyCoins() {
     setIsProcessing(true);
 
     try {
-      // TODO: Replace with your API endpoint
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      toast({
-        title: 'Processing payment...',
-        description: `Redirecting to ${paymentMethod}...`,
-      });
+      if (paymentMethod === 'paypal') {
+        // Open PayPal donation link
+        const donationUrl = `https://www.paypal.com/donate/?business=${encodeURIComponent(API_CONFIG.PAYPAL_EMAIL)}&amount=${selectedPackage.price}&currency_code=USD&item_name=${encodeURIComponent(`NovaEra Donation - ${selectedPackage.coins} NovaCoins`)}`;
+        window.open(donationUrl, '_blank');
+        
+        toast({
+          title: 'PayPal Donation',
+          description: 'After donating, contact us with your transaction ID to receive your NovaCoins.',
+        });
+      } else {
+        // TODO: Implement other payment methods
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        toast({
+          title: 'Processing payment...',
+          description: `Redirecting to ${paymentMethod}...`,
+        });
+      }
     } catch (error) {
       toast({
         title: 'Error',
@@ -151,12 +162,15 @@ export function BuyCoins() {
                 <div className="flex items-center gap-3 mb-3">
                   <Wallet className="h-8 w-8 text-[#0070ba]" />
                   <div>
-                    <h4 className="font-semibold">PayPal</h4>
-                    <p className="text-sm text-muted-foreground">Pay with your PayPal account</p>
+                    <h4 className="font-semibold">PayPal Donation</h4>
+                    <p className="text-sm text-muted-foreground">Support us with a donation</p>
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Use your PayPal balance or linked card. Fast and secure.
+                  Make a donation via PayPal. After donating, contact us with your transaction ID to receive your NovaCoins.
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Email: <span className="text-primary font-medium">{API_CONFIG.PAYPAL_EMAIL}</span>
                 </p>
               </div>
             </TabsContent>
@@ -187,8 +201,11 @@ export function BuyCoins() {
               'Processing...'
             ) : selectedPackage ? (
               <>
-                <CreditCard className="h-4 w-4" />
-                Pay ${selectedPackage.price} with {paymentMethod}
+                {paymentMethod === 'paypal' ? <Wallet className="h-4 w-4" /> : <CreditCard className="h-4 w-4" />}
+                {paymentMethod === 'paypal' 
+                  ? `Donate $${selectedPackage.price} via PayPal`
+                  : `Pay $${selectedPackage.price} with ${paymentMethod}`
+                }
               </>
             ) : (
               'Select a package'
