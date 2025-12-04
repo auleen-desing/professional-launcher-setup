@@ -1,47 +1,57 @@
-import { useState } from 'react';
-import { Calendar, Gift, Clock, CheckCircle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Calendar, Gift, Clock, CheckCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { buildApiUrl } from '@/config/api';
 
-const dailyRewards = [
-  { day: 1, coins: 50, claimed: true },
-  { day: 2, coins: 75, claimed: true },
-  { day: 3, coins: 100, claimed: true },
-  { day: 4, coins: 150, claimed: false, current: true },
-  { day: 5, coins: 200, claimed: false },
-  { day: 6, coins: 300, claimed: false },
-  { day: 7, coins: 500, claimed: false, special: true },
-];
+interface DailyRewardItem {
+  day: number;
+  coins: number;
+  itemVNum?: number;
+  itemAmount?: number;
+  special?: boolean;
+  claimed?: boolean;
+  current?: boolean;
+}
+
+interface DailyStatus {
+  canClaim: boolean;
+  streak: number;
+  currentDay: number;
+  rewards: DailyRewardItem[];
+  nextReward: DailyRewardItem | null;
+}
 
 export function DailyReward() {
-  const [claimed, setClaimed] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [status, setStatus] = useState<DailyStatus | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isClaiming, setIsClaiming] = useState(false);
   const { toast } = useToast();
   const { updateCoins, user } = useAuth();
 
-  const currentReward = dailyRewards.find(r => r.current);
-
-  const handleClaim = async () => {
-    setIsLoading(true);
-
+  const fetchStatus = async () => {
     try {
-      // TODO: Replace with your API endpoint
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(buildApiUrl('/daily/status'), {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       
-      if (currentReward) {
-        updateCoins((user?.coins || 0) + currentReward.coins);
-        setClaimed(true);
-        toast({
-          title: 'Reward claimed!',
-          description: `You received ${currentReward.coins} coins.`,
-        });
+      const data = await response.json();
+      
+      if (data.success) {
+        setStatus(data.data);
+      } else {
+        throw new Error(data.error || 'Error al obtener estado');
       }
     } catch (error) {
+      console.error('Error fetching daily status:', error);
       toast({
         title: 'Error',
-        description: 'You have already claimed your reward today.',
+        description: 'No se pudo cargar el estado de recompensas diarias',
         variant: 'destructive',
       });
     } finally {
@@ -49,11 +59,73 @@ export function DailyReward() {
     }
   };
 
+  useEffect(() => {
+    fetchStatus();
+  }, []);
+
+  const handleClaim = async () => {
+    setIsClaiming(true);
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch(buildApiUrl('/daily/claim'), {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        const { coinsReward, newBalance, day, itemVNum, itemAmount } = data.data;
+        
+        updateCoins(newBalance);
+        
+        let description = `¡Recibiste ${coinsReward} coins!`;
+        if (itemVNum && itemAmount > 0) {
+          description += ` + ${itemAmount} item(s)`;
+        }
+        
+        toast({
+          title: `¡Recompensa del Día ${day} reclamada!`,
+          description,
+        });
+        
+        // Refresh status
+        await fetchStatus();
+      } else {
+        throw new Error(data.error || 'Error al reclamar');
+      }
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'No se pudo reclamar la recompensa',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsClaiming(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const rewards = status?.rewards || [];
+  const currentReward = status?.nextReward;
+  const canClaim = status?.canClaim || false;
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gradient-gold">Daily Reward</h1>
-        <p className="text-muted-foreground mt-2">Claim your reward every day</p>
+        <h1 className="text-3xl font-bold text-gradient-gold">Recompensa Diaria</h1>
+        <p className="text-muted-foreground mt-2">Reclama tu recompensa cada día</p>
       </div>
 
       {/* Weekly Progress */}
@@ -61,13 +133,15 @@ export function DailyReward() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-primary" />
-            Weekly Progress
+            Progreso Semanal
           </CardTitle>
-          <CardDescription>Log in every day to increase your rewards</CardDescription>
+          <CardDescription>
+            Racha actual: {status?.streak || 0} días
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-7 gap-2">
-            {dailyRewards.map((reward) => (
+            {rewards.map((reward) => (
               <div
                 key={reward.day}
                 className={`relative p-3 rounded-lg border text-center transition-all ${
@@ -81,10 +155,13 @@ export function DailyReward() {
                 {reward.claimed && (
                   <CheckCircle className="absolute -top-2 -right-2 h-5 w-5 text-primary bg-background rounded-full" />
                 )}
-                <p className="text-xs text-muted-foreground">Day {reward.day}</p>
+                <p className="text-xs text-muted-foreground">Día {reward.day}</p>
                 <p className={`text-lg font-bold ${reward.special ? 'text-yellow-500' : 'text-foreground'}`}>
                   {reward.coins}
                 </p>
+                {reward.itemVNum && (
+                  <p className="text-xs text-muted-foreground">+Item</p>
+                )}
                 {reward.special && (
                   <Gift className="h-4 w-4 mx-auto text-yellow-500 mt-1" />
                 )}
@@ -97,29 +174,43 @@ export function DailyReward() {
       {/* Claim Button */}
       <Card className="max-w-md">
         <CardContent className="pt-6 text-center space-y-4">
-          {claimed ? (
+          {!canClaim ? (
             <div className="space-y-2">
               <CheckCircle className="h-16 w-16 text-primary mx-auto" />
-              <p className="text-lg font-medium">Reward claimed!</p>
+              <p className="text-lg font-medium">¡Recompensa reclamada!</p>
               <div className="flex items-center justify-center gap-2 text-muted-foreground">
                 <Clock className="h-4 w-4" />
-                <span>Come back tomorrow for your next reward</span>
+                <span>Vuelve mañana para tu próxima recompensa</span>
               </div>
             </div>
           ) : (
             <>
               <div className="space-y-2">
                 <Gift className="h-16 w-16 text-primary mx-auto animate-bounce" />
-                <p className="text-lg font-medium">Your reward is ready!</p>
-                <p className="text-3xl font-bold text-primary">{currentReward?.coins} Coins</p>
+                <p className="text-lg font-medium">¡Tu recompensa está lista!</p>
+                <p className="text-3xl font-bold text-primary">
+                  {currentReward?.coins || 0} Coins
+                </p>
+                {currentReward?.itemVNum && currentReward?.itemAmount && (
+                  <p className="text-sm text-muted-foreground">
+                    + {currentReward.itemAmount} Item(s)
+                  </p>
+                )}
               </div>
               <Button 
                 onClick={handleClaim} 
                 size="lg" 
                 className="w-full"
-                disabled={isLoading}
+                disabled={isClaiming}
               >
-                {isLoading ? 'Claiming...' : 'Claim Reward'}
+                {isClaiming ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Reclamando...
+                  </>
+                ) : (
+                  'Reclamar Recompensa'
+                )}
               </Button>
             </>
           )}
