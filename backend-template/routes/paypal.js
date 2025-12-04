@@ -80,27 +80,6 @@ router.post('/ipn', async (req, res) => {
 
     console.log('[PayPal IPN] Processing completed payment...');
 
-    // Extract relevant fields
-    const paymentStatus = params.payment_status;
-    const transactionId = params.custom; // Our transaction ID
-    const paypalTxnId = params.txn_id;
-    const receiverEmail = params.receiver_email;
-    const paymentAmount = parseFloat(params.mc_gross);
-    const paymentCurrency = params.mc_currency;
-
-    // Verify receiver email matches
-    const expectedEmail = process.env.PAYPAL_EMAIL || 'novaeranostale@gmail.com';
-    if (receiverEmail.toLowerCase() !== expectedEmail.toLowerCase()) {
-      console.error(`[PayPal IPN] Receiver email mismatch: ${receiverEmail} vs ${expectedEmail}`);
-      return;
-    }
-
-    // Only process completed payments
-    if (paymentStatus !== 'Completed') {
-      console.log(`[PayPal IPN] Payment status: ${paymentStatus} - not processing`);
-      return;
-    }
-
     const pool = await poolPromise;
 
     // Find the pending donation
