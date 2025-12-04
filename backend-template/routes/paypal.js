@@ -136,8 +136,14 @@ router.post('/ipn', async (req, res) => {
 // Verify IPN with PayPal
 function verifyWithPayPal(body) {
   return new Promise((resolve) => {
+    // Default to live mode - use 'sandbox' only if explicitly set
+    const useSandbox = process.env.PAYPAL_MODE === 'sandbox';
+    const hostname = useSandbox ? 'ipnpb.sandbox.paypal.com' : 'ipnpb.paypal.com';
+    
+    console.log(`[PayPal IPN] Verifying with ${hostname}`);
+    
     const options = {
-      hostname: process.env.PAYPAL_MODE === 'live' ? 'ipnpb.paypal.com' : 'ipnpb.sandbox.paypal.com',
+      hostname: hostname,
       port: 443,
       path: '/cgi-bin/webscr',
       method: 'POST',
