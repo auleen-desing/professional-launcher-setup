@@ -183,11 +183,9 @@ router.post('/purchase', authMiddleware, async (req, res) => {
       .input('characterId', sql.BigInt, targetCharId)
       .input('vnum', sql.Int, item.vnum)
       .input('amount', sql.Int, parseInt(item.amount) || 1)
-      .input('upgrade', sql.Int, item.upgrade || 0)
-      .input('rarity', sql.Int, item.rarity || 0)
       .query(`
-        INSERT INTO mail (ReceiverId, SenderId, Date, Header, Body, IsSenderCopy, ItemVNum, Amount, Upgrade, Rarity)
-        VALUES (@characterId, 0, GETDATE(), 'Web Shop', 'Thank you for your purchase!', 0, @vnum, @amount, @upgrade, @rarity)
+        INSERT INTO mail (ReceiverId, SenderId, Date, Header, SenderClass, IsSenderCopy, ItemVNum, Amount)
+        VALUES (@characterId, 0, GETDATE(), 'Web Shop', 0, 0, @vnum, @amount)
       `);
 
     // Log the purchase (optional - table may not exist)
