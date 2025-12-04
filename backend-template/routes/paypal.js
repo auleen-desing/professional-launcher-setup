@@ -42,12 +42,20 @@ router.post('/create-donation', authMiddleware, async (req, res) => {
   }
 });
 
+// Test endpoint to verify IPN URL is accessible
+router.get('/ipn-test', (req, res) => {
+  console.log('[PayPal IPN] Test endpoint hit');
+  res.json({ success: true, message: 'IPN endpoint is accessible', timestamp: new Date() });
+});
+
 // PayPal IPN handler
 router.post('/ipn', async (req, res) => {
   console.log('[PayPal IPN] ========== RECEIVED ==========');
+  console.log('[PayPal IPN] Method:', req.method);
+  console.log('[PayPal IPN] Content-Type:', req.headers['content-type']);
   console.log('[PayPal IPN] Raw body:', JSON.stringify(req.body, null, 2));
 
-  // Immediately respond to PayPal
+  // IMPORTANT: Respond to PayPal immediately with 200
   res.status(200).send('OK');
 
   try {
