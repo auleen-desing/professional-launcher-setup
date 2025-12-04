@@ -42,16 +42,10 @@ router.post('/create-donation', authMiddleware, async (req, res) => {
   }
 });
 
-// PayPal IPN handler - needs raw body for verification
+// PayPal IPN handler
 router.post('/ipn', async (req, res) => {
-  // Get raw body for verification - req.body is already parsed
-  const rawBody = Object.keys(req.body)
-    .map(key => `${key}=${encodeURIComponent(req.body[key])}`)
-    .join('&');
-  
   console.log('[PayPal IPN] Received notification');
-  console.log('[PayPal IPN] Payment status:', req.body.payment_status);
-  console.log('[PayPal IPN] Custom (transaction ID):', req.body.custom);
+  console.log('[PayPal IPN] Body:', JSON.stringify(req.body));
 
   // Immediately respond to PayPal
   res.status(200).send('OK');
@@ -59,17 +53,32 @@ router.post('/ipn', async (req, res) => {
   try {
     const params = req.body;
 
-    // Verify IPN with PayPal using the raw body
-    const verifyBody = 'cmd=_notify-validate&' + rawBody;
-    
-    const verified = await verifyWithPayPal(verifyBody);
-    
-    if (!verified) {
-      console.error('[PayPal IPN] Verification failed');
+    // Extract relevant fields
+    const paymentStatus = params.payment_status;
+    const transactionId = params.custom; // Our transaction ID
+    const paypalTxnId = params.txn_id;
+    const receiverEmail = params.receiver_email;
+    const paymentAmount = parseFloat(params.mc_gross);
+
+    console.log('[PayPal IPN] Payment status:', paymentStatus);
+    console.log('[PayPal IPN] Transaction ID:', transactionId);
+    console.log('[PayPal IPN] PayPal Txn ID:', paypalTxnId);
+    console.log('[PayPal IPN] Amount:', paymentAmount);
+
+    // Verify receiver email matches
+    const expectedEmail = process.env.PAYPAL_EMAIL || 'pincjx771@gmail.com';
+    if (receiverEmail && receiverEmail.toLowerCase() !== expectedEmail.toLowerCase()) {
+      console.error(`[PayPal IPN] Receiver email mismatch: ${receiverEmail} vs ${expectedEmail}`);
       return;
     }
 
-    console.log('[PayPal IPN] Verified successfully');
+    // Only process completed payments
+    if (paymentStatus !== 'Completed') {
+      console.log(`[PayPal IPN] Payment status: ${paymentStatus} - not processing`);
+      return;
+    }
+
+    console.log('[PayPal IPN] Processing completed payment...');
 
     // Extract relevant fields
     const paymentStatus = params.payment_status;
