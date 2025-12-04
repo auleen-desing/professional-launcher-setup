@@ -181,11 +181,13 @@ router.post('/purchase', authMiddleware, async (req, res) => {
     // Send item to character mail
     await pool.request()
       .input('characterId', sql.BigInt, targetCharId)
-      .input('vnum', sql.Int, item.vnum)
-      .input('amount', sql.Int, parseInt(item.amount) || 1)
+      .input('vnum', sql.SmallInt, item.vnum)
+      .input('amount', sql.SmallInt, parseInt(item.amount) || 1)
+      .input('upgrade', sql.TinyInt, item.upgrade || 0)
+      .input('rarity', sql.TinyInt, item.rarity || 0)
       .query(`
-        INSERT INTO mail (ReceiverId, SenderId, Date, Header, SenderClass, IsSenderCopy, ItemVNum, Amount)
-        VALUES (@characterId, 0, GETDATE(), 'Web Shop', 0, 0, @vnum, @amount)
+        INSERT INTO mail (ReceiverId, SenderId, Date, Title, Message, SenderClass, IsSenderCopy, IsOpened, AttachmentVNum, AttachmentAmount, AttachmentUpgrade, AttachmentRarity)
+        VALUES (@characterId, 0, GETDATE(), 'Web Shop', 'Thank you for your purchase!', 0, 0, 0, @vnum, @amount, @upgrade, @rarity)
       `);
 
     // Log the purchase (optional - table may not exist)
