@@ -21,6 +21,7 @@ import { Shop } from "./pages/dashboard/Shop";
 import { Password } from "./pages/dashboard/Password";
 import Characters from "./pages/dashboard/Characters";
 import Rankings from "./pages/dashboard/Rankings";
+import Launcher from "./pages/Launcher";
 
 // Admin imports
 import { AdminLayout } from "./components/admin/AdminLayout";
@@ -78,6 +79,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<Index />} />
+      <Route path="/launcher" element={<Launcher />} />
       <Route path="/login" element={<Login />} />
       
       {/* Dashboard Routes */}
