@@ -1,22 +1,53 @@
-import { useState } from 'react';
-import { Wallet, Check, Coins, Sparkles, Zap } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Wallet, Check, Coins, Sparkles, Zap, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { CoinPackage } from '@/types/user';
-import { API_CONFIG } from '@/config/api';
+import { API_CONFIG, buildApiUrl } from '@/config/api';
 
-const coinPackages: CoinPackage[] = [
-  { id: '1', name: 'Starter', coins: 1000, price: 5 },
-  { id: '2', name: 'Popular', coins: 5000, price: 20, bonus: 500, popular: true },
-  { id: '3', name: 'Premium', coins: 12000, price: 45, bonus: 2000 },
-  { id: '4', name: 'Ultimate', coins: 30000, price: 100, bonus: 8000 },
-];
+interface CoinPackage {
+  id: number;
+  coins: number;
+  price: number;
+  bonus?: number;
+  popular?: boolean;
+}
 
 export function BuyCoins() {
+  const [packages, setPackages] = useState<CoinPackage[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<CoinPackage | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+
+  useEffect(() => {
+    fetchPackages();
+  }, []);
+
+  const fetchPackages = async () => {
+    try {
+      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.SHOP.PACKAGES));
+      const data = await response.json();
+      
+      if (data.success && data.data) {
+        // Mark the second package as popular if there are multiple
+        const packagesWithPopular = data.data.map((pkg: CoinPackage, index: number) => ({
+          ...pkg,
+          popular: index === 1 && data.data.length > 1
+        }));
+        setPackages(packagesWithPopular);
+      }
+    } catch (error) {
+      console.error('Error fetching packages:', error);
+      toast({
+        title: 'Error',
+        description: 'Could not load coin packages.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handlePurchase = async () => {
     if (!selectedPackage) {
@@ -50,6 +81,21 @@ export function BuyCoins() {
     }
   };
 
+  const getPackageName = (coins: number): string => {
+    if (coins >= 30000) return 'Ultimate';
+    if (coins >= 10000) return 'Premium';
+    if (coins >= 5000) return 'Popular';
+    return 'Starter';
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div>
@@ -59,7 +105,7 @@ export function BuyCoins() {
 
       {/* Packages */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {coinPackages.map((pkg) => (
+        {packages.map((pkg) => (
           <Card 
             key={pkg.id}
             className={`relative cursor-pointer transition-all duration-300 overflow-hidden group ${
@@ -80,14 +126,14 @@ export function BuyCoins() {
               }`}>
                 {pkg.popular ? <Sparkles className="h-6 w-6 text-white" /> : <Coins className="h-6 w-6 text-primary" />}
               </div>
-              <CardTitle className="text-xl font-display">{pkg.name}</CardTitle>
+              <CardTitle className="text-xl font-display">{getPackageName(pkg.coins)}</CardTitle>
               <CardDescription className="text-lg font-semibold text-foreground">
                 {pkg.coins.toLocaleString()} NovaCoins
               </CardDescription>
             </CardHeader>
             <CardContent className="text-center space-y-3">
               <p className="text-4xl font-display font-black text-primary">${pkg.price}</p>
-              {pkg.bonus && (
+              {pkg.bonus && pkg.bonus > 0 && (
                 <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-neon-green/20 text-neon-green text-sm font-medium">
                   <Zap className="h-3 w-3" />
                   +{pkg.bonus.toLocaleString()} bonus
@@ -106,6 +152,12 @@ export function BuyCoins() {
           </Card>
         ))}
       </div>
+
+      {packages.length === 0 && !isLoading && (
+        <div className="text-center py-8 text-muted-foreground">
+          No coin packages available at the moment.
+        </div>
+      )}
 
       {/* PayPal Donation */}
       <Card className="border-border/50">
