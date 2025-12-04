@@ -88,7 +88,7 @@ export function Shop() {
     setPurchasing(item.id);
 
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('novaera_token');
       const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.SHOP.PURCHASE), {
         method: 'POST',
         headers: {
