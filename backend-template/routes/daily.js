@@ -3,51 +3,104 @@ const router = express.Router();
 const { sql, poolPromise } = require('../config/database');
 const { authMiddleware } = require('../middleware/auth');
 
-const DAILY_REWARDS = [
-  { day: 1, coins: 100 },
-  { day: 2, coins: 150 },
-  { day: 3, coins: 200 },
-  { day: 4, coins: 300 },
-  { day: 5, coins: 400 },
-  { day: 6, coins: 500 },
-  { day: 7, coins: 1000 }
-];
-
-// GET /api/daily/status
+// GET /api/daily/status - Get daily reward status and prizes from database
 router.get('/status', authMiddleware, async (req, res) => {
   try {
     const pool = await poolPromise;
-    const result = await pool.request()
+    
+    // Get prizes from web_daily_rewards_prize table
+    const prizesResult = await pool.request()
+      .query(`
+        SELECT Day, Coins, ItemVNum, ItemAmount, IsSpecial 
+        FROM web_daily_rewards_prize 
+        ORDER BY Day ASC
+      `);
+    
+    const prizes = prizesResult.recordset.map(p => ({
+      day: p.Day,
+      coins: p.Coins || 0,
+      itemVNum: p.ItemVNum,
+      itemAmount: p.ItemAmount || 0,
+      special: p.IsSpecial === 1 || p.IsSpecial === true
+    }));
+
+    // Get user's daily reward status
+    const statusResult = await pool.request()
       .input('accountId', sql.Int, req.user.id)
       .query(`
         SELECT LastClaim, Streak FROM web_daily_rewards WHERE AccountId = @accountId
       `);
 
-    const data = result.recordset[0];
-    const today = new Date().toDateString();
-    const lastClaim = data?.LastClaim ? new Date(data.LastClaim).toDateString() : null;
-    const canClaim = lastClaim !== today;
-    const streak = data?.Streak || 0;
+    const data = statusResult.recordset[0];
+    const today = new Date();
+    const todayStr = today.toDateString();
+    const lastClaim = data?.LastClaim ? new Date(data.LastClaim) : null;
+    const lastClaimStr = lastClaim ? lastClaim.toDateString() : null;
+    
+    // Check if can claim today
+    const canClaim = lastClaimStr !== todayStr;
+    
+    // Calculate current streak and day
+    let streak = data?.Streak || 0;
+    let currentDay = 1;
+    
+    if (lastClaim) {
+      const dayDiff = Math.floor((today - lastClaim) / (1000 * 60 * 60 * 24));
+      
+      if (dayDiff === 0) {
+        // Claimed today, show next day
+        currentDay = (streak % prizes.length) + 1;
+      } else if (dayDiff === 1) {
+        // Yesterday claim, continue streak
+        currentDay = (streak % prizes.length) + 1;
+      } else {
+        // Streak broken, reset to day 1
+        currentDay = 1;
+        streak = 0;
+      }
+    }
+
+    // Mark which days are claimed and current
+    const rewardsWithStatus = prizes.map((prize, index) => ({
+      ...prize,
+      claimed: index < (streak % prizes.length) || (index < streak && !canClaim),
+      current: index + 1 === currentDay && canClaim
+    }));
+
+    console.log(`[Daily] User ${req.user.id} - Streak: ${streak}, CurrentDay: ${currentDay}, CanClaim: ${canClaim}`);
 
     res.json({
       success: true,
       data: {
         canClaim,
         streak,
-        currentDay: (streak % 7) + 1,
-        rewards: DAILY_REWARDS
+        currentDay,
+        rewards: rewardsWithStatus,
+        nextReward: canClaim ? prizes[currentDay - 1] : null
       }
     });
   } catch (err) {
-    res.json({ success: true, data: { canClaim: true, streak: 0, currentDay: 1, rewards: DAILY_REWARDS } });
+    console.error('[Daily] Status error:', err);
+    res.status(500).json({ success: false, error: 'Error fetching daily status' });
   }
 });
 
-// POST /api/daily/claim
+// POST /api/daily/claim - Claim daily reward
 router.post('/claim', authMiddleware, async (req, res) => {
   try {
     const pool = await poolPromise;
     
+    // Get prizes from database
+    const prizesResult = await pool.request()
+      .query(`
+        SELECT Day, Coins, ItemVNum, ItemAmount, IsSpecial 
+        FROM web_daily_rewards_prize 
+        ORDER BY Day ASC
+      `);
+    
+    const prizes = prizesResult.recordset;
+    const maxDays = prizes.length;
+
     // Check if already claimed today
     const statusResult = await pool.request()
       .input('accountId', sql.Int, req.user.id)
@@ -58,22 +111,32 @@ router.post('/claim', authMiddleware, async (req, res) => {
     const lastClaim = data?.LastClaim ? new Date(data.LastClaim) : null;
 
     if (lastClaim && lastClaim.toDateString() === today.toDateString()) {
-      return res.status(400).json({ success: false, error: 'Already claimed today' });
+      return res.status(400).json({ success: false, error: 'Ya reclamaste tu recompensa hoy' });
     }
 
-    // Calculate streak
-    let streak = 1;
+    // Calculate new streak
+    let newStreak = 1;
     if (lastClaim) {
       const dayDiff = Math.floor((today - lastClaim) / (1000 * 60 * 60 * 24));
-      streak = dayDiff === 1 ? (data.Streak % 7) + 1 : 1;
+      if (dayDiff === 1) {
+        // Continue streak
+        newStreak = ((data.Streak || 0) % maxDays) + 1;
+      } else {
+        // Streak broken, reset
+        newStreak = 1;
+      }
     }
 
-    const reward = DAILY_REWARDS[streak - 1].coins;
+    // Get reward for current day
+    const currentPrize = prizes[newStreak - 1];
+    const coinsReward = currentPrize?.Coins || 0;
+    const itemVNum = currentPrize?.ItemVNum;
+    const itemAmount = currentPrize?.ItemAmount || 0;
 
     // Update or insert daily record
     await pool.request()
       .input('accountId', sql.Int, req.user.id)
-      .input('streak', sql.Int, streak)
+      .input('streak', sql.Int, newStreak)
       .query(`
         MERGE web_daily_rewards AS target
         USING (SELECT @accountId AS AccountId) AS source
@@ -82,16 +145,44 @@ router.post('/claim', authMiddleware, async (req, res) => {
         WHEN NOT MATCHED THEN INSERT (AccountId, LastClaim, Streak) VALUES (@accountId, GETDATE(), @streak);
       `);
 
-    // Add coins
-    await pool.request()
-      .input('accountId', sql.Int, req.user.id)
-      .input('coins', sql.Int, reward)
-      .query('UPDATE account SET Coins = Coins + @coins WHERE AccountId = @accountId');
+    // Add coins to account
+    if (coinsReward > 0) {
+      await pool.request()
+        .input('accountId', sql.Int, req.user.id)
+        .input('coins', sql.Int, coinsReward)
+        .query('UPDATE account SET Coins = Coins + @coins WHERE AccountId = @accountId');
+    }
 
-    res.json({ success: true, data: { reward, newStreak: streak } });
+    // If there's an item reward, add to inventory (you may need to adjust this based on your game's item system)
+    if (itemVNum && itemAmount > 0) {
+      console.log(`[Daily] Item reward: VNum ${itemVNum} x${itemAmount} for user ${req.user.id}`);
+      // TODO: Add item to character inventory if needed
+      // This depends on your game's item delivery system
+    }
+
+    // Get updated coin balance
+    const balanceResult = await pool.request()
+      .input('accountId', sql.Int, req.user.id)
+      .query('SELECT Coins FROM account WHERE AccountId = @accountId');
+    
+    const newBalance = balanceResult.recordset[0]?.Coins || 0;
+
+    console.log(`[Daily] User ${req.user.id} claimed day ${newStreak}: ${coinsReward} coins`);
+
+    res.json({ 
+      success: true, 
+      data: { 
+        day: newStreak,
+        coinsReward,
+        itemVNum,
+        itemAmount,
+        newStreak,
+        newBalance
+      } 
+    });
   } catch (err) {
-    console.error('Daily claim error:', err);
-    res.status(500).json({ success: false, error: 'Server error' });
+    console.error('[Daily] Claim error:', err);
+    res.status(500).json({ success: false, error: 'Error al reclamar recompensa' });
   }
 });
 
