@@ -9,7 +9,7 @@ const { authMiddleware } = require('../middleware/auth');
 router.post('/create-donation', authMiddleware, async (req, res) => {
   try {
     const { packageId, coins, amount } = req.body;
-    const accountId = req.user.id; // JWT token uses 'id' not 'accountId'
+    const accountId = req.user.id;
 
     if (!packageId || !coins || !amount) {
       return res.status(400).json({ success: false, error: 'Missing required fields' });
@@ -44,8 +44,8 @@ router.post('/create-donation', authMiddleware, async (req, res) => {
 
 // PayPal IPN handler
 router.post('/ipn', async (req, res) => {
-  console.log('[PayPal IPN] Received notification');
-  console.log('[PayPal IPN] Body:', JSON.stringify(req.body));
+  console.log('[PayPal IPN] ========== RECEIVED ==========');
+  console.log('[PayPal IPN] Raw body:', JSON.stringify(req.body, null, 2));
 
   // Immediately respond to PayPal
   res.status(200).send('OK');
@@ -53,28 +53,44 @@ router.post('/ipn', async (req, res) => {
   try {
     const params = req.body;
 
+    // Log ALL received fields for debugging
+    console.log('[PayPal IPN] All fields received:');
+    Object.keys(params).forEach(key => {
+      console.log(`  ${key}: ${params[key]}`);
+    });
+
     // Extract relevant fields
     const paymentStatus = params.payment_status;
     const transactionId = params.custom; // Our transaction ID
     const paypalTxnId = params.txn_id;
     const receiverEmail = params.receiver_email;
-    const paymentAmount = parseFloat(params.mc_gross);
+    const paymentAmount = parseFloat(params.mc_gross) || 0;
+    const itemNumber = params.item_number;
 
-    console.log('[PayPal IPN] Payment status:', paymentStatus);
-    console.log('[PayPal IPN] Transaction ID:', transactionId);
-    console.log('[PayPal IPN] PayPal Txn ID:', paypalTxnId);
-    console.log('[PayPal IPN] Amount:', paymentAmount);
+    console.log('[PayPal IPN] Extracted values:');
+    console.log(`  payment_status: ${paymentStatus}`);
+    console.log(`  custom (our txn): ${transactionId}`);
+    console.log(`  txn_id (paypal): ${paypalTxnId}`);
+    console.log(`  receiver_email: ${receiverEmail}`);
+    console.log(`  mc_gross: ${paymentAmount}`);
+    console.log(`  item_number: ${itemNumber}`);
 
-    // Verify receiver email matches
-    const expectedEmail = process.env.PAYPAL_EMAIL || 'pincjx771@gmail.com';
-    if (receiverEmail && receiverEmail.toLowerCase() !== expectedEmail.toLowerCase()) {
-      console.error(`[PayPal IPN] Receiver email mismatch: ${receiverEmail} vs ${expectedEmail}`);
+    // Skip test/verification IPNs
+    if (paypalTxnId === 'TEST123' || !paypalTxnId) {
+      console.log('[PayPal IPN] Skipping test/verification IPN');
       return;
     }
 
     // Only process completed payments
     if (paymentStatus !== 'Completed') {
-      console.log(`[PayPal IPN] Payment status: ${paymentStatus} - not processing`);
+      console.log(`[PayPal IPN] Payment not completed: ${paymentStatus}`);
+      return;
+    }
+
+    // Verify receiver email matches (optional check)
+    const expectedEmail = process.env.PAYPAL_EMAIL || 'pincjx771@gmail.com';
+    if (receiverEmail && receiverEmail.toLowerCase() !== expectedEmail.toLowerCase()) {
+      console.error(`[PayPal IPN] Receiver email mismatch: ${receiverEmail} vs ${expectedEmail}`);
       return;
     }
 
@@ -82,35 +98,46 @@ router.post('/ipn', async (req, res) => {
 
     const pool = await poolPromise;
 
-    // Find the pending donation
-    const donationResult = await pool.request()
-      .input('transactionId', sql.VarChar(100), transactionId)
+    // First try to find by custom field (our transaction ID)
+    let donationResult = await pool.request()
+      .input('transactionId', sql.VarChar(100), transactionId || '')
       .query(`
         SELECT * FROM web_donations 
         WHERE transaction_id = @transactionId AND status = 'pending'
       `);
 
+    // If not found by custom, try to find the most recent pending donation
+    // matching the amount (fallback for when custom field doesn't arrive)
     if (!donationResult.recordset || donationResult.recordset.length === 0) {
-      console.error(`[PayPal IPN] Donation not found or already processed: ${transactionId}`);
+      console.log('[PayPal IPN] Not found by custom field, trying amount match...');
+      
+      donationResult = await pool.request()
+        .input('amount', sql.Decimal(10, 2), paymentAmount)
+        .query(`
+          SELECT TOP 1 * FROM web_donations 
+          WHERE status = 'pending' 
+          AND ABS(amount - @amount) < 0.5
+          ORDER BY created_at DESC
+        `);
+    }
+
+    if (!donationResult.recordset || donationResult.recordset.length === 0) {
+      console.error(`[PayPal IPN] No matching pending donation found`);
+      console.error(`[PayPal IPN] Searched for: custom=${transactionId}, amount=${paymentAmount}`);
       return;
     }
 
     const donation = donationResult.recordset[0];
-
-    // Verify amount matches (allow small variance for currency conversion)
-    if (Math.abs(paymentAmount - donation.amount) > 1) {
-      console.error(`[PayPal IPN] Amount mismatch: received ${paymentAmount}, expected ${donation.amount}`);
-      return;
-    }
+    console.log(`[PayPal IPN] Found donation: ${donation.transaction_id}, account: ${donation.account_id}, coins: ${donation.coins}`);
 
     // Update donation status and add PayPal transaction ID
     await pool.request()
-      .input('transactionId', sql.VarChar(100), transactionId)
+      .input('id', sql.Int, donation.id)
       .input('paypalTxnId', sql.VarChar(100), paypalTxnId)
       .query(`
         UPDATE web_donations 
         SET status = 'completed', paypal_txn_id = @paypalTxnId, completed_at = GETDATE()
-        WHERE transaction_id = @transactionId
+        WHERE id = @id
       `);
 
     // Credit coins to account
@@ -128,44 +155,94 @@ router.post('/ipn', async (req, res) => {
   }
 });
 
-// Verify IPN with PayPal
-function verifyWithPayPal(body) {
-  return new Promise((resolve) => {
-    // Default to live mode - use 'sandbox' only if explicitly set
-    const useSandbox = process.env.PAYPAL_MODE === 'sandbox';
-    const hostname = useSandbox ? 'ipnpb.sandbox.paypal.com' : 'ipnpb.paypal.com';
-    
-    console.log(`[PayPal IPN] Verifying with ${hostname}`);
-    
-    const options = {
-      hostname: hostname,
-      port: 443,
-      path: '/cgi-bin/webscr',
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Content-Length': Buffer.byteLength(body),
-      },
-    };
+// Admin endpoint to manually complete a donation
+router.post('/admin/complete-donation', authMiddleware, async (req, res) => {
+  try {
+    const { transactionId } = req.body;
+    const adminId = req.user.id;
 
-    const req = https.request(options, (res) => {
-      let data = '';
-      res.on('data', (chunk) => data += chunk);
-      res.on('end', () => {
-        console.log('[PayPal IPN] Verify response:', data);
-        resolve(data === 'VERIFIED');
-      });
+    // Check if user is admin (authority >= 100)
+    const pool = await poolPromise;
+    const adminCheck = await pool.request()
+      .input('accountId', sql.Int, adminId)
+      .query(`SELECT Authority FROM Account WHERE AccountId = @accountId`);
+
+    if (!adminCheck.recordset[0] || adminCheck.recordset[0].Authority < 100) {
+      return res.status(403).json({ success: false, error: 'Admin access required' });
+    }
+
+    // Find the pending donation
+    const donationResult = await pool.request()
+      .input('transactionId', sql.VarChar(100), transactionId)
+      .query(`
+        SELECT * FROM web_donations 
+        WHERE transaction_id = @transactionId AND status = 'pending'
+      `);
+
+    if (!donationResult.recordset || donationResult.recordset.length === 0) {
+      return res.status(404).json({ success: false, error: 'Pending donation not found' });
+    }
+
+    const donation = donationResult.recordset[0];
+
+    // Update donation status
+    await pool.request()
+      .input('transactionId', sql.VarChar(100), transactionId)
+      .query(`
+        UPDATE web_donations 
+        SET status = 'completed', completed_at = GETDATE()
+        WHERE transaction_id = @transactionId
+      `);
+
+    // Credit coins to account
+    await pool.request()
+      .input('accountId', sql.Int, donation.account_id)
+      .input('coins', sql.Int, donation.coins)
+      .query(`
+        UPDATE Account SET coins = ISNULL(coins, 0) + @coins WHERE AccountId = @accountId
+      `);
+
+    console.log(`[PayPal Admin] Manually completed donation ${transactionId}: ${donation.coins} coins to account ${donation.account_id}`);
+
+    res.json({ 
+      success: true, 
+      message: `Credited ${donation.coins} coins to account ${donation.account_id}` 
     });
+  } catch (error) {
+    console.error('[PayPal Admin] Error:', error);
+    res.status(500).json({ success: false, error: 'Failed to complete donation' });
+  }
+});
 
-    req.on('error', (err) => {
-      console.error('[PayPal IPN] Verify error:', err);
-      resolve(false);
-    });
+// Get all pending donations (admin only)
+router.get('/admin/pending-donations', authMiddleware, async (req, res) => {
+  try {
+    const adminId = req.user.id;
 
-    req.write(body);
-    req.end();
-  });
-}
+    const pool = await poolPromise;
+    const adminCheck = await pool.request()
+      .input('accountId', sql.Int, adminId)
+      .query(`SELECT Authority FROM Account WHERE AccountId = @accountId`);
+
+    if (!adminCheck.recordset[0] || adminCheck.recordset[0].Authority < 100) {
+      return res.status(403).json({ success: false, error: 'Admin access required' });
+    }
+
+    const result = await pool.request()
+      .query(`
+        SELECT d.*, a.Name as account_name
+        FROM web_donations d
+        LEFT JOIN Account a ON d.account_id = a.AccountId
+        WHERE d.status = 'pending'
+        ORDER BY d.created_at DESC
+      `);
+
+    res.json({ success: true, data: result.recordset });
+  } catch (error) {
+    console.error('[PayPal Admin] Error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch pending donations' });
+  }
+});
 
 // Check donation status (for frontend polling)
 router.get('/donation-status/:transactionId', authMiddleware, async (req, res) => {
