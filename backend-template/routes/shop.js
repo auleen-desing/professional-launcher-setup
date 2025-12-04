@@ -172,11 +172,11 @@ router.post('/purchase', authMiddleware, async (req, res) => {
       targetCharId = charResult.recordset[0].CharacterId;
     }
 
-    // Deduct coins
+    // Deduct coins using stored procedure to bypass trigger
     await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
-      .input('price', sql.Int, item.price)
-      .query('UPDATE account SET Coins = Coins - @price WHERE AccountId = @accountId');
+      .input('amount', sql.Int, item.price)
+      .execute('sp_WebShopDeductCoins');
 
     // Send item to character mail
     await pool.request()
