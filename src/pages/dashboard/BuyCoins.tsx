@@ -27,7 +27,8 @@ export function BuyCoins() {
   const PAYPAL_EMAIL = 'pincjx771@gmail.com';
   const RETURN_URL = `${window.location.origin}/dashboard/buy-coins?donation=success`;
   const CANCEL_URL = `${window.location.origin}/dashboard/buy-coins?donation=canceled`;
-  const IPN_URL = buildApiUrl('/payments/paypal/ipn');
+  // IPN URL must be absolute for PayPal
+  const IPN_URL = `${window.location.origin}/api/payments/paypal/ipn`;
 
   useEffect(() => {
     fetchPackages();
