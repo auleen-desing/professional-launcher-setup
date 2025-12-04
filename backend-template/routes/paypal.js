@@ -3,7 +3,7 @@ const router = express.Router();
 const sql = require('mssql');
 const crypto = require('crypto');
 const https = require('https');
-const authMiddleware = require('../middleware/auth');
+const { authMiddleware } = require('../middleware/auth');
 
 // Create pending donation record
 router.post('/create-donation', authMiddleware, async (req, res) => {
