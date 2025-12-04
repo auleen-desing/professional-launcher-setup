@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const sql = require('mssql');
+const { sql, poolPromise } = require('../config/database');
 const crypto = require('crypto');
 const https = require('https');
 const { authMiddleware } = require('../middleware/auth');
@@ -9,7 +9,7 @@ const { authMiddleware } = require('../middleware/auth');
 router.post('/create-donation', authMiddleware, async (req, res) => {
   try {
     const { packageId, coins, amount } = req.body;
-    const accountId = req.user.accountId;
+    const accountId = req.user.id; // JWT token uses 'id' not 'accountId'
 
     if (!packageId || !coins || !amount) {
       return res.status(400).json({ success: false, error: 'Missing required fields' });
@@ -18,7 +18,7 @@ router.post('/create-donation', authMiddleware, async (req, res) => {
     // Generate unique transaction ID
     const transactionId = `NOVA-${Date.now()}-${crypto.randomBytes(4).toString('hex').toUpperCase()}`;
 
-    const pool = await sql.connect();
+    const pool = await poolPromise;
     
     // Create pending donation record
     await pool.request()
@@ -85,7 +85,7 @@ router.post('/ipn', async (req, res) => {
       return;
     }
 
-    const pool = await sql.connect();
+    const pool = await poolPromise;
 
     // Find the pending donation
     const donationResult = await pool.request()
@@ -170,9 +170,9 @@ function verifyWithPayPal(body) {
 router.get('/donation-status/:transactionId', authMiddleware, async (req, res) => {
   try {
     const { transactionId } = req.params;
-    const accountId = req.user.accountId;
+    const accountId = req.user.id;
 
-    const pool = await sql.connect();
+    const pool = await poolPromise;
     const result = await pool.request()
       .input('transactionId', sql.VarChar(100), transactionId)
       .input('accountId', sql.Int, accountId)
