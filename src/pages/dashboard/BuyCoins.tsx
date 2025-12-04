@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { CreditCard, Wallet, Shield, Check, Coins, Sparkles, Zap } from 'lucide-react';
+import { Wallet, Check, Coins, Sparkles, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { CoinPackage } from '@/types/user';
 import { API_CONFIG } from '@/config/api';
@@ -16,7 +15,6 @@ const coinPackages: CoinPackage[] = [
 
 export function BuyCoins() {
   const [selectedPackage, setSelectedPackage] = useState<CoinPackage | null>(null);
-  const [paymentMethod, setPaymentMethod] = useState('stripe');
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
@@ -33,24 +31,14 @@ export function BuyCoins() {
     setIsProcessing(true);
 
     try {
-      if (paymentMethod === 'paypal') {
-        // Open PayPal donation link
-        const donationUrl = `https://www.paypal.com/donate/?business=${encodeURIComponent(API_CONFIG.PAYPAL_EMAIL)}&amount=${selectedPackage.price}&currency_code=USD&item_name=${encodeURIComponent(`NovaEra Donation - ${selectedPackage.coins} NovaCoins`)}`;
-        window.open(donationUrl, '_blank');
-        
-        toast({
-          title: 'PayPal Donation',
-          description: 'After donating, contact us with your transaction ID to receive your NovaCoins.',
-        });
-      } else {
-        // TODO: Implement other payment methods
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        
-        toast({
-          title: 'Processing payment...',
-          description: `Redirecting to ${paymentMethod}...`,
-        });
-      }
+      // Open PayPal donation link
+      const donationUrl = `https://www.paypal.com/donate/?business=${encodeURIComponent(API_CONFIG.PAYPAL_EMAIL)}&amount=${selectedPackage.price}&currency_code=USD&item_name=${encodeURIComponent(`NovaEra Donation - ${selectedPackage.coins} NovaCoins`)}`;
+      window.open(donationUrl, '_blank');
+      
+      toast({
+        title: 'PayPal Donation',
+        description: 'After donating, contact us with your transaction ID to receive your NovaCoins.',
+      });
     } catch (error) {
       toast({
         title: 'Error',
@@ -66,7 +54,7 @@ export function BuyCoins() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-display font-bold text-gradient-cyan">Buy NovaCoins</h1>
-        <p className="text-muted-foreground mt-2">Select a package and payment method</p>
+        <p className="text-muted-foreground mt-2">Select a package and donate via PayPal</p>
       </div>
 
       {/* Packages */}
@@ -119,77 +107,28 @@ export function BuyCoins() {
         ))}
       </div>
 
-      {/* Payment Methods */}
+      {/* PayPal Donation */}
       <Card className="border-border/50">
         <CardHeader>
-          <CardTitle className="font-display">Payment Method</CardTitle>
-          <CardDescription>Select how you want to pay</CardDescription>
+          <CardTitle className="font-display">PayPal Donation</CardTitle>
+          <CardDescription>Support us with a donation to receive your NovaCoins</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs value={paymentMethod} onValueChange={setPaymentMethod}>
-            <TabsList className="grid grid-cols-3 w-full h-auto p-1">
-              <TabsTrigger value="stripe" className="gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                <CreditCard className="h-4 w-4" />
-                <span className="hidden sm:inline">Stripe</span>
-              </TabsTrigger>
-              <TabsTrigger value="paypal" className="gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                <Wallet className="h-4 w-4" />
-                <span className="hidden sm:inline">PayPal</span>
-              </TabsTrigger>
-              <TabsTrigger value="paysafecard" className="gap-2 py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-                <Shield className="h-4 w-4" />
-                <span className="hidden sm:inline">Paysafecard</span>
-              </TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="stripe" className="mt-6">
-              <div className="bg-card rounded-xl p-6 border border-border/50">
-                <div className="flex items-center gap-3 mb-3">
-                  <CreditCard className="h-8 w-8 text-primary" />
-                  <div>
-                    <h4 className="font-semibold">Credit/Debit Card</h4>
-                    <p className="text-sm text-muted-foreground">Visa, Mastercard, American Express</p>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Pay securely by card through Stripe. Instant transaction.
-                </p>
+          <div className="bg-card rounded-xl p-6 border border-border/50">
+            <div className="flex items-center gap-3 mb-3">
+              <Wallet className="h-8 w-8 text-[#0070ba]" />
+              <div>
+                <h4 className="font-semibold">PayPal Donation</h4>
+                <p className="text-sm text-muted-foreground">Support us with a donation</p>
               </div>
-            </TabsContent>
-            
-            <TabsContent value="paypal" className="mt-6">
-              <div className="bg-card rounded-xl p-6 border border-border/50">
-                <div className="flex items-center gap-3 mb-3">
-                  <Wallet className="h-8 w-8 text-[#0070ba]" />
-                  <div>
-                    <h4 className="font-semibold">PayPal Donation</h4>
-                    <p className="text-sm text-muted-foreground">Support us with a donation</p>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Make a donation via PayPal. After donating, contact us with your transaction ID to receive your NovaCoins.
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Email: <span className="text-primary font-medium">{API_CONFIG.PAYPAL_EMAIL}</span>
-                </p>
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="paysafecard" className="mt-6">
-              <div className="bg-card rounded-xl p-6 border border-border/50">
-                <div className="flex items-center gap-3 mb-3">
-                  <Shield className="h-8 w-8 text-[#00a3e0]" />
-                  <div>
-                    <h4 className="font-semibold">Paysafecard</h4>
-                    <p className="text-sm text-muted-foreground">Prepaid code payment</p>
-                  </div>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  Buy a Paysafecard at any point of sale and use the code.
-                </p>
-              </div>
-            </TabsContent>
-          </Tabs>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Make a donation via PayPal. After donating, contact us with your transaction ID to receive your NovaCoins.
+            </p>
+            <p className="text-xs text-muted-foreground mt-2">
+              Email: <span className="text-primary font-medium">{API_CONFIG.PAYPAL_EMAIL}</span>
+            </p>
+          </div>
 
           <Button 
             onClick={handlePurchase}
@@ -201,11 +140,8 @@ export function BuyCoins() {
               'Processing...'
             ) : selectedPackage ? (
               <>
-                {paymentMethod === 'paypal' ? <Wallet className="h-4 w-4" /> : <CreditCard className="h-4 w-4" />}
-                {paymentMethod === 'paypal' 
-                  ? `Donate $${selectedPackage.price} via PayPal`
-                  : `Pay $${selectedPackage.price} with ${paymentMethod}`
-                }
+                <Wallet className="h-4 w-4" />
+                Donate ${selectedPackage.price} via PayPal
               </>
             ) : (
               'Select a package'
