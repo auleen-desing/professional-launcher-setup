@@ -45,13 +45,13 @@ export function DailyReward() {
       if (data.success) {
         setStatus(data.data);
       } else {
-        throw new Error(data.error || 'Error al obtener estado');
+        throw new Error(data.error || 'Error fetching status');
       }
     } catch (error) {
       console.error('Error fetching daily status:', error);
       toast({
         title: 'Error',
-        description: 'No se pudo cargar el estado de recompensas diarias',
+        description: 'Could not load daily rewards status',
         variant: 'destructive',
       });
     } finally {
@@ -83,25 +83,25 @@ export function DailyReward() {
         
         updateCoins(newBalance);
         
-        let description = `¡Recibiste ${coinsReward} coins!`;
+        let description = `You received ${coinsReward} coins!`;
         if (itemVNum && itemAmount > 0) {
           description += ` + ${itemAmount} item(s)`;
         }
         
         toast({
-          title: `¡Recompensa del Día ${day} reclamada!`,
+          title: `Day ${day} Reward Claimed!`,
           description,
         });
         
         // Refresh status
         await fetchStatus();
       } else {
-        throw new Error(data.error || 'Error al reclamar');
+        throw new Error(data.error || 'Error claiming reward');
       }
     } catch (error: any) {
       toast({
         title: 'Error',
-        description: error.message || 'No se pudo reclamar la recompensa',
+        description: error.message || 'Could not claim reward',
         variant: 'destructive',
       });
     } finally {
@@ -124,8 +124,8 @@ export function DailyReward() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gradient-gold">Recompensa Diaria</h1>
-        <p className="text-muted-foreground mt-2">Reclama tu recompensa cada día</p>
+        <h1 className="text-3xl font-bold text-gradient-gold">Daily Reward</h1>
+        <p className="text-muted-foreground mt-2">Claim your reward every day</p>
       </div>
 
       {/* Weekly Progress */}
@@ -133,10 +133,10 @@ export function DailyReward() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5 text-primary" />
-            Progreso Semanal
+            Weekly Progress
           </CardTitle>
           <CardDescription>
-            Racha actual: {status?.streak || 0} días
+            Current streak: {status?.streak || 0} days
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -155,7 +155,7 @@ export function DailyReward() {
                 {reward.claimed && (
                   <CheckCircle className="absolute -top-2 -right-2 h-5 w-5 text-primary bg-background rounded-full" />
                 )}
-                <p className="text-xs text-muted-foreground">Día {reward.day}</p>
+                <p className="text-xs text-muted-foreground">Day {reward.day}</p>
                 <p className={`text-lg font-bold ${reward.special ? 'text-yellow-500' : 'text-foreground'}`}>
                   {reward.coins}
                 </p>
@@ -177,17 +177,17 @@ export function DailyReward() {
           {!canClaim ? (
             <div className="space-y-2">
               <CheckCircle className="h-16 w-16 text-primary mx-auto" />
-              <p className="text-lg font-medium">¡Recompensa reclamada!</p>
+              <p className="text-lg font-medium">Reward claimed!</p>
               <div className="flex items-center justify-center gap-2 text-muted-foreground">
                 <Clock className="h-4 w-4" />
-                <span>Vuelve mañana para tu próxima recompensa</span>
+                <span>Come back tomorrow for your next reward</span>
               </div>
             </div>
           ) : (
             <>
               <div className="space-y-2">
                 <Gift className="h-16 w-16 text-primary mx-auto animate-bounce" />
-                <p className="text-lg font-medium">¡Tu recompensa está lista!</p>
+                <p className="text-lg font-medium">Your reward is ready!</p>
                 <p className="text-3xl font-bold text-primary">
                   {currentReward?.coins || 0} Coins
                 </p>
@@ -206,10 +206,10 @@ export function DailyReward() {
                 {isClaiming ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Reclamando...
+                    Claiming...
                   </>
                 ) : (
-                  'Reclamar Recompensa'
+                  'Claim Reward'
                 )}
               </Button>
             </>
