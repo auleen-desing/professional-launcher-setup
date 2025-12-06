@@ -4,21 +4,31 @@ const { sql, poolPromise } = require('../config/database');
 const { authMiddleware } = require('../middleware/auth');
 
 const SPIN_COST = 2500;
-const PRIZES = [
-  { id: 1, name: '500 Coins', type: 'coins', value: 500, chance: 25 },
-  { id: 2, name: '1000 Coins', type: 'coins', value: 1000, chance: 20 },
-  { id: 3, name: '2500 Coins', type: 'coins', value: 2500, chance: 15 },
-  { id: 4, name: '5000 Coins', type: 'coins', value: 5000, chance: 10 },
-  { id: 5, name: 'SP Card Box', type: 'item', value: 4099, chance: 10 },
-  { id: 6, name: 'Wings Box', type: 'item', value: 5000, chance: 5 },
-  { id: 7, name: '10000 Coins', type: 'coins', value: 10000, chance: 5 },
-  { id: 8, name: 'Jackpot!', type: 'coins', value: 50000, chance: 1 },
-  { id: 9, name: 'Try Again', type: 'coins', value: 100, chance: 9 }
-];
 
-// GET /api/roulette/prizes
-router.get('/prizes', (req, res) => {
-  res.json({ success: true, data: { prizes: PRIZES, spinCost: SPIN_COST } });
+// GET /api/roulette/prizes - Get prizes from database
+router.get('/prizes', async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .query(`
+        SELECT Id as id, Name as name, Type as type, Value as value, Chance as chance
+        FROM web_roulette_prizes
+        ORDER BY Chance DESC
+      `);
+
+    const prizes = result.recordset.map(p => ({
+      id: p.id,
+      name: p.name,
+      type: p.type,
+      value: p.value,
+      chance: parseFloat(p.chance)
+    }));
+
+    res.json({ success: true, data: { prizes, spinCost: SPIN_COST } });
+  } catch (err) {
+    console.error('Roulette prizes error:', err);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
 });
 
 // POST /api/roulette/spin
@@ -36,6 +46,22 @@ router.post('/spin', authMiddleware, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Insufficient coins' });
     }
 
+    // Get prizes from database
+    const prizesResult = await pool.request()
+      .query(`
+        SELECT Id as id, Name as name, Type as type, Value as value, Chance as chance
+        FROM web_roulette_prizes
+        ORDER BY Chance DESC
+      `);
+
+    const prizes = prizesResult.recordset.map(p => ({
+      id: p.id,
+      name: p.name,
+      type: p.type,
+      value: p.value,
+      chance: parseFloat(p.chance)
+    }));
+
     // Deduct spin cost
     await pool.request()
       .input('id', sql.Int, req.user.id)
@@ -45,9 +71,9 @@ router.post('/spin', authMiddleware, async (req, res) => {
     // Determine prize (weighted random)
     const random = Math.random() * 100;
     let cumulative = 0;
-    let prize = PRIZES[PRIZES.length - 1];
+    let prize = prizes[prizes.length - 1];
     
-    for (const p of PRIZES) {
+    for (const p of prizes) {
       cumulative += p.chance;
       if (random <= cumulative) {
         prize = p;
@@ -61,6 +87,9 @@ router.post('/spin', authMiddleware, async (req, res) => {
         .input('id', sql.Int, req.user.id)
         .input('coins', sql.Int, prize.value)
         .query('UPDATE account SET Coins = Coins + @coins WHERE AccountId = @id');
+    } else if (prize.type === 'item') {
+      // Log item prize for manual delivery or game integration
+      console.log(`[Roulette] User ${req.user.id} won item ${prize.value} (${prize.name})`);
     }
 
     // Get new balance

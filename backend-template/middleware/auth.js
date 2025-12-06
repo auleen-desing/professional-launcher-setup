@@ -18,12 +18,24 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
+const adminMiddleware = (req, res, next) => {
+  if (!req.user || req.user.authority < 100) {
+    return res.status(403).json({ success: false, error: 'Admin access required' });
+  }
+  next();
+};
+
 const generateToken = (user) => {
   return jwt.sign(
-    { id: user.AccountId, username: user.Name, isAdmin: user.Authority >= 2 },
+    { 
+      id: user.AccountId, 
+      username: user.Name, 
+      authority: user.Authority,
+      isAdmin: user.Authority >= 100 
+    },
     JWT_SECRET,
     { expiresIn: '7d' }
   );
 };
 
-module.exports = { authMiddleware, generateToken, JWT_SECRET };
+module.exports = { authMiddleware, adminMiddleware, generateToken, JWT_SECRET };

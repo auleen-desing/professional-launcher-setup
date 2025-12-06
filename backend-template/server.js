@@ -25,6 +25,7 @@ app.use('/api/roulette', require('./routes/roulette'));
 app.use('/api/coupons', require('./routes/coupons'));
 app.use('/api/character', require('./routes/character'));
 app.use('/api/payments/paypal', require('./routes/paypal'));
+app.use('/api/admin', require('./routes/admin'));
 
 // Health check
 app.get('/api/health', (req, res) => {

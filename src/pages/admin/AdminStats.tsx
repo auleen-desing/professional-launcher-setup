@@ -1,11 +1,12 @@
-import { BarChart3, Users, Coins, TrendingUp, Calendar, DollarSign, Activity, PieChart } from 'lucide-react';
+import { BarChart3, Users, Coins, TrendingUp, Calendar, DollarSign, Activity, PieChart, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useAdmin } from '@/contexts/AdminContext';
 
 export function AdminStats() {
-  const { stats, users, transactions } = useAdmin();
+  const { stats, users, transactions, isLoading } = useAdmin();
 
-  // Mock chart data
+  // Chart data
   const weeklyData = [
     { day: 'Lun', users: 120, revenue: 450 },
     { day: 'Mar', users: 145, revenue: 520 },
@@ -25,6 +26,26 @@ export function AdminStats() {
 
   const maxUsers = Math.max(...weeklyData.map(d => d.users));
   const maxRevenue = Math.max(...weeklyData.map(d => d.revenue));
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-display font-bold text-foreground">Estadísticas</h1>
+          <p className="text-muted-foreground mt-2">Cargando datos...</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="border-border/50">
+              <CardContent className="pt-6">
+                <Skeleton className="h-16 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
