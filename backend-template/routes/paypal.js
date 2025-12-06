@@ -42,13 +42,21 @@ router.post('/create-donation', authMiddleware, async (req, res) => {
   }
 });
 
+// Get PayPal config (public endpoint for frontend)
+router.get('/config', (req, res) => {
+  res.json({ 
+    success: true, 
+    email: process.env.PAYPAL_EMAIL || 'pincjx771@gmail.com'
+  });
+});
+
 // Test endpoint to verify IPN URL is accessible
 router.get('/ipn-test', (req, res) => {
   console.log('[PayPal IPN] Test endpoint hit');
   res.json({ success: true, message: 'IPN endpoint is accessible', timestamp: new Date() });
 });
 
-// PayPal IPN handler
+// PayPal IPN handler with verification
 router.post('/ipn', async (req, res) => {
   console.log('[PayPal IPN] ========== RECEIVED ==========');
   console.log('[PayPal IPN] Raw body:', JSON.stringify(req.body, null, 2));
@@ -58,6 +66,29 @@ router.post('/ipn', async (req, res) => {
 
   try {
     const params = req.body;
+
+    // ====== SECURITY: Verify IPN with PayPal ======
+    const verifyUrl = 'https://ipnpb.paypal.com/cgi-bin/webscr';
+    const verifyBody = 'cmd=_notify-validate&' + new URLSearchParams(params).toString();
+    
+    try {
+      const verifyResponse = await fetch(verifyUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: verifyBody
+      });
+      const verifyResult = await verifyResponse.text();
+      
+      if (verifyResult !== 'VERIFIED') {
+        console.error('[PayPal IPN] SECURITY: IPN verification failed - possible fraud attempt');
+        return;
+      }
+      console.log('[PayPal IPN] IPN verified successfully');
+    } catch (verifyError) {
+      console.error('[PayPal IPN] Verification request failed:', verifyError);
+      return;
+    }
+    // ====== END SECURITY ======
 
     // Extract relevant fields
     const paymentStatus = params.payment_status;
@@ -85,9 +116,15 @@ router.post('/ipn', async (req, res) => {
     }
 
     // Verify receiver email matches
-    const expectedEmail = 'pincjx771@gmail.com';
+    const expectedEmail = process.env.PAYPAL_EMAIL || 'pincjx771@gmail.com';
     if (receiverEmail && receiverEmail.toLowerCase() !== expectedEmail.toLowerCase()) {
-      console.error(`[PayPal IPN] Receiver email mismatch: ${receiverEmail} vs ${expectedEmail}`);
+      console.error(`[PayPal IPN] SECURITY: Receiver email mismatch: ${receiverEmail} vs ${expectedEmail}`);
+      return;
+    }
+
+    // SECURITY: Must have valid transaction ID from custom field
+    if (!transactionId || !transactionId.startsWith('NOVA-')) {
+      console.error('[PayPal IPN] SECURITY: Invalid or missing transaction ID in custom field');
       return;
     }
 
@@ -95,35 +132,38 @@ router.post('/ipn', async (req, res) => {
 
     const pool = await poolPromise;
 
-    // Find by custom field (our transaction ID)
-    let donationResult = await pool.request()
-      .input('transactionId', sql.NVarChar(100), transactionId || '')
+    // SECURITY: Only find by exact transaction ID - no amount fallback
+    const donationResult = await pool.request()
+      .input('transactionId', sql.NVarChar(100), transactionId)
       .query(`
         SELECT * FROM web_donations 
         WHERE TransactionId = @transactionId AND Status = 'pending'
       `);
 
-    // Fallback: find by amount
     if (!donationResult.recordset || donationResult.recordset.length === 0) {
-      console.log('[PayPal IPN] Not found by custom field, trying amount match...');
-      
-      donationResult = await pool.request()
-        .input('amount', sql.Decimal(10, 2), paymentAmount)
-        .query(`
-          SELECT TOP 1 * FROM web_donations 
-          WHERE Status = 'pending' 
-          AND ABS(Amount - @amount) < 0.5
-          ORDER BY CreatedAt DESC
-        `);
-    }
-
-    if (!donationResult.recordset || donationResult.recordset.length === 0) {
-      console.error(`[PayPal IPN] No matching pending donation found`);
+      console.error(`[PayPal IPN] No matching pending donation found for: ${transactionId}`);
       return;
     }
 
     const donation = donationResult.recordset[0];
+    
+    // SECURITY: Verify amount matches (with small tolerance for currency conversion)
+    if (Math.abs(donation.Amount - paymentAmount) > 0.5) {
+      console.error(`[PayPal IPN] SECURITY: Amount mismatch! Expected: ${donation.Amount}, Received: ${paymentAmount}`);
+      return;
+    }
+
     console.log(`[PayPal IPN] Found donation: ${donation.TransactionId}, account: ${donation.AccountId}, coins: ${donation.Coins}`);
+
+    // SECURITY: Check for duplicate processing
+    const duplicateCheck = await pool.request()
+      .input('paypalTxnId', sql.NVarChar(100), paypalTxnId)
+      .query(`SELECT COUNT(*) as count FROM web_donations WHERE TransactionId = @paypalTxnId AND Status = 'completed'`);
+    
+    if (duplicateCheck.recordset[0].count > 0) {
+      console.error(`[PayPal IPN] SECURITY: Duplicate PayPal transaction ID detected: ${paypalTxnId}`);
+      return;
+    }
 
     // Update donation status
     await pool.request()
@@ -132,7 +172,7 @@ router.post('/ipn', async (req, res) => {
       .query(`
         UPDATE web_donations 
         SET Status = 'completed', TransactionId = @paypalTxnId, CompletedAt = GETDATE()
-        WHERE Id = @id
+        WHERE Id = @id AND Status = 'pending'
       `);
 
     // Credit coins to account

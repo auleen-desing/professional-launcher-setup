@@ -36,9 +36,6 @@ export const API_CONFIG = {
   SHOP_BONUS: 0,
   PROMO: 20,
   
-  // Payment
-  PAYPAL_EMAIL: 'pincjx771@gmail.com',
-  
   // Endpoints
   ENDPOINTS: {
     AUTH: {
