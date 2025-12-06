@@ -29,13 +29,13 @@ CREATE TABLE web_user_titles (
 IF NOT EXISTS (SELECT * FROM web_titles WHERE Name = 'novice')
 BEGIN
     INSERT INTO web_titles (Name, DisplayName, Description, Price, Rarity, Icon, Color) VALUES
-    ('novice', 'Novice', 'A beginner adventurer', 100, 'common', 'star', '#9ca3af'),
-    ('warrior', 'Warrior', 'Battle-hardened fighter', 500, 'uncommon', 'shield', '#4ade80'),
-    ('champion', 'Champion', 'Victor of many battles', 1500, 'rare', 'crown', '#60a5fa'),
-    ('legend', 'Legend', 'Stories are told about you', 5000, 'epic', 'sparkles', '#c084fc'),
-    ('immortal', 'Immortal', 'Beyond life and death', 15000, 'legendary', 'flame', '#facc15'),
-    ('destroyer', 'Destroyer', 'Leave nothing standing', 3000, 'rare', 'skull', '#f87171'),
-    ('beloved', 'Beloved', 'Loved by all', 2000, 'uncommon', 'heart', '#fb7185'),
-    ('lightning', 'Lightning', 'Fast as thunder', 8000, 'epic', 'zap', '#fbbf24');
+    ('novice', 'Novice', 'A beginner adventurer', 8000, 'common', 'star', '#9ca3af'),
+    ('warrior', 'Warrior', 'Battle-hardened fighter', 9000, 'uncommon', 'shield', '#4ade80'),
+    ('champion', 'Champion', 'Victor of many battles', 10000, 'rare', 'crown', '#60a5fa'),
+    ('legend', 'Legend', 'Stories are told about you', 11000, 'epic', 'sparkles', '#c084fc'),
+    ('immortal', 'Immortal', 'Beyond life and death', 12000, 'legendary', 'flame', '#facc15'),
+    ('destroyer', 'Destroyer', 'Leave nothing standing', 13000, 'rare', 'skull', '#f87171'),
+    ('beloved', 'Beloved', 'Loved by all', 14000, 'uncommon', 'heart', '#fb7185'),
+    ('lightning', 'Lightning', 'Fast as thunder', 15000, 'epic', 'zap', '#fbbf24');
 END
 GO
