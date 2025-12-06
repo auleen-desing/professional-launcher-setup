@@ -39,8 +39,14 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`NovaEra API running on port ${PORT}`);
+const HOST = '0.0.0.0';
+
+const server = app.listen(PORT, HOST, () => {
+  console.log(`NovaEra API running on http://${HOST}:${PORT}`);
+});
+
+server.on('error', (err) => {
+  console.error('Server error:', err);
 });
 
 module.exports = app;
