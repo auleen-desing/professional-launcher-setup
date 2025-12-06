@@ -46,20 +46,23 @@ export function BuyCoins() {
         }));
         setPackages(packagesWithPopular);
       } else {
+        // Fallback packages if database is empty
         setPackages([
-          { id: '1', name: 'Starter', coins: 1000, price: 5 },
-          { id: '2', name: 'Popular', coins: 5000, price: 20, bonus: 500, popular: true },
-          { id: '3', name: 'Premium', coins: 12000, price: 45, bonus: 2000 },
-          { id: '4', name: 'Ultimate', coins: 30000, price: 100, bonus: 8000 },
+          { id: '1', name: 'Básico', coins: 8000, price: 10 },
+          { id: '2', name: 'Popular', coins: 24500, price: 30, popular: true },
+          { id: '3', name: 'Premium', coins: 55000, price: 50 },
+          { id: '4', name: 'Élite', coins: 110000, price: 100 },
+          { id: '5', name: 'Ultimate', coins: 240000, price: 200 },
         ]);
       }
     } catch (error) {
       console.error('Error fetching packages:', error);
       setPackages([
-        { id: '1', name: 'Starter', coins: 1000, price: 5 },
-        { id: '2', name: 'Popular', coins: 5000, price: 20, bonus: 500, popular: true },
-        { id: '3', name: 'Premium', coins: 12000, price: 45, bonus: 2000 },
-        { id: '4', name: 'Ultimate', coins: 30000, price: 100, bonus: 8000 },
+        { id: '1', name: 'Básico', coins: 8000, price: 10 },
+        { id: '2', name: 'Popular', coins: 24500, price: 30, popular: true },
+        { id: '3', name: 'Premium', coins: 55000, price: 50 },
+        { id: '4', name: 'Élite', coins: 110000, price: 100 },
+        { id: '5', name: 'Ultimate', coins: 240000, price: 200 },
       ]);
     } finally {
       setIsLoading(false);
