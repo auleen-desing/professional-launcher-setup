@@ -26,13 +26,31 @@ router.get('/', authMiddleware, async (req, res) => {
 router.post('/create', authMiddleware, async (req, res) => {
   try {
     const { subject, category, message } = req.body;
+    
+    // SECURITY: Input validation
+    if (!subject || !message) {
+      return res.status(400).json({ success: false, error: 'Subject and message are required' });
+    }
+    
+    if (subject.length > 200) {
+      return res.status(400).json({ success: false, error: 'Subject too long (max 200 characters)' });
+    }
+    
+    if (message.length > 5000) {
+      return res.status(400).json({ success: false, error: 'Message too long (max 5000 characters)' });
+    }
+    
+    // SECURITY: Sanitize HTML/scripts
+    const sanitizedSubject = subject.replace(/<[^>]*>/g, '').trim();
+    const sanitizedMessage = message.replace(/<script[^>]*>.*?<\/script>/gi, '').trim();
+    
     const pool = await poolPromise;
 
     await pool.request()
       .input('accountId', sql.Int, req.user.id)
-      .input('subject', sql.NVarChar, subject)
-      .input('category', sql.VarChar, category)
-      .input('message', sql.NVarChar, message)
+      .input('subject', sql.NVarChar, sanitizedSubject)
+      .input('category', sql.VarChar, category || 'general')
+      .input('message', sql.NVarChar, sanitizedMessage)
       .query(`
         INSERT INTO web_tickets (AccountId, Subject, Category, Status, Message, CreatedAt)
         VALUES (@accountId, @subject, @category, 'open', @message, GETDATE())
