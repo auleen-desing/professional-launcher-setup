@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { sql, poolPromise } = require('../config/database');
 const crypto = require('crypto');
-const https = require('https');
 const { authMiddleware } = require('../middleware/auth');
 
 // Create pending donation record
@@ -10,6 +9,8 @@ router.post('/create-donation', authMiddleware, async (req, res) => {
   try {
     const { packageId, coins, amount } = req.body;
     const accountId = req.user.id;
+
+    console.log('[PayPal] Creating donation:', { packageId, coins, amount, accountId });
 
     if (!packageId || !coins || !amount) {
       return res.status(400).json({ success: false, error: 'Missing required fields' });
@@ -22,15 +23,14 @@ router.post('/create-donation', authMiddleware, async (req, res) => {
     
     // Create pending donation record
     await pool.request()
-      .input('transactionId', sql.VarChar(100), transactionId)
-      .input('accountId', sql.Int, accountId)
-      .input('packageId', sql.VarChar(50), packageId)
+      .input('transactionId', sql.NVarChar(100), transactionId)
+      .input('accountId', sql.BigInt, accountId)
+      .input('packageId', sql.Int, parseInt(packageId) || 0)
       .input('coins', sql.Int, coins)
       .input('amount', sql.Decimal(10, 2), amount)
-      .input('status', sql.VarChar(20), 'pending')
       .query(`
-        INSERT INTO web_donations (transaction_id, account_id, package_id, coins, amount, status, created_at)
-        VALUES (@transactionId, @accountId, @packageId, @coins, @amount, @status, GETDATE())
+        INSERT INTO web_donations (AccountId, PackageId, TransactionId, PaymentMethod, Amount, Currency, Coins, Status, CreatedAt)
+        VALUES (@accountId, @packageId, @transactionId, 'paypal', @amount, 'EUR', @coins, 'pending', GETDATE())
       `);
 
     console.log(`[PayPal] Created pending donation: ${transactionId} for account ${accountId}`);
@@ -51,8 +51,6 @@ router.get('/ipn-test', (req, res) => {
 // PayPal IPN handler
 router.post('/ipn', async (req, res) => {
   console.log('[PayPal IPN] ========== RECEIVED ==========');
-  console.log('[PayPal IPN] Method:', req.method);
-  console.log('[PayPal IPN] Content-Type:', req.headers['content-type']);
   console.log('[PayPal IPN] Raw body:', JSON.stringify(req.body, null, 2));
 
   // IMPORTANT: Respond to PayPal immediately with 200
@@ -61,27 +59,18 @@ router.post('/ipn', async (req, res) => {
   try {
     const params = req.body;
 
-    // Log ALL received fields for debugging
-    console.log('[PayPal IPN] All fields received:');
-    Object.keys(params).forEach(key => {
-      console.log(`  ${key}: ${params[key]}`);
-    });
-
     // Extract relevant fields
     const paymentStatus = params.payment_status;
     const transactionId = params.custom; // Our transaction ID
     const paypalTxnId = params.txn_id;
     const receiverEmail = params.receiver_email;
     const paymentAmount = parseFloat(params.mc_gross) || 0;
-    const itemNumber = params.item_number;
 
     console.log('[PayPal IPN] Extracted values:');
     console.log(`  payment_status: ${paymentStatus}`);
     console.log(`  custom (our txn): ${transactionId}`);
     console.log(`  txn_id (paypal): ${paypalTxnId}`);
-    console.log(`  receiver_email: ${receiverEmail}`);
     console.log(`  mc_gross: ${paymentAmount}`);
-    console.log(`  item_number: ${itemNumber}`);
 
     // Skip test/verification IPNs
     if (paypalTxnId === 'TEST123' || !paypalTxnId) {
@@ -95,8 +84,8 @@ router.post('/ipn', async (req, res) => {
       return;
     }
 
-    // Verify receiver email matches (optional check)
-    const expectedEmail = process.env.PAYPAL_EMAIL || 'pincjx771@gmail.com';
+    // Verify receiver email matches
+    const expectedEmail = 'pincjx771@gmail.com';
     if (receiverEmail && receiverEmail.toLowerCase() !== expectedEmail.toLowerCase()) {
       console.error(`[PayPal IPN] Receiver email mismatch: ${receiverEmail} vs ${expectedEmail}`);
       return;
@@ -106,16 +95,15 @@ router.post('/ipn', async (req, res) => {
 
     const pool = await poolPromise;
 
-    // First try to find by custom field (our transaction ID)
+    // Find by custom field (our transaction ID)
     let donationResult = await pool.request()
-      .input('transactionId', sql.VarChar(100), transactionId || '')
+      .input('transactionId', sql.NVarChar(100), transactionId || '')
       .query(`
         SELECT * FROM web_donations 
-        WHERE transaction_id = @transactionId AND status = 'pending'
+        WHERE TransactionId = @transactionId AND Status = 'pending'
       `);
 
-    // If not found by custom, try to find the most recent pending donation
-    // matching the amount (fallback for when custom field doesn't arrive)
+    // Fallback: find by amount
     if (!donationResult.recordset || donationResult.recordset.length === 0) {
       console.log('[PayPal IPN] Not found by custom field, trying amount match...');
       
@@ -123,40 +111,39 @@ router.post('/ipn', async (req, res) => {
         .input('amount', sql.Decimal(10, 2), paymentAmount)
         .query(`
           SELECT TOP 1 * FROM web_donations 
-          WHERE status = 'pending' 
-          AND ABS(amount - @amount) < 0.5
-          ORDER BY created_at DESC
+          WHERE Status = 'pending' 
+          AND ABS(Amount - @amount) < 0.5
+          ORDER BY CreatedAt DESC
         `);
     }
 
     if (!donationResult.recordset || donationResult.recordset.length === 0) {
       console.error(`[PayPal IPN] No matching pending donation found`);
-      console.error(`[PayPal IPN] Searched for: custom=${transactionId}, amount=${paymentAmount}`);
       return;
     }
 
     const donation = donationResult.recordset[0];
-    console.log(`[PayPal IPN] Found donation: ${donation.transaction_id}, account: ${donation.account_id}, coins: ${donation.coins}`);
+    console.log(`[PayPal IPN] Found donation: ${donation.TransactionId}, account: ${donation.AccountId}, coins: ${donation.Coins}`);
 
-    // Update donation status and add PayPal transaction ID
+    // Update donation status
     await pool.request()
-      .input('id', sql.Int, donation.id)
-      .input('paypalTxnId', sql.VarChar(100), paypalTxnId)
+      .input('id', sql.Int, donation.Id)
+      .input('paypalTxnId', sql.NVarChar(100), paypalTxnId)
       .query(`
         UPDATE web_donations 
-        SET status = 'completed', paypal_txn_id = @paypalTxnId, completed_at = GETDATE()
-        WHERE id = @id
+        SET Status = 'completed', TransactionId = @paypalTxnId, CompletedAt = GETDATE()
+        WHERE Id = @id
       `);
 
     // Credit coins to account
     await pool.request()
-      .input('accountId', sql.Int, donation.account_id)
-      .input('coins', sql.Int, donation.coins)
+      .input('accountId', sql.BigInt, donation.AccountId)
+      .input('coins', sql.Int, donation.Coins)
       .query(`
-        UPDATE Account SET coins = ISNULL(coins, 0) + @coins WHERE AccountId = @accountId
+        UPDATE Account SET Coins = ISNULL(Coins, 0) + @coins WHERE AccountId = @accountId
       `);
 
-    console.log(`[PayPal IPN] SUCCESS: Credited ${donation.coins} coins to account ${donation.account_id}`);
+    console.log(`[PayPal IPN] SUCCESS: Credited ${donation.Coins} coins to account ${donation.AccountId}`);
 
   } catch (error) {
     console.error('[PayPal IPN] Error processing:', error);
@@ -169,10 +156,9 @@ router.post('/admin/complete-donation', authMiddleware, async (req, res) => {
     const { transactionId } = req.body;
     const adminId = req.user.id;
 
-    // Check if user is admin (authority >= 100)
     const pool = await poolPromise;
     const adminCheck = await pool.request()
-      .input('accountId', sql.Int, adminId)
+      .input('accountId', sql.BigInt, adminId)
       .query(`SELECT Authority FROM Account WHERE AccountId = @accountId`);
 
     if (!adminCheck.recordset[0] || adminCheck.recordset[0].Authority < 100) {
@@ -181,10 +167,10 @@ router.post('/admin/complete-donation', authMiddleware, async (req, res) => {
 
     // Find the pending donation
     const donationResult = await pool.request()
-      .input('transactionId', sql.VarChar(100), transactionId)
+      .input('transactionId', sql.NVarChar(100), transactionId)
       .query(`
         SELECT * FROM web_donations 
-        WHERE transaction_id = @transactionId AND status = 'pending'
+        WHERE TransactionId = @transactionId AND Status = 'pending'
       `);
 
     if (!donationResult.recordset || donationResult.recordset.length === 0) {
@@ -195,26 +181,26 @@ router.post('/admin/complete-donation', authMiddleware, async (req, res) => {
 
     // Update donation status
     await pool.request()
-      .input('transactionId', sql.VarChar(100), transactionId)
+      .input('transactionId', sql.NVarChar(100), transactionId)
       .query(`
         UPDATE web_donations 
-        SET status = 'completed', completed_at = GETDATE()
-        WHERE transaction_id = @transactionId
+        SET Status = 'completed', CompletedAt = GETDATE()
+        WHERE TransactionId = @transactionId
       `);
 
     // Credit coins to account
     await pool.request()
-      .input('accountId', sql.Int, donation.account_id)
-      .input('coins', sql.Int, donation.coins)
+      .input('accountId', sql.BigInt, donation.AccountId)
+      .input('coins', sql.Int, donation.Coins)
       .query(`
-        UPDATE Account SET coins = ISNULL(coins, 0) + @coins WHERE AccountId = @accountId
+        UPDATE Account SET Coins = ISNULL(Coins, 0) + @coins WHERE AccountId = @accountId
       `);
 
-    console.log(`[PayPal Admin] Manually completed donation ${transactionId}: ${donation.coins} coins to account ${donation.account_id}`);
+    console.log(`[PayPal Admin] Manually completed donation ${transactionId}: ${donation.Coins} coins to account ${donation.AccountId}`);
 
     res.json({ 
       success: true, 
-      message: `Credited ${donation.coins} coins to account ${donation.account_id}` 
+      message: `Credited ${donation.Coins} coins to account ${donation.AccountId}` 
     });
   } catch (error) {
     console.error('[PayPal Admin] Error:', error);
@@ -229,7 +215,7 @@ router.get('/admin/pending-donations', authMiddleware, async (req, res) => {
 
     const pool = await poolPromise;
     const adminCheck = await pool.request()
-      .input('accountId', sql.Int, adminId)
+      .input('accountId', sql.BigInt, adminId)
       .query(`SELECT Authority FROM Account WHERE AccountId = @accountId`);
 
     if (!adminCheck.recordset[0] || adminCheck.recordset[0].Authority < 100) {
@@ -238,11 +224,11 @@ router.get('/admin/pending-donations', authMiddleware, async (req, res) => {
 
     const result = await pool.request()
       .query(`
-        SELECT d.*, a.Name as account_name
+        SELECT d.*, a.Name as AccountName
         FROM web_donations d
-        LEFT JOIN Account a ON d.account_id = a.AccountId
-        WHERE d.status = 'pending'
-        ORDER BY d.created_at DESC
+        LEFT JOIN Account a ON d.AccountId = a.AccountId
+        WHERE d.Status = 'pending'
+        ORDER BY d.CreatedAt DESC
       `);
 
     res.json({ success: true, data: result.recordset });
@@ -252,7 +238,7 @@ router.get('/admin/pending-donations', authMiddleware, async (req, res) => {
   }
 });
 
-// Check donation status (for frontend polling)
+// Check donation status
 router.get('/donation-status/:transactionId', authMiddleware, async (req, res) => {
   try {
     const { transactionId } = req.params;
@@ -260,11 +246,11 @@ router.get('/donation-status/:transactionId', authMiddleware, async (req, res) =
 
     const pool = await poolPromise;
     const result = await pool.request()
-      .input('transactionId', sql.VarChar(100), transactionId)
-      .input('accountId', sql.Int, accountId)
+      .input('transactionId', sql.NVarChar(100), transactionId)
+      .input('accountId', sql.BigInt, accountId)
       .query(`
-        SELECT status, coins FROM web_donations 
-        WHERE transaction_id = @transactionId AND account_id = @accountId
+        SELECT Status, Coins FROM web_donations 
+        WHERE TransactionId = @transactionId AND AccountId = @accountId
       `);
 
     if (!result.recordset || result.recordset.length === 0) {
