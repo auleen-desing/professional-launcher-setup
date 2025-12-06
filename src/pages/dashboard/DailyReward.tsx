@@ -33,7 +33,7 @@ export function DailyReward() {
 
   const fetchStatus = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('novaera_token');
       const response = await fetch(buildApiUrl('/daily/status'), {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -67,7 +67,7 @@ export function DailyReward() {
     setIsClaiming(true);
 
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('novaera_token');
       const response = await fetch(buildApiUrl('/daily/claim'), {
         method: 'POST',
         headers: {
