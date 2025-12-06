@@ -9,12 +9,15 @@ router.post('/redeem', authMiddleware, async (req, res) => {
     const { code } = req.body;
     const pool = await poolPromise;
 
+    console.log('Redeeming coupon:', code, 'for user:', req.user.id);
+
     // Find coupon
     const couponResult = await pool.request()
-      .input('code', sql.VarChar, code)
+      .input('code', sql.NVarChar, code)
       .query(`
         SELECT * FROM web_coupons 
-        WHERE Code = @code AND IsActive = 1 AND (MaxUses IS NULL OR Uses < MaxUses)
+        WHERE Code = @code AND Active = 1 
+        AND (MaxUses IS NULL OR CurrentUses < MaxUses)
         AND (ExpiresAt IS NULL OR ExpiresAt > GETDATE())
       `);
 
@@ -26,9 +29,9 @@ router.post('/redeem', authMiddleware, async (req, res) => {
 
     // Check if user already used this coupon
     const usedResult = await pool.request()
-      .input('accountId', sql.Int, req.user.id)
+      .input('accountId', sql.BigInt, req.user.id)
       .input('couponId', sql.Int, coupon.Id)
-      .query('SELECT * FROM web_coupon_uses WHERE AccountId = @accountId AND CouponId = @couponId');
+      .query('SELECT * FROM web_coupon_redemptions WHERE AccountId = @accountId AND CouponId = @couponId');
 
     if (usedResult.recordset.length > 0) {
       return res.status(400).json({ success: false, error: 'You have already used this coupon' });
@@ -36,20 +39,22 @@ router.post('/redeem', authMiddleware, async (req, res) => {
 
     // Apply coupon reward
     await pool.request()
-      .input('accountId', sql.Int, req.user.id)
+      .input('accountId', sql.BigInt, req.user.id)
       .input('coins', sql.Int, coupon.Coins)
-      .query('UPDATE account SET Coins = Coins + @coins WHERE AccountId = @accountId');
+      .query('UPDATE Account SET Coins = ISNULL(Coins, 0) + @coins WHERE AccountId = @accountId');
 
     // Record usage
     await pool.request()
-      .input('accountId', sql.Int, req.user.id)
+      .input('accountId', sql.BigInt, req.user.id)
       .input('couponId', sql.Int, coupon.Id)
-      .query('INSERT INTO web_coupon_uses (AccountId, CouponId, UsedAt) VALUES (@accountId, @couponId, GETDATE())');
+      .query('INSERT INTO web_coupon_redemptions (CouponId, AccountId, RedeemedAt) VALUES (@couponId, @accountId, GETDATE())');
 
     // Update coupon uses
     await pool.request()
       .input('couponId', sql.Int, coupon.Id)
-      .query('UPDATE web_coupons SET Uses = Uses + 1 WHERE Id = @couponId');
+      .query('UPDATE web_coupons SET CurrentUses = CurrentUses + 1 WHERE Id = @couponId');
+
+    console.log('Coupon redeemed successfully:', coupon.Coins, 'coins');
 
     res.json({ 
       success: true, 
