@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Search, Filter, MoreVertical, Ban, Coins, Eye, Mail, Shield } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Search, Filter, MoreVertical, Ban, Coins, Eye, Mail, Shield, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,11 +24,14 @@ const roleColors = {
   admin: 'bg-destructive/20 text-destructive',
 };
 
+type SortOrder = 'none' | 'asc' | 'desc';
+
 export function AdminUsers() {
   const { users, updateUserCoins, banUser, unbanUser } = useAdmin();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [coinsSortOrder, setCoinsSortOrder] = useState<SortOrder>('none');
   const [selectedUser, setSelectedUser] = useState<AdminUser | null>(null);
   const [coinDialogOpen, setCoinDialogOpen] = useState(false);
   const [banDialogOpen, setBanDialogOpen] = useState(false);
@@ -37,12 +40,39 @@ export function AdminUsers() {
   const [coinType, setCoinType] = useState<'add' | 'remove'>('add');
   const [banReason, setBanReason] = useState('');
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          user.email.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const filteredAndSortedUsers = useMemo(() => {
+    let result = users.filter(user => {
+      const matchesSearch = user.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            user.email.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+
+    // Sort by coins if sort order is set
+    if (coinsSortOrder === 'asc') {
+      result = [...result].sort((a, b) => a.coins - b.coins);
+    } else if (coinsSortOrder === 'desc') {
+      result = [...result].sort((a, b) => b.coins - a.coins);
+    }
+
+    return result;
+  }, [users, searchQuery, statusFilter, coinsSortOrder]);
+
+  const toggleCoinsSortOrder = () => {
+    if (coinsSortOrder === 'none') {
+      setCoinsSortOrder('desc');
+    } else if (coinsSortOrder === 'desc') {
+      setCoinsSortOrder('asc');
+    } else {
+      setCoinsSortOrder('none');
+    }
+  };
+
+  const getSortIcon = () => {
+    if (coinsSortOrder === 'desc') return <ArrowDown className="h-4 w-4 ml-1" />;
+    if (coinsSortOrder === 'asc') return <ArrowUp className="h-4 w-4 ml-1" />;
+    return <ArrowUpDown className="h-4 w-4 ml-1 opacity-50" />;
+  };
 
   const handleCoinAction = () => {
     if (!selectedUser || !coinAmount || !coinReason) return;
@@ -111,7 +141,15 @@ export function AdminUsers() {
               <thead className="border-b border-border/50">
                 <tr className="text-left text-sm text-muted-foreground">
                   <th className="p-4 font-medium">Usuario</th>
-                  <th className="p-4 font-medium">NovaCoins</th>
+                  <th className="p-4 font-medium">
+                    <button 
+                      onClick={toggleCoinsSortOrder}
+                      className="flex items-center hover:text-primary transition-colors"
+                    >
+                      NovaCoins
+                      {getSortIcon()}
+                    </button>
+                  </th>
                   <th className="p-4 font-medium">Estado</th>
                   <th className="p-4 font-medium">Rol</th>
                   <th className="p-4 font-medium">Último acceso</th>
@@ -119,7 +157,7 @@ export function AdminUsers() {
                 </tr>
               </thead>
               <tbody>
-                {filteredUsers.map((user) => (
+                {filteredAndSortedUsers.map((user) => (
                   <tr key={user.id} className="border-b border-border/30 hover:bg-muted/30 transition-colors">
                     <td className="p-4">
                       <div className="flex items-center gap-3">
