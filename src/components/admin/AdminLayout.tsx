@@ -30,12 +30,12 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-  { name: 'Usuarios', href: '/admin/users', icon: Users },
+  { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'NovaCoins', href: '/admin/coins', icon: Coins },
-  { name: 'Anuncios', href: '/admin/announcements', icon: Megaphone },
-  { name: 'Moderación', href: '/admin/moderation', icon: Shield, badge: 3 },
-  { name: 'Estadísticas', href: '/admin/stats', icon: BarChart3 },
-  { name: 'Configuración', href: '/admin/settings', icon: Settings },
+  { name: 'Announcements', href: '/admin/announcements', icon: Megaphone },
+  { name: 'Moderation', href: '/admin/moderation', icon: Shield, badge: 3 },
+  { name: 'Statistics', href: '/admin/stats', icon: BarChart3 },
+  { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
 
 interface AdminLayoutProps {
@@ -75,7 +75,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <div className="relative w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Buscar usuarios, IPs..." 
+                placeholder="Search users, IPs..." 
                 className="pl-10 bg-background/50"
               />
             </div>
@@ -92,7 +92,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <Link to="/">
               <Button variant="outline" size="sm" className="gap-2">
                 <Home className="h-4 w-4" />
-                <span className="hidden sm:inline">Ir al sitio</span>
+                <span className="hidden sm:inline">Go to site</span>
               </Button>
             </Link>
           </div>
@@ -143,14 +143,14 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-colors"
             >
               <Users className="h-5 w-5" />
-              Panel Usuario
+              User Panel
             </Link>
             <button
               onClick={() => navigate('/')}
               className="flex items-center gap-3 px-4 py-3 rounded-xl text-destructive hover:bg-destructive/10 w-full transition-colors"
             >
               <LogOut className="h-5 w-5" />
-              Cerrar sesión
+              Log Out
             </button>
           </div>
         </nav>

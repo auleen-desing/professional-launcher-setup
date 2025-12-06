@@ -34,19 +34,19 @@ export function AdminSettings() {
   });
 
   const handleSave = () => {
-    toast({ title: 'Configuración guardada', description: 'Los cambios se han aplicado correctamente' });
+    toast({ title: 'Settings saved', description: 'Changes have been applied successfully' });
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">Configuración</h1>
-          <p className="text-muted-foreground mt-2">Ajustes del servidor y la plataforma</p>
+          <h1 className="text-3xl font-display font-bold text-foreground">Settings</h1>
+          <p className="text-muted-foreground mt-2">Server and platform settings</p>
         </div>
         <Button onClick={handleSave} className="gap-2">
           <Save className="h-4 w-4" />
-          Guardar Cambios
+          Save Changes
         </Button>
       </div>
 
@@ -54,53 +54,53 @@ export function AdminSettings() {
         <TabsList className="grid grid-cols-4 w-full max-w-2xl">
           <TabsTrigger value="server" className="gap-2">
             <Server className="h-4 w-4" />
-            <span className="hidden sm:inline">Servidor</span>
+            <span className="hidden sm:inline">Server</span>
           </TabsTrigger>
           <TabsTrigger value="shop" className="gap-2">
             <Coins className="h-4 w-4" />
-            <span className="hidden sm:inline">Tienda</span>
+            <span className="hidden sm:inline">Shop</span>
           </TabsTrigger>
           <TabsTrigger value="security" className="gap-2">
             <Shield className="h-4 w-4" />
-            <span className="hidden sm:inline">Seguridad</span>
+            <span className="hidden sm:inline">Security</span>
           </TabsTrigger>
           <TabsTrigger value="database" className="gap-2">
             <Database className="h-4 w-4" />
-            <span className="hidden sm:inline">Base de Datos</span>
+            <span className="hidden sm:inline">Database</span>
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="server">
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle>Configuración del Servidor</CardTitle>
-              <CardDescription>Ajustes generales del servidor de juego</CardDescription>
+              <CardTitle>Server Configuration</CardTitle>
+              <CardDescription>General game server settings</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Nombre del Servidor</label>
+                  <label className="text-sm font-medium mb-2 block">Server Name</label>
                   <Input
                     value={serverSettings.serverName}
                     onChange={(e) => setServerSettings(prev => ({ ...prev, serverName: e.target.value }))}
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">IP del Servidor</label>
+                  <label className="text-sm font-medium mb-2 block">Server IP</label>
                   <Input
                     value={serverSettings.serverIp}
                     onChange={(e) => setServerSettings(prev => ({ ...prev, serverIp: e.target.value }))}
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Puerto de Login</label>
+                  <label className="text-sm font-medium mb-2 block">Login Port</label>
                   <Input
                     value={serverSettings.loginPort}
                     onChange={(e) => setServerSettings(prev => ({ ...prev, loginPort: e.target.value }))}
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Máximo de Jugadores</label>
+                  <label className="text-sm font-medium mb-2 block">Max Players</label>
                   <Input
                     value={serverSettings.maxPlayers}
                     onChange={(e) => setServerSettings(prev => ({ ...prev, maxPlayers: e.target.value }))}
@@ -110,8 +110,8 @@ export function AdminSettings() {
 
               <div className="flex items-center justify-between p-4 rounded-lg bg-destructive/10 border border-destructive/30">
                 <div>
-                  <p className="font-medium text-foreground">Modo Mantenimiento</p>
-                  <p className="text-sm text-muted-foreground">Desconecta a todos los jugadores</p>
+                  <p className="font-medium text-foreground">Maintenance Mode</p>
+                  <p className="text-sm text-muted-foreground">Disconnects all players</p>
                 </div>
                 <Switch
                   checked={serverSettings.maintenanceMode}
@@ -125,20 +125,20 @@ export function AdminSettings() {
         <TabsContent value="shop">
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle>Configuración de Tienda</CardTitle>
-              <CardDescription>Ajustes de la tienda y sistema de coins</CardDescription>
+              <CardTitle>Shop Configuration</CardTitle>
+              <CardDescription>Shop and coin system settings</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Nombre de la Moneda</label>
+                  <label className="text-sm font-medium mb-2 block">Currency Name</label>
                   <Input
                     value={shopSettings.coinName}
                     onChange={(e) => setShopSettings(prev => ({ ...prev, coinName: e.target.value }))}
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Descuento Global (%)</label>
+                  <label className="text-sm font-medium mb-2 block">Global Discount (%)</label>
                   <Input
                     type="number"
                     value={shopSettings.discount}
@@ -146,7 +146,7 @@ export function AdminSettings() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Bonus de Tienda (%)</label>
+                  <label className="text-sm font-medium mb-2 block">Shop Bonus (%)</label>
                   <Input
                     type="number"
                     value={shopSettings.shopBonus}
@@ -154,7 +154,7 @@ export function AdminSettings() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Costo Giro Ruleta</label>
+                  <label className="text-sm font-medium mb-2 block">Roulette Spin Cost</label>
                   <Input
                     type="number"
                     value={shopSettings.fortuneWheelCost}
@@ -169,15 +169,15 @@ export function AdminSettings() {
         <TabsContent value="security">
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle>Configuración de Seguridad</CardTitle>
-              <CardDescription>Ajustes de seguridad y autenticación</CardDescription>
+              <CardTitle>Security Configuration</CardTitle>
+              <CardDescription>Security and authentication settings</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30">
                   <div>
-                    <p className="font-medium text-foreground">Verificación de Email</p>
-                    <p className="text-sm text-muted-foreground">Requiere verificar email al registrarse</p>
+                    <p className="font-medium text-foreground">Email Verification</p>
+                    <p className="text-sm text-muted-foreground">Requires email verification on registration</p>
                   </div>
                   <Switch
                     checked={securitySettings.requireEmailVerification}
@@ -188,7 +188,7 @@ export function AdminSettings() {
                 <div className="flex items-center justify-between p-4 rounded-lg bg-muted/30">
                   <div>
                     <p className="font-medium text-foreground">reCAPTCHA</p>
-                    <p className="text-sm text-muted-foreground">Protección contra bots en el registro</p>
+                    <p className="text-sm text-muted-foreground">Bot protection on registration</p>
                   </div>
                   <Switch
                     checked={securitySettings.enableCaptcha}
@@ -199,7 +199,7 @@ export function AdminSettings() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Intentos de Login Máximos</label>
+                  <label className="text-sm font-medium mb-2 block">Max Login Attempts</label>
                   <Input
                     type="number"
                     value={securitySettings.maxLoginAttempts}
@@ -207,7 +207,7 @@ export function AdminSettings() {
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Timeout de Sesión (min)</label>
+                  <label className="text-sm font-medium mb-2 block">Session Timeout (min)</label>
                   <Input
                     type="number"
                     value={securitySettings.sessionTimeout}
@@ -222,13 +222,13 @@ export function AdminSettings() {
         <TabsContent value="database">
           <Card className="border-border/50">
             <CardHeader>
-              <CardTitle>Base de Datos</CardTitle>
-              <CardDescription>Información y herramientas de la base de datos</CardDescription>
+              <CardTitle>Database</CardTitle>
+              <CardDescription>Database information and tools</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-4 rounded-lg bg-muted/30">
-                  <p className="text-sm text-muted-foreground">Conexión</p>
+                  <p className="text-sm text-muted-foreground">Connection</p>
                   <p className="font-medium text-foreground">SQL Server</p>
                 </div>
                 <div className="p-4 rounded-lg bg-muted/30">
@@ -236,23 +236,23 @@ export function AdminSettings() {
                   <p className="font-medium text-foreground">127.0.0.1:1433</p>
                 </div>
                 <div className="p-4 rounded-lg bg-muted/30">
-                  <p className="text-sm text-muted-foreground">Base de Datos</p>
+                  <p className="text-sm text-muted-foreground">Database</p>
                   <p className="font-medium text-foreground">Novaera</p>
                 </div>
                 <div className="p-4 rounded-lg bg-neon-green/10 border border-neon-green/30">
-                  <p className="text-sm text-muted-foreground">Estado</p>
-                  <p className="font-medium text-neon-green">Conectado</p>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <p className="font-medium text-neon-green">Connected</p>
                 </div>
               </div>
 
               <div className="flex gap-4">
                 <Button variant="outline" className="gap-2">
                   <RefreshCw className="h-4 w-4" />
-                  Test Conexión
+                  Test Connection
                 </Button>
                 <Button variant="outline" className="gap-2">
                   <Database className="h-4 w-4" />
-                  Backup Manual
+                  Manual Backup
                 </Button>
               </div>
             </CardContent>
