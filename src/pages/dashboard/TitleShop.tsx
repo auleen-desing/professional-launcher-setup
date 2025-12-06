@@ -49,14 +49,14 @@ const rarityGlow: Record<string, string> = {
 
 // Mock titles for display - will be replaced with API data
 const mockTitles: Title[] = [
-  { id: 1, name: 'novice', displayName: 'Novice', description: 'A beginner adventurer', price: 100, rarity: 'common', icon: 'star', color: '#9ca3af' },
-  { id: 2, name: 'warrior', displayName: 'Warrior', description: 'Battle-hardened fighter', price: 500, rarity: 'uncommon', icon: 'shield', color: '#4ade80' },
-  { id: 3, name: 'champion', displayName: 'Champion', description: 'Victor of many battles', price: 1500, rarity: 'rare', icon: 'crown', color: '#60a5fa' },
-  { id: 4, name: 'legend', displayName: 'Legend', description: 'Stories are told about you', price: 5000, rarity: 'epic', icon: 'sparkles', color: '#c084fc' },
-  { id: 5, name: 'immortal', displayName: 'Immortal', description: 'Beyond life and death', price: 15000, rarity: 'legendary', icon: 'flame', color: '#facc15' },
-  { id: 6, name: 'destroyer', displayName: 'Destroyer', description: 'Leave nothing standing', price: 3000, rarity: 'rare', icon: 'skull', color: '#f87171' },
-  { id: 7, name: 'beloved', displayName: 'Beloved', description: 'Loved by all', price: 2000, rarity: 'uncommon', icon: 'heart', color: '#fb7185' },
-  { id: 8, name: 'lightning', displayName: 'Lightning', description: 'Fast as thunder', price: 8000, rarity: 'epic', icon: 'zap', color: '#fbbf24' },
+  { id: 1, name: 'novice', displayName: 'Novice', description: 'A beginner adventurer', price: 8000, rarity: 'common', icon: 'star', color: '#9ca3af' },
+  { id: 2, name: 'warrior', displayName: 'Warrior', description: 'Battle-hardened fighter', price: 9000, rarity: 'uncommon', icon: 'shield', color: '#4ade80' },
+  { id: 3, name: 'champion', displayName: 'Champion', description: 'Victor of many battles', price: 10000, rarity: 'rare', icon: 'crown', color: '#60a5fa' },
+  { id: 4, name: 'legend', displayName: 'Legend', description: 'Stories are told about you', price: 11000, rarity: 'epic', icon: 'sparkles', color: '#c084fc' },
+  { id: 5, name: 'immortal', displayName: 'Immortal', description: 'Beyond life and death', price: 12000, rarity: 'legendary', icon: 'flame', color: '#facc15' },
+  { id: 6, name: 'destroyer', displayName: 'Destroyer', description: 'Leave nothing standing', price: 13000, rarity: 'rare', icon: 'skull', color: '#f87171' },
+  { id: 7, name: 'beloved', displayName: 'Beloved', description: 'Loved by all', price: 14000, rarity: 'uncommon', icon: 'heart', color: '#fb7185' },
+  { id: 8, name: 'lightning', displayName: 'Lightning', description: 'Fast as thunder', price: 15000, rarity: 'epic', icon: 'zap', color: '#fbbf24' },
 ];
 
 export function TitleShop() {
