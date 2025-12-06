@@ -247,25 +247,29 @@ function clearLoginAttempts(username, ip) {
 
 /**
  * Input Sanitization Middleware
+ * Note: Password fields are NOT sanitized to allow special characters
  */
 function sanitizeInput(req, res, next) {
-  const sanitize = (obj) => {
+  // Fields that should NOT be sanitized (passwords can have any character)
+  const sensitiveFields = ['password', 'currentPassword', 'newPassword', 'confirmPassword'];
+  
+  const sanitize = (obj, parentKey = '') => {
     if (typeof obj === 'string') {
-      // Remove null bytes
+      // Don't sanitize password fields
+      if (sensitiveFields.includes(parentKey)) {
+        return obj;
+      }
+      // Remove null bytes only (parameterized queries handle SQL injection)
       obj = obj.replace(/\0/g, '');
-      // Remove potential SQL injection patterns (extra layer, parameterized queries are primary defense)
-      obj = obj.replace(/(['";]|--)/g, '');
       return obj.trim();
     }
     if (Array.isArray(obj)) {
-      return obj.map(sanitize);
+      return obj.map(item => sanitize(item, parentKey));
     }
     if (obj && typeof obj === 'object') {
       const sanitized = {};
       for (const key of Object.keys(obj)) {
-        // Sanitize keys too
-        const cleanKey = key.replace(/[^\w\-]/g, '');
-        sanitized[cleanKey] = sanitize(obj[key]);
+        sanitized[key] = sanitize(obj[key], key);
       }
       return sanitized;
     }
