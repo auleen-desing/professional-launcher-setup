@@ -14,7 +14,8 @@ import {
   ChevronRight,
   Bell,
   Search,
-  BarChart3
+  BarChart3,
+  Ticket
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,7 @@ const navItems: NavItem[] = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'NovaCoins', href: '/admin/coins', icon: Coins },
+  { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
   { name: 'Announcements', href: '/admin/announcements', icon: Megaphone },
   { name: 'Moderation', href: '/admin/moderation', icon: Shield, badge: 3 },
   { name: 'Statistics', href: '/admin/stats', icon: BarChart3 },

@@ -338,4 +338,139 @@ router.delete('/announcements/:id', authMiddleware, adminMiddleware, async (req,
   }
 });
 
+// ==================== COUPONS ====================
+
+// GET /api/admin/coupons - List all coupons
+router.get('/coupons', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query(`
+      SELECT Id, Code, Coins, MaxUses, CurrentUses, Active, ExpiresAt, CreatedAt
+      FROM web_coupons
+      ORDER BY CreatedAt DESC
+    `);
+    
+    res.json({ success: true, data: result.recordset });
+  } catch (err) {
+    console.error('Get coupons error:', err);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// POST /api/admin/coupons - Create a new coupon
+router.post('/coupons', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { code, coins, maxUses, expiresAt } = req.body;
+    
+    // Validate
+    if (!code || typeof code !== 'string' || code.length < 3) {
+      return res.status(400).json({ success: false, error: 'Invalid coupon code' });
+    }
+    
+    if (!coins || coins <= 0) {
+      return res.status(400).json({ success: false, error: 'Coins must be greater than 0' });
+    }
+    
+    const pool = await poolPromise;
+    
+    // Check if code exists
+    const existing = await pool.request()
+      .input('code', sql.NVarChar, code.toUpperCase())
+      .query('SELECT Id FROM web_coupons WHERE Code = @code');
+    
+    if (existing.recordset.length > 0) {
+      return res.status(400).json({ success: false, error: 'Coupon code already exists' });
+    }
+    
+    // Create coupon
+    await pool.request()
+      .input('code', sql.NVarChar, code.toUpperCase())
+      .input('coins', sql.Int, coins)
+      .input('maxUses', sql.Int, maxUses || null)
+      .input('expiresAt', sql.DateTime, expiresAt ? new Date(expiresAt) : null)
+      .query(`
+        INSERT INTO web_coupons (Code, Coins, MaxUses, CurrentUses, Active, ExpiresAt, CreatedAt)
+        VALUES (@code, @coins, @maxUses, 0, 1, @expiresAt, GETDATE())
+      `);
+    
+    console.log(`[ADMIN] Coupon created: ${code} - ${coins} coins`);
+    
+    res.json({ success: true, message: 'Coupon created successfully' });
+  } catch (err) {
+    console.error('Create coupon error:', err);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// PUT /api/admin/coupons/:id - Update coupon
+router.put('/coupons/:id', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { active, coins, maxUses, expiresAt } = req.body;
+    
+    const pool = await poolPromise;
+    
+    // Build dynamic update query
+    let updates = [];
+    const request = pool.request().input('id', sql.Int, id);
+    
+    if (active !== undefined) {
+      updates.push('Active = @active');
+      request.input('active', sql.Bit, active ? 1 : 0);
+    }
+    
+    if (coins !== undefined) {
+      updates.push('Coins = @coins');
+      request.input('coins', sql.Int, coins);
+    }
+    
+    if (maxUses !== undefined) {
+      updates.push('MaxUses = @maxUses');
+      request.input('maxUses', sql.Int, maxUses);
+    }
+    
+    if (expiresAt !== undefined) {
+      updates.push('ExpiresAt = @expiresAt');
+      request.input('expiresAt', sql.DateTime, expiresAt ? new Date(expiresAt) : null);
+    }
+    
+    if (updates.length === 0) {
+      return res.status(400).json({ success: false, error: 'No fields to update' });
+    }
+    
+    await request.query(`UPDATE web_coupons SET ${updates.join(', ')} WHERE Id = @id`);
+    
+    res.json({ success: true, message: 'Coupon updated successfully' });
+  } catch (err) {
+    console.error('Update coupon error:', err);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// DELETE /api/admin/coupons/:id - Delete coupon
+router.delete('/coupons/:id', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    const pool = await poolPromise;
+    
+    // Delete redemptions first
+    await pool.request()
+      .input('id', sql.Int, id)
+      .query('DELETE FROM web_coupon_redemptions WHERE CouponId = @id');
+    
+    // Delete coupon
+    await pool.request()
+      .input('id', sql.Int, id)
+      .query('DELETE FROM web_coupons WHERE Id = @id');
+    
+    console.log(`[ADMIN] Coupon deleted: ID ${id}`);
+    
+    res.json({ success: true, message: 'Coupon deleted successfully' });
+  } catch (err) {
+    console.error('Delete coupon error:', err);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
 module.exports = router;

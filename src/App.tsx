@@ -28,6 +28,7 @@ import { AdminLayout } from "./components/admin/AdminLayout";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { AdminUsers } from "./pages/admin/AdminUsers";
 import { AdminCoins } from "./pages/admin/AdminCoins";
+import { AdminCoupons } from "./pages/admin/AdminCoupons";
 import { AdminAnnouncements } from "./pages/admin/AdminAnnouncements";
 import { AdminModeration } from "./pages/admin/AdminModeration";
 import { AdminStats } from "./pages/admin/AdminStats";
@@ -208,6 +209,7 @@ function AppRoutes() {
       <Route path="/admin" element={<ProtectedAdminRoute><AdminLayout><AdminDashboard /></AdminLayout></ProtectedAdminRoute>} />
       <Route path="/admin/users" element={<ProtectedAdminRoute><AdminLayout><AdminUsers /></AdminLayout></ProtectedAdminRoute>} />
       <Route path="/admin/coins" element={<ProtectedAdminRoute><AdminLayout><AdminCoins /></AdminLayout></ProtectedAdminRoute>} />
+      <Route path="/admin/coupons" element={<ProtectedAdminRoute><AdminLayout><AdminCoupons /></AdminLayout></ProtectedAdminRoute>} />
       <Route path="/admin/announcements" element={<ProtectedAdminRoute><AdminLayout><AdminAnnouncements /></AdminLayout></ProtectedAdminRoute>} />
       <Route path="/admin/moderation" element={<ProtectedAdminRoute><AdminLayout><AdminModeration /></AdminLayout></ProtectedAdminRoute>} />
       <Route path="/admin/stats" element={<ProtectedAdminRoute><AdminLayout><AdminStats /></AdminLayout></ProtectedAdminRoute>} />
