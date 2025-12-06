@@ -55,6 +55,19 @@ router.post('/password', authMiddleware, async (req, res) => {
     const { currentPassword, newPassword } = req.body;
     const crypto = require('crypto');
     
+    // SECURITY: Validate input
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, error: 'Both passwords are required' });
+    }
+    
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, error: 'New password must be at least 6 characters' });
+    }
+    
+    if (newPassword.length > 100) {
+      return res.status(400).json({ success: false, error: 'Password too long' });
+    }
+    
     // SHA512 hash function
     function sha512(password) {
       return crypto.createHash('sha512').update(password, 'utf8').digest('hex');
@@ -67,9 +80,19 @@ router.post('/password', authMiddleware, async (req, res) => {
       .query('SELECT Password FROM Account WHERE AccountId = @id');
 
     const user = result.recordset[0];
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+    
     const hashedCurrentPassword = sha512(currentPassword);
     
-    if (user.Password.toLowerCase() !== hashedCurrentPassword.toLowerCase()) {
+    // SECURITY: Use timing-safe comparison
+    const passwordMatch = crypto.timingSafeEqual(
+      Buffer.from(user.Password.toLowerCase()),
+      Buffer.from(hashedCurrentPassword.toLowerCase())
+    );
+    
+    if (!passwordMatch) {
       return res.status(400).json({ success: false, error: 'Current password is incorrect' });
     }
 
