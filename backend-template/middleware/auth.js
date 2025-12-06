@@ -1,6 +1,11 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'novaera_secret_key_change_this';
+// SECURITY: Use environment variable or generate a secure random secret
+const JWT_SECRET = process.env.JWT_SECRET || (() => {
+  console.warn('WARNING: JWT_SECRET not set in environment. Using generated secret (will change on restart).');
+  return crypto.randomBytes(64).toString('hex');
+})();
 
 const authMiddleware = (req, res, next) => {
   const token = req.headers.authorization?.replace('Bearer ', '');

@@ -23,16 +23,29 @@ export function BuyCoins() {
   const { toast } = useToast();
   const { user, refreshUser } = useAuth();
 
-  // PayPal donation config
-  const PAYPAL_EMAIL = 'pincjx771@gmail.com';
+  const [paypalEmail, setPaypalEmail] = useState<string>('');
+
+  // URLs for PayPal
   const RETURN_URL = `${window.location.origin}/dashboard/buy-coins?donation=success`;
   const CANCEL_URL = `${window.location.origin}/dashboard/buy-coins?donation=canceled`;
-  // IPN URL must be absolute for PayPal
   const IPN_URL = `${window.location.origin}/api/payments/paypal/ipn`;
 
   useEffect(() => {
     fetchPackages();
+    fetchPaypalConfig();
   }, []);
+
+  const fetchPaypalConfig = async () => {
+    try {
+      const response = await fetch(buildApiUrl('/payments/paypal/config'));
+      const data = await response.json();
+      if (data.success && data.email) {
+        setPaypalEmail(data.email);
+      }
+    } catch (error) {
+      console.error('Error fetching PayPal config:', error);
+    }
+  };
 
   const fetchPackages = async () => {
     try {
@@ -129,7 +142,7 @@ export function BuyCoins() {
 
       const fields = {
         cmd: '_donations',
-        business: PAYPAL_EMAIL,
+        business: paypalEmail,
         item_name: 'Server donation',
         amount: selectedPackage.price.toString(),
         custom: transactionId,
