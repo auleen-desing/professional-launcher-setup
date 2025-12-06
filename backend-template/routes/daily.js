@@ -26,7 +26,7 @@ router.get('/status', authMiddleware, async (req, res) => {
 
     // Get user's daily reward status
     const statusResult = await pool.request()
-      .input('accountId', sql.Int, req.user.id)
+      .input('accountId', sql.BigInt, req.user.id)
       .query(`
         SELECT LastClaim, Streak FROM web_daily_rewards WHERE AccountId = @accountId
       `);
@@ -103,7 +103,7 @@ router.post('/claim', authMiddleware, async (req, res) => {
 
     // Check if already claimed today
     const statusResult = await pool.request()
-      .input('accountId', sql.Int, req.user.id)
+      .input('accountId', sql.BigInt, req.user.id)
       .query('SELECT LastClaim, Streak FROM web_daily_rewards WHERE AccountId = @accountId');
 
     const data = statusResult.recordset[0];
@@ -135,7 +135,7 @@ router.post('/claim', authMiddleware, async (req, res) => {
 
     // Update or insert daily record
     await pool.request()
-      .input('accountId', sql.Int, req.user.id)
+      .input('accountId', sql.BigInt, req.user.id)
       .input('streak', sql.Int, newStreak)
       .query(`
         MERGE web_daily_rewards AS target
@@ -148,9 +148,9 @@ router.post('/claim', authMiddleware, async (req, res) => {
     // Add coins to account
     if (coinsReward > 0) {
       await pool.request()
-        .input('accountId', sql.Int, req.user.id)
+        .input('accountId', sql.BigInt, req.user.id)
         .input('coins', sql.Int, coinsReward)
-        .query('UPDATE account SET Coins = Coins + @coins WHERE AccountId = @accountId');
+        .query('UPDATE Account SET coins = coins + @coins WHERE AccountId = @accountId');
     }
 
     // If there's an item reward, log it
@@ -160,10 +160,10 @@ router.post('/claim', authMiddleware, async (req, res) => {
 
     // Get updated coin balance
     const balanceResult = await pool.request()
-      .input('accountId', sql.Int, req.user.id)
-      .query('SELECT Coins FROM account WHERE AccountId = @accountId');
+      .input('accountId', sql.BigInt, req.user.id)
+      .query('SELECT coins FROM Account WHERE AccountId = @accountId');
     
-    const newBalance = balanceResult.recordset[0]?.Coins || 0;
+    const newBalance = balanceResult.recordset[0]?.coins || 0;
 
     console.log(`[Daily] User ${req.user.id} claimed day ${newStreak}: ${coinsReward} coins`);
 
