@@ -62,7 +62,7 @@ export function Tickets() {
   const fetchTickets = async () => {
     setIsLoading(true);
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('novaera_token');
       const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.TICKETS.LIST), {
         headers: { 'Authorization': `Bearer ${token}` },
       });
@@ -91,7 +91,7 @@ export function Tickets() {
     setIsCreating(true);
 
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('novaera_token');
       const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.TICKETS.CREATE), {
         method: 'POST',
         headers: {
@@ -136,7 +136,7 @@ export function Tickets() {
     setTicketReplies([]);
     
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('novaera_token');
       const response = await fetch(buildApiUrl(`/tickets/${ticket.id}`), {
         headers: { 'Authorization': `Bearer ${token}` },
       });
@@ -156,7 +156,7 @@ export function Tickets() {
     setIsReplying(true);
 
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('novaera_token');
       const response = await fetch(buildApiUrl(`/tickets/${selectedTicket.id}/reply`), {
         method: 'POST',
         headers: {

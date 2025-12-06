@@ -29,7 +29,7 @@ export function Unbug() {
 
   const fetchCharacters = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('novaera_token');
       const response = await fetch(buildApiUrl('/character/list'), {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -68,7 +68,7 @@ export function Unbug() {
     setIsUnbugging(true);
 
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('novaera_token');
       const response = await fetch(buildApiUrl('/character/unbug'), {
         method: 'POST',
         headers: {
