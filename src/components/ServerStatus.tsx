@@ -22,6 +22,19 @@ export function ServerStatus() {
   const fetchServerStatus = async () => {
     try {
       const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.SERVER.STATUS));
+      
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        setError('Server not available');
+        return;
+      }
+      
+      if (!response.ok) {
+        setError('Server not available');
+        return;
+      }
+
       const data = await response.json();
       
       if (data.success) {
@@ -32,7 +45,6 @@ export function ServerStatus() {
         setError('Failed to fetch server status');
       }
     } catch (err) {
-      console.error('Server status error:', err);
       setError('Could not connect to server');
     } finally {
       setLoading(false);
@@ -40,9 +52,17 @@ export function ServerStatus() {
   };
 
   useEffect(() => {
+    let isMounted = true;
+    
     fetchServerStatus();
-    const interval = setInterval(fetchServerStatus, 30000);
-    return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      if (isMounted) fetchServerStatus();
+    }, 30000);
+    
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   const getStatusBadge = (status: string) => {

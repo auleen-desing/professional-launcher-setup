@@ -11,11 +11,31 @@ export function HeroSection() {
   });
 
   useEffect(() => {
+    let isMounted = true;
+    let retryCount = 0;
+    const maxRetries = 3;
+
     const fetchStatus = async () => {
+      if (retryCount >= maxRetries) return;
+      
       try {
         const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.SERVER.STATUS));
+        
+        // Check if response is JSON before parsing
+        const contentType = response.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+          retryCount++;
+          return;
+        }
+        
+        if (!response.ok) {
+          retryCount++;
+          return;
+        }
+
         const data = await response.json();
-        if (data.success) {
+        if (isMounted && data.success) {
+          retryCount = 0; // Reset on success
           const onlineChannels = data.data.channels.filter((ch: any) => ch.status === 'online');
           setServerStatus({
             online: onlineChannels.length > 0,
@@ -23,12 +43,17 @@ export function HeroSection() {
           });
         }
       } catch (err) {
-        console.error('Failed to fetch server status:', err);
+        retryCount++;
+        // Silently fail - don't spam console
       }
     };
+    
     fetchStatus();
     const interval = setInterval(fetchStatus, 30000);
-    return () => clearInterval(interval);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, []);
 
   return (
