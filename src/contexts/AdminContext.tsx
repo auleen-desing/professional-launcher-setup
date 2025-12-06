@@ -34,7 +34,16 @@ const defaultStats: ServerStats = {
 };
 
 export function AdminProvider({ children }: { children: ReactNode }) {
-  const { isAdmin } = useAuth();
+  // Safely get auth context - if not available, assume not admin
+  let isAdmin = false;
+  try {
+    const auth = useAuth();
+    isAdmin = auth?.isAdmin ?? false;
+  } catch {
+    // Auth context not available yet
+    isAdmin = false;
+  }
+
   const [stats, setStats] = useState<ServerStats>(defaultStats);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -42,7 +51,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   const [modActions, setModActions] = useState<ModAction[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const getToken = () => localStorage.getItem('auth_token');
+  const getToken = () => localStorage.getItem('novaera_token');
 
   const fetchStats = async () => {
     try {
