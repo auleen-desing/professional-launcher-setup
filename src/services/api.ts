@@ -71,6 +71,15 @@ class ApiService {
         headers,
       });
 
+      // Check if response is JSON before parsing
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        return {
+          success: false,
+          error: 'Server unavailable. Please try again later.',
+        };
+      }
+
       const json = await response.json();
 
       if (!response.ok) {
@@ -95,10 +104,9 @@ class ApiService {
         data: json,
       };
     } catch (error) {
-      console.error('API Request failed:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Network error',
+        error: 'Could not connect to server. Please try again later.',
       };
     }
   }
