@@ -8,11 +8,11 @@ router.get('/status', authMiddleware, async (req, res) => {
   try {
     const pool = await poolPromise;
     
-    // Get prizes from web_daily_rewards_prize table
+    // Get prizes from web_daily_prizes table
     const prizesResult = await pool.request()
       .query(`
-        SELECT Day, Coins, ItemVNum, ItemAmount, IsSpecial 
-        FROM web_daily_rewards_prize 
+        SELECT Day, Coins, ItemVNum, ItemAmount, Special 
+        FROM web_daily_prizes 
         ORDER BY Day ASC
       `);
     
@@ -21,7 +21,7 @@ router.get('/status', authMiddleware, async (req, res) => {
       coins: p.Coins || 0,
       itemVNum: p.ItemVNum,
       itemAmount: p.ItemAmount || 0,
-      special: p.IsSpecial === 1 || p.IsSpecial === true
+      special: p.Special === 1 || p.Special === true
     }));
 
     // Get user's daily reward status
@@ -93,8 +93,8 @@ router.post('/claim', authMiddleware, async (req, res) => {
     // Get prizes from database
     const prizesResult = await pool.request()
       .query(`
-        SELECT Day, Coins, ItemVNum, ItemAmount, IsSpecial 
-        FROM web_daily_rewards_prize 
+        SELECT Day, Coins, ItemVNum, ItemAmount, Special 
+        FROM web_daily_prizes 
         ORDER BY Day ASC
       `);
     
@@ -153,11 +153,9 @@ router.post('/claim', authMiddleware, async (req, res) => {
         .query('UPDATE account SET Coins = Coins + @coins WHERE AccountId = @accountId');
     }
 
-    // If there's an item reward, add to inventory (you may need to adjust this based on your game's item system)
+    // If there's an item reward, log it
     if (itemVNum && itemAmount > 0) {
       console.log(`[Daily] Item reward: VNum ${itemVNum} x${itemAmount} for user ${req.user.id}`);
-      // TODO: Add item to character inventory if needed
-      // This depends on your game's item delivery system
     }
 
     // Get updated coin balance
