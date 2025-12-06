@@ -83,11 +83,11 @@ router.post('/redeem', authMiddleware, async (req, res) => {
       success: true, 
       message: `Coupon redeemed! You received ${coupon.Coins} coins.`,
       data: { coins: coupon.Coins }
-});
-
-module.exports = router;
+    });
   } catch (err) {
     console.error('Coupon error:', err);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });
+
+module.exports = router;
