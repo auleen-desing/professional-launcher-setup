@@ -28,6 +28,7 @@ import Launcher from "./pages/Launcher";
 import { AdminLayout } from "./components/admin/AdminLayout";
 import { AdminDashboard } from "./pages/admin/AdminDashboard";
 import { AdminUsers } from "./pages/admin/AdminUsers";
+import { AdminIPBan } from "./pages/admin/AdminIPBan";
 import { AdminCoins } from "./pages/admin/AdminCoins";
 import { AdminCoupons } from "./pages/admin/AdminCoupons";
 import { AdminAnnouncements } from "./pages/admin/AdminAnnouncements";
@@ -219,6 +220,7 @@ function AppRoutes() {
       {/* Admin Routes - Protected by CanUseCP > 1 */}
       <Route path="/admin" element={<ProtectedAdminRoute><AdminLayout><AdminDashboard /></AdminLayout></ProtectedAdminRoute>} />
       <Route path="/admin/users" element={<ProtectedAdminRoute><AdminLayout><AdminUsers /></AdminLayout></ProtectedAdminRoute>} />
+      <Route path="/admin/ipban" element={<ProtectedAdminRoute><AdminLayout><AdminIPBan /></AdminLayout></ProtectedAdminRoute>} />
       <Route path="/admin/coins" element={<ProtectedAdminRoute><AdminLayout><AdminCoins /></AdminLayout></ProtectedAdminRoute>} />
       <Route path="/admin/coupons" element={<ProtectedAdminRoute><AdminLayout><AdminCoupons /></AdminLayout></ProtectedAdminRoute>} />
       <Route path="/admin/announcements" element={<ProtectedAdminRoute><AdminLayout><AdminAnnouncements /></AdminLayout></ProtectedAdminRoute>} />

@@ -53,7 +53,7 @@ class ApiService {
     this.token = localStorage.getItem('novaera_token');
   }
 
-  private async request<T>(
+  public async request<T>(
     endpoint: string,
     options: RequestInit = {}
   ): Promise<ApiResponse<T>> {

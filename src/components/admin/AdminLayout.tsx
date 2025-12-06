@@ -15,7 +15,8 @@ import {
   Bell,
   Search,
   BarChart3,
-  Ticket
+  Ticket,
+  Globe
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Users', href: '/admin/users', icon: Users },
+  { name: 'IP Ban', href: '/admin/ipban', icon: Globe },
   { name: 'NovaCoins', href: '/admin/coins', icon: Coins },
   { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
   { name: 'Announcements', href: '/admin/announcements', icon: Megaphone },
