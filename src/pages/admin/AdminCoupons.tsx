@@ -76,7 +76,7 @@ export function AdminCoupons() {
   const fetchCoupons = async () => {
     try {
       setLoading(true);
-      const response = await adminRequest('/api/admin/coupons');
+      const response = await adminRequest('/admin/coupons');
       if (response.success) {
         setCoupons(response.data || []);
       }
@@ -112,7 +112,7 @@ export function AdminCoupons() {
 
     try {
       setCreating(true);
-      const response = await adminRequest('/api/admin/coupons', {
+      const response = await adminRequest('/admin/coupons', {
         method: 'POST',
         body: JSON.stringify({
           code: newCoupon.code.toUpperCase(),
@@ -150,7 +150,7 @@ export function AdminCoupons() {
 
   const handleToggleActive = async (coupon: Coupon) => {
     try {
-      const response = await adminRequest(`/api/admin/coupons/${coupon.Id}`, {
+      const response = await adminRequest(`/admin/coupons/${coupon.Id}`, {
         method: 'PUT',
         body: JSON.stringify({ active: !coupon.Active }),
       });
@@ -177,7 +177,7 @@ export function AdminCoupons() {
     if (!confirm(`Are you sure you want to delete coupon ${coupon.Code}?`)) return;
 
     try {
-      const response = await adminRequest(`/api/admin/coupons/${coupon.Id}`, {
+      const response = await adminRequest(`/admin/coupons/${coupon.Id}`, {
         method: 'DELETE',
       });
 
