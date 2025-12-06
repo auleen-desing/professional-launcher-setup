@@ -49,8 +49,8 @@ export function Roulette() {
   const handleSpin = async () => {
     if ((user?.coins || 0) < spinCost) {
       toast({
-        title: 'Coins insuficientes',
-        description: `Necesitas ${spinCost.toLocaleString()} coins para girar.`,
+        title: 'Insufficient Coins',
+        description: `You need ${spinCost.toLocaleString()} coins to spin.`,
         variant: 'destructive',
       });
       return;
@@ -91,10 +91,10 @@ export function Roulette() {
             updateCoins(data.data.newBalance);
 
             toast({
-              title: '🎉 ¡Felicidades!',
+              title: '🎉 Congratulations!',
               description: wonPrize.type === 'item' 
-                ? `¡Ganaste ${wonPrize.name}! Revisa tu correo del juego.`
-                : `¡Ganaste ${wonPrize.value.toLocaleString()} coins!`,
+                ? `You won ${wonPrize.name}! Check your in-game mail.`
+                : `You won ${wonPrize.value.toLocaleString()} coins!`,
             });
           }
         }, 100 + (currentIndex * 5)); // Slow down gradually
@@ -103,7 +103,7 @@ export function Roulette() {
         setIsSpinning(false);
         toast({
           title: 'Error',
-          description: data.error || 'No se pudo girar la ruleta',
+          description: data.error || 'Could not spin the roulette',
           variant: 'destructive',
         });
       }
@@ -111,7 +111,7 @@ export function Roulette() {
       setIsSpinning(false);
       toast({
         title: 'Error',
-        description: 'No se pudo conectar al servidor',
+        description: 'Could not connect to server',
         variant: 'destructive',
       });
     }
@@ -121,8 +121,8 @@ export function Roulette() {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold text-gradient-gold">Ruleta de la Suerte</h1>
-          <p className="text-muted-foreground mt-2">Prueba tu suerte y gana premios</p>
+          <h1 className="text-3xl font-bold text-gradient-gold">Lucky Roulette</h1>
+          <p className="text-muted-foreground mt-2">Try your luck and win prizes</p>
         </div>
         <Card><CardContent className="p-6"><Skeleton className="h-64 w-full" /></CardContent></Card>
       </div>
@@ -132,8 +132,8 @@ export function Roulette() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-gradient-gold">Ruleta de la Suerte</h1>
-        <p className="text-muted-foreground mt-2">Prueba tu suerte y gana premios increíbles</p>
+        <h1 className="text-3xl font-bold text-gradient-gold">Lucky Roulette</h1>
+        <p className="text-muted-foreground mt-2">Try your luck and win amazing prizes</p>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
@@ -142,10 +142,10 @@ export function Roulette() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Gift className="h-5 w-5 text-primary" />
-              Premios Disponibles
+              Available Prizes
             </CardTitle>
             <CardDescription>
-              Costo por giro: <span className="text-primary font-bold">{spinCost.toLocaleString()} coins</span>
+              Cost per spin: <span className="text-primary font-bold">{spinCost.toLocaleString()} coins</span>
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -186,7 +186,7 @@ export function Roulette() {
                   {/* Winner Badge */}
                   {result?.id === prize.id && !isSpinning && (
                     <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full font-bold">
-                      ¡GANADOR!
+                      WINNER!
                     </div>
                   )}
                 </div>
@@ -200,13 +200,13 @@ export function Roulette() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Dices className="h-5 w-5 text-primary" />
-              Girar Ruleta
+              Spin Roulette
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* User Balance */}
             <div className="p-4 bg-muted/50 rounded-lg text-center">
-              <p className="text-sm text-muted-foreground mb-1">Tu balance</p>
+              <p className="text-sm text-muted-foreground mb-1">Your balance</p>
               <p className="text-2xl font-bold text-primary">
                 {(user?.coins || 0).toLocaleString()} <span className="text-sm">coins</span>
               </p>
@@ -214,7 +214,7 @@ export function Roulette() {
 
             {/* Spin Cost */}
             <div className="p-4 bg-primary/10 rounded-lg text-center border border-primary/20">
-              <p className="text-sm text-muted-foreground mb-1">Costo por giro</p>
+              <p className="text-sm text-muted-foreground mb-1">Cost per spin</p>
               <p className="text-xl font-bold">{spinCost.toLocaleString()} coins</p>
             </div>
 
@@ -228,19 +228,19 @@ export function Roulette() {
               {isSpinning ? (
                 <>
                   <RotateCcw className="h-5 w-5 animate-spin" />
-                  Girando...
+                  Spinning...
                 </>
               ) : (
                 <>
                   <Sparkles className="h-5 w-5" />
-                  ¡Girar!
+                  Spin!
                 </>
               )}
             </Button>
 
             {(user?.coins || 0) < spinCost && (
               <p className="text-sm text-destructive text-center">
-                No tienes suficientes coins para girar
+                You don't have enough coins to spin
               </p>
             )}
 
@@ -248,11 +248,11 @@ export function Roulette() {
             {result && !isSpinning && (
               <div className="p-4 bg-gradient-to-r from-primary/20 to-yellow-500/20 rounded-lg border border-primary/30 text-center animate-fade-in">
                 <Sparkles className="h-8 w-8 text-primary mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">¡Ganaste!</p>
+                <p className="text-sm text-muted-foreground">You won!</p>
                 <p className="text-xl font-bold text-primary">{result.name}</p>
                 {result.type === 'coins' && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    +{result.value.toLocaleString()} coins añadidos
+                    +{result.value.toLocaleString()} coins added
                   </p>
                 )}
               </div>
@@ -265,8 +265,8 @@ export function Roulette() {
       <Card className="bg-muted/30">
         <CardContent className="pt-6">
           <p className="text-sm text-muted-foreground">
-            <strong>💡 Consejo:</strong> La ruleta selecciona un premio al azar basándose en las probabilidades mostradas. 
-            Los premios de items se envían automáticamente al correo de tu personaje principal.
+            <strong>💡 Tip:</strong> The roulette randomly selects a prize based on the displayed probabilities. 
+            Item prizes are automatically sent to your main character's in-game mail.
           </p>
         </CardContent>
       </Card>

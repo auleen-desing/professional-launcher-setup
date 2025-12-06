@@ -75,7 +75,7 @@ export function Login() {
     if (!regUsername.trim() || !regEmail.trim() || !regPassword.trim()) {
       toast({
         title: 'Error',
-        description: 'Por favor completa todos los campos.',
+        description: 'Please fill in all fields.',
         variant: 'destructive',
       });
       return;
@@ -84,7 +84,7 @@ export function Login() {
     if (regUsername.length < 3 || regUsername.length > 20) {
       toast({
         title: 'Error',
-        description: 'El nombre de usuario debe tener entre 3 y 20 caracteres.',
+        description: 'Username must be between 3 and 20 characters.',
         variant: 'destructive',
       });
       return;
@@ -93,7 +93,7 @@ export function Login() {
     if (regPassword.length < 6) {
       toast({
         title: 'Error',
-        description: 'La contraseña debe tener al menos 6 caracteres.',
+        description: 'Password must be at least 6 characters.',
         variant: 'destructive',
       });
       return;
@@ -106,16 +106,16 @@ export function Login() {
 
       if (result.success) {
         toast({
-          title: 'Cuenta creada',
-          description: 'Tu cuenta ha sido creada exitosamente. Ya puedes iniciar sesión.',
+          title: 'Account Created',
+          description: 'Your account has been created successfully. You can now log in.',
         });
         setRegUsername('');
         setRegEmail('');
         setRegPassword('');
       } else {
         toast({
-          title: 'Error de registro',
-          description: result.error || 'No se pudo crear la cuenta.',
+          title: 'Registration Error',
+          description: result.error || 'Could not create account.',
           variant: 'destructive',
         });
       }
@@ -123,7 +123,7 @@ export function Login() {
       console.error('Register error:', error);
       toast({
         title: 'Error',
-        description: 'No se pudo conectar con el servidor.',
+        description: 'Could not connect to server.',
         variant: 'destructive',
       });
     } finally {
@@ -251,7 +251,7 @@ export function Login() {
                       />
                     </div>
                     <Button type="submit" className="w-full gap-2" disabled={isRegistering}>
-                      {isRegistering ? 'Registrando...' : 'Registrarse'}
+                      {isRegistering ? 'Registering...' : 'Register'}
                     </Button>
                   </form>
                 </TabsContent>

@@ -7,20 +7,20 @@ export function AdminDashboard() {
   const { stats, transactions, modActions, isLoading } = useAdmin();
 
   const statCards = [
-    { title: 'Usuarios Totales', value: stats.totalUsers.toLocaleString(), icon: Users, change: '+12%', color: 'from-blue-500 to-cyan-500' },
-    { title: 'Jugadores Online', value: stats.onlinePlayers.toLocaleString(), icon: Activity, change: '+5%', color: 'from-green-500 to-emerald-500' },
-    { title: 'Ingresos del Mes', value: `$${stats.revenue.toLocaleString()}`, icon: DollarSign, change: '+23%', color: 'from-yellow-500 to-orange-500' },
-    { title: 'Tickets Abiertos', value: stats.ticketsOpen.toString(), icon: Ticket, change: '-8%', color: 'from-purple-500 to-pink-500' },
-    { title: 'Nuevos Hoy', value: stats.newUsersToday.toString(), icon: UserPlus, change: '+15%', color: 'from-cyan-500 to-blue-500' },
-    { title: 'Usuarios Baneados', value: stats.bannedUsers.toString(), icon: Ban, change: '+2', color: 'from-red-500 to-rose-500' },
+    { title: 'Total Users', value: stats.totalUsers.toLocaleString(), icon: Users, change: '+12%', color: 'from-blue-500 to-cyan-500' },
+    { title: 'Online Players', value: stats.onlinePlayers.toLocaleString(), icon: Activity, change: '+5%', color: 'from-green-500 to-emerald-500' },
+    { title: 'Monthly Revenue', value: `$${stats.revenue.toLocaleString()}`, icon: DollarSign, change: '+23%', color: 'from-yellow-500 to-orange-500' },
+    { title: 'Open Tickets', value: stats.ticketsOpen.toString(), icon: Ticket, change: '-8%', color: 'from-purple-500 to-pink-500' },
+    { title: 'New Today', value: stats.newUsersToday.toString(), icon: UserPlus, change: '+15%', color: 'from-cyan-500 to-blue-500' },
+    { title: 'Banned Users', value: stats.bannedUsers.toString(), icon: Ban, change: '+2', color: 'from-red-500 to-rose-500' },
   ];
 
   if (isLoading) {
     return (
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-display font-bold text-foreground">Panel de Administración</h1>
-          <p className="text-muted-foreground mt-2">Cargando datos...</p>
+          <h1 className="text-3xl font-display font-bold text-foreground">Admin Panel</h1>
+          <p className="text-muted-foreground mt-2">Loading data...</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -38,8 +38,8 @@ export function AdminDashboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-3xl font-display font-bold text-foreground">Panel de Administración</h1>
-        <p className="text-muted-foreground mt-2">Bienvenido al centro de control de NovaEra</p>
+        <h1 className="text-3xl font-display font-bold text-foreground">Admin Panel</h1>
+        <p className="text-muted-foreground mt-2">Welcome to NovaEra control center</p>
       </div>
 
       {/* Stats Grid */}
@@ -52,7 +52,7 @@ export function AdminDashboard() {
                   <p className="text-sm text-muted-foreground">{stat.title}</p>
                   <p className="text-3xl font-display font-bold text-foreground mt-1">{stat.value}</p>
                   <p className={`text-sm mt-1 ${stat.change.startsWith('+') ? 'text-neon-green' : 'text-destructive'}`}>
-                    {stat.change} vs mes anterior
+                    {stat.change} vs last month
                   </p>
                 </div>
                 <div className={`p-3 rounded-xl bg-gradient-to-br ${stat.color}`}>
@@ -71,14 +71,14 @@ export function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Coins className="h-5 w-5 text-primary" />
-              Transacciones Recientes
+              Recent Transactions
             </CardTitle>
-            <CardDescription>Últimos movimientos de NovaCoins</CardDescription>
+            <CardDescription>Latest NovaCoins movements</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {transactions.length === 0 ? (
-                <p className="text-center text-muted-foreground py-4">No hay transacciones</p>
+                <p className="text-center text-muted-foreground py-4">No transactions</p>
               ) : (
                 transactions.slice(0, 5).map((tx) => (
                   <div key={tx.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
@@ -104,14 +104,14 @@ export function AdminDashboard() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Ban className="h-5 w-5 text-destructive" />
-              Acciones de Moderación
+              Moderation Actions
             </CardTitle>
-            <CardDescription>Últimas acciones tomadas</CardDescription>
+            <CardDescription>Latest actions taken</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               {modActions.length === 0 ? (
-                <p className="text-center text-muted-foreground py-4">No hay acciones de moderación</p>
+                <p className="text-center text-muted-foreground py-4">No moderation actions</p>
               ) : (
                 modActions.slice(0, 5).map((action) => (
                   <div key={action.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
@@ -129,7 +129,7 @@ export function AdminDashboard() {
                       </div>
                     </div>
                     <span className="text-xs text-muted-foreground">
-                      por {action.adminName}
+                      by {action.adminName}
                     </span>
                   </div>
                 ))
