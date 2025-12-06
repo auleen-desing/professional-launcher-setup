@@ -8,10 +8,10 @@ router.get('/profile', authMiddleware, async (req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
-      .input('id', sql.Int, req.user.id)
+      .input('id', sql.BigInt, req.user.id)
       .query(`
-        SELECT AccountId, Name, Email, Authority, Coins, RegistrationIP
-        FROM account WHERE AccountId = @id
+        SELECT AccountId, Name, Email, Authority, coins, RegistrationIP
+        FROM Account WHERE AccountId = @id
       `);
 
     if (result.recordset.length === 0) {
@@ -25,7 +25,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
         id: user.AccountId,
         username: user.Name,
         email: user.Email,
-        coins: user.Coins || 0,
+        coins: user.coins || 0,
         authority: user.Authority || 0
       }
     });
@@ -40,10 +40,10 @@ router.get('/coins', authMiddleware, async (req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
-      .input('id', sql.Int, req.user.id)
-      .query('SELECT Coins FROM account WHERE AccountId = @id');
+      .input('id', sql.BigInt, req.user.id)
+      .query('SELECT coins FROM Account WHERE AccountId = @id');
 
-    res.json({ success: true, data: { coins: result.recordset[0]?.Coins || 0 } });
+    res.json({ success: true, data: { coins: result.recordset[0]?.coins || 0 } });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Server error' });
   }
@@ -53,21 +53,32 @@ router.get('/coins', authMiddleware, async (req, res) => {
 router.post('/password', authMiddleware, async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
+    const crypto = require('crypto');
+    
+    // SHA512 hash function
+    function sha512(password) {
+      return crypto.createHash('sha512').update(password, 'utf8').digest('hex');
+    }
+    
     const pool = await poolPromise;
 
     const result = await pool.request()
-      .input('id', sql.Int, req.user.id)
-      .query('SELECT Password FROM account WHERE AccountId = @id');
+      .input('id', sql.BigInt, req.user.id)
+      .query('SELECT Password FROM Account WHERE AccountId = @id');
 
     const user = result.recordset[0];
-    if (user.Password !== currentPassword) {
+    const hashedCurrentPassword = sha512(currentPassword);
+    
+    if (user.Password.toLowerCase() !== hashedCurrentPassword.toLowerCase()) {
       return res.status(400).json({ success: false, error: 'Current password is incorrect' });
     }
 
+    const hashedNewPassword = sha512(newPassword);
+    
     await pool.request()
-      .input('id', sql.Int, req.user.id)
-      .input('password', sql.VarChar, newPassword)
-      .query('UPDATE account SET Password = @password WHERE AccountId = @id');
+      .input('id', sql.BigInt, req.user.id)
+      .input('password', sql.VarChar, hashedNewPassword)
+      .query('UPDATE Account SET Password = @password WHERE AccountId = @id');
 
     res.json({ success: true, message: 'Password updated successfully' });
   } catch (err) {
@@ -81,11 +92,11 @@ router.get('/characters', authMiddleware, async (req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
-      .input('id', sql.Int, req.user.id)
+      .input('id', sql.BigInt, req.user.id)
       .query(`
         SELECT CharacterId, Name, Class, Level, JobLevel, HeroLevel, 
                Reputation, Gold, Compliment, Act4Dead, Act4Kill
-        FROM character 
+        FROM Character 
         WHERE AccountId = @id
         ORDER BY Level DESC
       `);
