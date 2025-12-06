@@ -13,6 +13,7 @@ import { DashboardHome } from "./pages/dashboard/DashboardHome";
 import { BuyCoins } from "./pages/dashboard/BuyCoins";
 import { Coupon } from "./pages/dashboard/Coupon";
 import { DailyReward } from "./pages/dashboard/DailyReward";
+import { TitleShop } from "./pages/dashboard/TitleShop";
 import { Roulette } from "./pages/dashboard/Roulette";
 import { Tickets } from "./pages/dashboard/Tickets";
 import { Unbug } from "./pages/dashboard/Unbug";
@@ -120,6 +121,16 @@ function AppRoutes() {
           <ProtectedRoute>
             <DashboardLayout>
               <DailyReward />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/titles"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <TitleShop />
             </DashboardLayout>
           </ProtectedRoute>
         }

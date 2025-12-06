@@ -20,7 +20,8 @@ import {
   Gamepad2,
   Users,
   Trophy,
-  Shield
+  Shield,
+  Crown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,6 +41,7 @@ const navItems: NavItem[] = [
   { name: 'Buy NovaCoins', href: '/dashboard/buy-coins', icon: Coins },
   { name: 'Coupon', href: '/dashboard/coupon', icon: Ticket },
   { name: 'Daily Reward', href: '/dashboard/daily', icon: Calendar },
+  { name: 'Title Shop', href: '/dashboard/titles', icon: Crown },
   { name: 'Roulette', href: '/dashboard/roulette', icon: Dices },
   { name: 'Shop', href: '/dashboard/shop', icon: ShoppingCart },
   { name: 'Tickets', href: '/dashboard/tickets', icon: MessageSquare },
