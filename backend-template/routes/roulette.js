@@ -3,7 +3,7 @@ const router = express.Router();
 const { sql, poolPromise } = require('../config/database');
 const { authMiddleware } = require('../middleware/auth');
 
-const SPIN_COST = 2500;
+const SPIN_COST = 500;
 
 // GET /api/roulette/prizes - Get prizes from database
 router.get('/prizes', async (req, res) => {
