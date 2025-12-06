@@ -11,17 +11,18 @@ router.get('/prizes', async (req, res) => {
     const pool = await poolPromise;
     const result = await pool.request()
       .query(`
-        SELECT Id as id, Name as name, Type as type, Value as value, Chance as chance
+        SELECT Id, Name, Coins, ItemVNum, ItemAmount, Probability, Color
         FROM web_roulette_prizes
-        ORDER BY Chance DESC
+        ORDER BY Probability DESC
       `);
 
     const prizes = result.recordset.map(p => ({
-      id: p.id,
-      name: p.name,
-      type: p.type,
-      value: p.value,
-      chance: parseFloat(p.chance)
+      id: p.Id,
+      name: p.Name,
+      type: p.Coins > 0 ? 'coins' : 'item',
+      value: p.Coins > 0 ? p.Coins : p.ItemVNum,
+      chance: parseFloat(p.Probability),
+      color: p.Color
     }));
 
     res.json({ success: true, data: { prizes, spinCost: SPIN_COST } });
@@ -36,10 +37,12 @@ router.post('/spin', authMiddleware, async (req, res) => {
   try {
     const pool = await poolPromise;
 
+    console.log('Roulette spin for user:', req.user.id);
+
     // Check coins
     const userResult = await pool.request()
-      .input('id', sql.Int, req.user.id)
-      .query('SELECT Coins FROM account WHERE AccountId = @id');
+      .input('id', sql.BigInt, req.user.id)
+      .query('SELECT Coins FROM Account WHERE AccountId = @id');
 
     const coins = userResult.recordset[0]?.Coins || 0;
     if (coins < SPIN_COST) {
@@ -49,24 +52,26 @@ router.post('/spin', authMiddleware, async (req, res) => {
     // Get prizes from database
     const prizesResult = await pool.request()
       .query(`
-        SELECT Id as id, Name as name, Type as type, Value as value, Chance as chance
+        SELECT Id, Name, Coins, ItemVNum, ItemAmount, Probability, Color
         FROM web_roulette_prizes
-        ORDER BY Chance DESC
+        ORDER BY Probability DESC
       `);
 
     const prizes = prizesResult.recordset.map(p => ({
-      id: p.id,
-      name: p.name,
-      type: p.type,
-      value: p.value,
-      chance: parseFloat(p.chance)
+      id: p.Id,
+      name: p.Name,
+      type: p.Coins > 0 ? 'coins' : 'item',
+      value: p.Coins > 0 ? p.Coins : p.ItemVNum,
+      itemAmount: p.ItemAmount,
+      chance: parseFloat(p.Probability),
+      color: p.Color
     }));
 
     // Deduct spin cost
     await pool.request()
-      .input('id', sql.Int, req.user.id)
+      .input('id', sql.BigInt, req.user.id)
       .input('cost', sql.Int, SPIN_COST)
-      .query('UPDATE account SET Coins = Coins - @cost WHERE AccountId = @id');
+      .query('UPDATE Account SET Coins = Coins - @cost WHERE AccountId = @id');
 
     // Determine prize (weighted random)
     const random = Math.random() * 100;
@@ -81,21 +86,23 @@ router.post('/spin', authMiddleware, async (req, res) => {
       }
     }
 
+    console.log('Won prize:', prize.name);
+
     // Award prize
-    if (prize.type === 'coins') {
+    if (prize.type === 'coins' && prize.value > 0) {
       await pool.request()
-        .input('id', sql.Int, req.user.id)
+        .input('id', sql.BigInt, req.user.id)
         .input('coins', sql.Int, prize.value)
-        .query('UPDATE account SET Coins = Coins + @coins WHERE AccountId = @id');
-    } else if (prize.type === 'item') {
+        .query('UPDATE Account SET Coins = Coins + @coins WHERE AccountId = @id');
+    } else if (prize.type === 'item' && prize.value) {
       // Log item prize for manual delivery or game integration
-      console.log(`[Roulette] User ${req.user.id} won item ${prize.value} (${prize.name})`);
+      console.log(`[Roulette] User ${req.user.id} won item ${prize.value} x${prize.itemAmount} (${prize.name})`);
     }
 
     // Get new balance
     const newBalance = await pool.request()
-      .input('id', sql.Int, req.user.id)
-      .query('SELECT Coins FROM account WHERE AccountId = @id');
+      .input('id', sql.BigInt, req.user.id)
+      .query('SELECT Coins FROM Account WHERE AccountId = @id');
 
     res.json({
       success: true,
