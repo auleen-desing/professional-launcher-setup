@@ -72,8 +72,8 @@ export function Shop() {
     }
   };
 
-  // Get main categories (master_category = 0)
-  const mainCategories = categories.filter(c => c.master_category === 0);
+  // Get main categories (master_category = NULL or 0)
+  const mainCategories = categories.filter(c => c.master_category === null || c.master_category === 0);
   
   // Get subcategories for a given category
   const getSubcategories = (categoryId: number) => {
