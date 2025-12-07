@@ -168,6 +168,21 @@ class ApiService {
     });
   }
 
+  // Password reset
+  async forgotPassword(email: string): Promise<ApiResponse> {
+    return this.request('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async resetPassword(token: string, password: string): Promise<ApiResponse> {
+    return this.request('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ token, password }),
+    });
+  }
+
   // User endpoints
   async getProfile(): Promise<ApiResponse<LoginResponse['user']>> {
     return this.request(API_CONFIG.ENDPOINTS.USER.PROFILE);
