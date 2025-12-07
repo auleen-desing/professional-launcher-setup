@@ -101,28 +101,33 @@ router.post('/claim', authMiddleware, async (req, res) => {
     const prizes = prizesResult.recordset;
     const maxDays = prizes.length;
 
-    // Check if already claimed today
-    const statusResult = await pool.request()
+// Check if already claimed today using SQL Server date comparison
+    const checkResult = await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
-      .query('SELECT LastClaim, Streak FROM web_daily_rewards WHERE AccountId = @accountId');
+      .query(`
+        SELECT LastClaim, Streak,
+          CASE WHEN CAST(LastClaim AS DATE) = CAST(GETDATE() AS DATE) THEN 1 ELSE 0 END AS ClaimedToday,
+          DATEDIFF(DAY, LastClaim, GETDATE()) AS DaysSinceLastClaim
+        FROM web_daily_rewards 
+        WHERE AccountId = @accountId
+      `);
 
-    const data = statusResult.recordset[0];
-    const today = new Date();
-    const lastClaim = data?.LastClaim ? new Date(data.LastClaim) : null;
+    const data = checkResult.recordset[0];
 
-    if (lastClaim && lastClaim.toDateString() === today.toDateString()) {
-      return res.status(400).json({ success: false, error: 'Ya reclamaste tu recompensa hoy' });
+    if (data && data.ClaimedToday === 1) {
+      return res.status(400).json({ success: false, error: 'You already claimed your reward today' });
     }
+    
+    const daysSinceLastClaim = data?.DaysSinceLastClaim ?? null;
 
-    // Calculate new streak
+    // Calculate new streak based on days since last claim
     let newStreak = 1;
-    if (lastClaim) {
-      const dayDiff = Math.floor((today - lastClaim) / (1000 * 60 * 60 * 24));
-      if (dayDiff === 1) {
-        // Continue streak
+    if (data && daysSinceLastClaim !== null) {
+      if (daysSinceLastClaim === 1) {
+        // Continue streak (yesterday claim)
         newStreak = ((data.Streak || 0) % maxDays) + 1;
       } else {
-        // Streak broken, reset
+        // Streak broken (more than 1 day), reset
         newStreak = 1;
       }
     }
