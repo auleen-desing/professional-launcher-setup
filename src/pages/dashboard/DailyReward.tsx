@@ -22,12 +22,14 @@ interface DailyStatus {
   currentDay: number;
   rewards: DailyRewardItem[];
   nextReward: DailyRewardItem | null;
+  secondsUntilReset: number;
 }
 
 export function DailyReward() {
   const [status, setStatus] = useState<DailyStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [countdown, setCountdown] = useState<number>(0);
   const { toast } = useToast();
   const { updateCoins, user } = useAuth();
 
@@ -62,6 +64,34 @@ export function DailyReward() {
   useEffect(() => {
     fetchStatus();
   }, []);
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (status && !status.canClaim && status.secondsUntilReset > 0) {
+      setCountdown(status.secondsUntilReset);
+      
+      const interval = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            // Refresh status when countdown reaches 0
+            fetchStatus();
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, [status]);
+
+  const formatCountdown = (seconds: number) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const handleClaim = async () => {
     setIsClaiming(true);
@@ -175,12 +205,17 @@ export function DailyReward() {
       <Card className="max-w-md">
         <CardContent className="pt-6 text-center space-y-4">
           {!canClaim ? (
-            <div className="space-y-2">
+            <div className="space-y-4">
               <CheckCircle className="h-16 w-16 text-primary mx-auto" />
               <p className="text-lg font-medium">Reward claimed!</p>
-              <div className="flex items-center justify-center gap-2 text-muted-foreground">
-                <Clock className="h-4 w-4" />
-                <span>Come back tomorrow for your next reward</span>
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">Next reward available in:</p>
+                <div className="flex items-center justify-center gap-2">
+                  <Clock className="h-5 w-5 text-primary" />
+                  <span className="text-2xl font-bold font-mono text-primary">
+                    {formatCountdown(countdown)}
+                  </span>
+                </div>
               </div>
             </div>
           ) : (
