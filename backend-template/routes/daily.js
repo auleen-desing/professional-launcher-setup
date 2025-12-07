@@ -67,6 +67,12 @@ router.get('/status', authMiddleware, async (req, res) => {
       current: index + 1 === currentDay && canClaim
     }));
 
+    // Calculate seconds until midnight (next reset)
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0);
+    const secondsUntilReset = Math.floor((midnight - now) / 1000);
+
     console.log(`[Daily] User ${req.user.id} - Streak: ${streak}, CurrentDay: ${currentDay}, CanClaim: ${canClaim}`);
 
     res.json({
@@ -76,7 +82,8 @@ router.get('/status', authMiddleware, async (req, res) => {
         streak,
         currentDay,
         rewards: rewardsWithStatus,
-        nextReward: canClaim ? prizes[currentDay - 1] : null
+        nextReward: canClaim ? prizes[currentDay - 1] : null,
+        secondsUntilReset
       }
     });
   } catch (err) {
