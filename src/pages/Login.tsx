@@ -286,9 +286,9 @@ export function Login() {
                   </form>
 
                   <div className="mt-6 text-center">
-                    <a href="#" className="text-sm text-primary hover:underline">
+                    <Link to="/forgot-password" className="text-sm text-primary hover:underline">
                       Forgot your password?
-                    </a>
+                    </Link>
                   </div>
                 </TabsContent>
 

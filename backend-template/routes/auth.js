@@ -461,6 +461,197 @@ router.post('/resend-verification', authRateLimit, async (req, res) => {
   }
 });
 
+// Send password reset email
+async function sendPasswordResetEmail(email, username, token) {
+  const resetUrl = `${FRONTEND_URL}/reset-password?token=${token}`;
+  
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'NovaEra <noreply@novaerasite.com>',
+      to: [email],
+      subject: 'Reset your NovaEra password',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #0f0f0f; font-family: Arial, sans-serif;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+            <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 40px; border: 1px solid #d4af37;">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #d4af37; font-size: 32px; margin: 0;">NovaEra</h1>
+                <p style="color: #888; margin-top: 8px;">Password Reset</p>
+              </div>
+              
+              <p style="color: #ffffff; font-size: 16px; line-height: 1.6;">
+                Hello <strong style="color: #d4af37;">${username}</strong>,
+              </p>
+              
+              <p style="color: #cccccc; font-size: 15px; line-height: 1.6;">
+                We received a request to reset your password. Click the button below to create a new password.
+              </p>
+              
+              <div style="text-align: center; margin: 35px 0;">
+                <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%); color: #000000; font-weight: bold; text-decoration: none; padding: 15px 40px; border-radius: 8px; font-size: 16px;">
+                  Reset Password
+                </a>
+              </div>
+              
+              <p style="color: #888888; font-size: 13px; line-height: 1.5;">
+                If the button doesn't work, copy and paste this link into your browser:<br>
+                <a href="${resetUrl}" style="color: #d4af37; word-break: break-all;">${resetUrl}</a>
+              </p>
+              
+              <hr style="border: none; border-top: 1px solid #333; margin: 30px 0;">
+              
+              <p style="color: #666666; font-size: 12px; text-align: center;">
+                This link will expire in 1 hour.<br>
+                If you didn't request a password reset, you can safely ignore this email.
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    });
+
+    if (error) {
+      console.error('[EMAIL] Failed to send password reset email:', error);
+      return false;
+    }
+
+    console.log('[EMAIL] Password reset email sent to:', email);
+    return true;
+  } catch (err) {
+    console.error('[EMAIL] Error sending password reset email:', err);
+    return false;
+  }
+}
+
+// POST /api/auth/forgot-password - Request password reset
+router.post('/forgot-password', authRateLimit, async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ success: false, error: 'Email required' });
+    }
+
+    const pool = await poolPromise;
+    
+    // Find the account
+    const result = await pool.request()
+      .input('email', sql.NVarChar, email.toLowerCase())
+      .query('SELECT AccountId, Name, Email FROM Account WHERE LOWER(Email) = @email');
+
+    if (result.recordset.length === 0) {
+      // Don't reveal if email exists or not
+      return res.json({ success: true, message: 'If an account exists with this email, a reset link has been sent.' });
+    }
+
+    const user = result.recordset[0];
+
+    // Generate reset token
+    const resetToken = generateVerificationToken();
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    // Delete old tokens and create new one
+    await pool.request()
+      .input('accountId', sql.BigInt, user.AccountId)
+      .query('DELETE FROM web_password_resets WHERE AccountId = @accountId AND UsedAt IS NULL');
+
+    await pool.request()
+      .input('accountId', sql.BigInt, user.AccountId)
+      .input('token', sql.NVarChar, resetToken)
+      .input('email', sql.NVarChar, user.Email)
+      .input('expiresAt', sql.DateTime, expiresAt)
+      .query(`
+        INSERT INTO web_password_resets (AccountId, Token, Email, ExpiresAt)
+        VALUES (@accountId, @token, @email, @expiresAt)
+      `);
+
+    // Send password reset email
+    const emailSent = await sendPasswordResetEmail(user.Email, user.Name, resetToken);
+
+    if (!emailSent) {
+      console.log(`[AUTH] Failed to send password reset email for ${email}`);
+    } else {
+      console.log(`[AUTH] Password reset requested for: ${email}`);
+    }
+
+    res.json({ success: true, message: 'If an account exists with this email, a reset link has been sent.' });
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// POST /api/auth/reset-password - Reset password with token
+router.post('/reset-password', authRateLimit, async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ success: false, error: 'Token required' });
+    }
+
+    if (!password || typeof password !== 'string' || password.length < 6) {
+      return res.status(400).json({ success: false, error: 'Password must be at least 6 characters' });
+    }
+
+    const pool = await poolPromise;
+    
+    // Find the reset token
+    const result = await pool.request()
+      .input('token', sql.NVarChar, token)
+      .query(`
+        SELECT AccountId, Email, ExpiresAt, UsedAt 
+        FROM web_password_resets 
+        WHERE Token = @token
+      `);
+
+    if (result.recordset.length === 0) {
+      return res.status(400).json({ success: false, error: 'Invalid or expired reset link' });
+    }
+
+    const resetRequest = result.recordset[0];
+
+    // Check if already used
+    if (resetRequest.UsedAt) {
+      return res.status(400).json({ success: false, error: 'This reset link has already been used' });
+    }
+
+    // Check if expired
+    if (new Date() > new Date(resetRequest.ExpiresAt)) {
+      return res.status(400).json({ success: false, error: 'Reset link has expired. Please request a new one.' });
+    }
+
+    // Hash new password
+    const hashedPassword = sha512(password);
+
+    // Update password
+    await pool.request()
+      .input('accountId', sql.BigInt, resetRequest.AccountId)
+      .input('password', sql.VarChar, hashedPassword)
+      .query('UPDATE Account SET Password = @password WHERE AccountId = @accountId');
+
+    // Mark token as used
+    await pool.request()
+      .input('token', sql.NVarChar, token)
+      .input('usedAt', sql.DateTime, new Date())
+      .query('UPDATE web_password_resets SET UsedAt = @usedAt WHERE Token = @token');
+
+    console.log(`[AUTH] Password reset completed for account ${resetRequest.AccountId}`);
+
+    res.json({ success: true, message: 'Password has been reset successfully' });
+  } catch (err) {
+    console.error('Reset password error:', err);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
 // GET /api/auth/session
 router.get('/session', authMiddleware, async (req, res) => {
   try {

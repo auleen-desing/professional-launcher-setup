@@ -24,6 +24,8 @@ import Characters from "./pages/dashboard/Characters";
 import Rankings from "./pages/dashboard/Rankings";
 import Launcher from "./pages/Launcher";
 import { VerifyEmail } from "./pages/VerifyEmail";
+import { ForgotPassword } from "./pages/ForgotPassword";
+import { ResetPassword } from "./pages/ResetPassword";
 
 // Admin imports
 import { AdminLayout } from "./components/admin/AdminLayout";
@@ -86,6 +88,8 @@ function AppRoutes() {
       <Route path="/launcher" element={<Launcher />} />
       <Route path="/login" element={<Login />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       
       {/* Dashboard Routes */}
       <Route
