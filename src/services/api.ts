@@ -153,6 +153,21 @@ class ApiService {
     });
   }
 
+  // Email verification
+  async verifyEmail(token: string): Promise<ApiResponse<{ username: string }>> {
+    return this.request('/auth/verify-email', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  async resendVerification(email: string): Promise<ApiResponse> {
+    return this.request('/auth/resend-verification', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  }
+
   // User endpoints
   async getProfile(): Promise<ApiResponse<LoginResponse['user']>> {
     return this.request(API_CONFIG.ENDPOINTS.USER.PROFILE);

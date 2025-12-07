@@ -2,11 +2,18 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { User } from '@/types/user';
 import { apiService } from '@/services/api';
 
+interface LoginResult {
+  success: boolean;
+  error?: string;
+  needsVerification?: boolean;
+  email?: string;
+}
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAdmin: boolean;
-  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  login: (username: string, password: string) => Promise<LoginResult>;
   logout: () => void;
   updateCoins: (newCoins: number) => void;
   refreshUser: () => Promise<void>;
@@ -74,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const login = async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
+  const login = async (username: string, password: string): Promise<LoginResult> => {
     try {
       if (DEV_MODE) {
         // Development: mock login
@@ -99,6 +106,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(userData);
         localStorage.setItem('novaera_user', JSON.stringify(userData));
         return { success: true };
+      }
+
+      // Check for email verification needed
+      const responseAny = response as any;
+      if (responseAny.needsVerification) {
+        return { 
+          success: false, 
+          error: response.error || 'Please verify your email.',
+          needsVerification: true,
+          email: responseAny.email
+        };
       }
 
       return { 
