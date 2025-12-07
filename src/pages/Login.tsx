@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { User, Lock, LogIn, ArrowLeft, Mail, Eye, EyeOff, Gamepad2 } from 'lucide-react';
+import { User, Lock, LogIn, ArrowLeft, Mail, Eye, EyeOff, Gamepad2, CheckCircle2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,6 +23,11 @@ export function Login() {
   const [regEmail, setRegEmail] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
+  
+  // Verification state
+  const [showVerificationSent, setShowVerificationSent] = useState(false);
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState('');
+  const [isResending, setIsResending] = useState(false);
   
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -52,11 +57,22 @@ export function Login() {
         });
         navigate('/dashboard');
       } else {
-        toast({
-          title: 'Authentication Error',
-          description: result.error || 'Incorrect username or password.',
-          variant: 'destructive',
-        });
+        // Check if email verification is needed
+        if (result.needsVerification) {
+          setPendingVerificationEmail(result.email || '');
+          setShowVerificationSent(true);
+          toast({
+            title: 'Email Not Verified',
+            description: 'Please check your email to verify your account.',
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Authentication Error',
+            description: result.error || 'Incorrect username or password.',
+            variant: 'destructive',
+          });
+        }
       }
     } catch (error) {
       toast({
@@ -105,9 +121,11 @@ export function Login() {
       const result = await apiService.register(regUsername, regEmail, regPassword);
 
       if (result.success) {
+        setPendingVerificationEmail(regEmail);
+        setShowVerificationSent(true);
         toast({
           title: 'Account Created',
-          description: 'Your account has been created successfully. You can now log in.',
+          description: 'Please check your email to verify your account.',
         });
         setRegUsername('');
         setRegEmail('');
@@ -128,6 +146,35 @@ export function Login() {
       });
     } finally {
       setIsRegistering(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!pendingVerificationEmail) return;
+    
+    setIsResending(true);
+    try {
+      const result = await apiService.resendVerification(pendingVerificationEmail);
+      if (result.success) {
+        toast({
+          title: 'Email Sent',
+          description: 'A new verification email has been sent.',
+        });
+      } else {
+        toast({
+          title: 'Error',
+          description: result.error || 'Could not send verification email.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Could not connect to server.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -172,6 +219,32 @@ export function Login() {
               <CardDescription>Access your account to manage your profile</CardDescription>
             </CardHeader>
             <CardContent>
+              {/* Verification Sent Message */}
+              {showVerificationSent && (
+                <div className="mb-6 p-4 rounded-lg bg-primary/10 border border-primary/30">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5" />
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-primary mb-1">Verify Your Email</h4>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        We sent a verification link to <span className="font-medium text-foreground">{pendingVerificationEmail}</span>. 
+                        Please check your inbox and click the link to activate your account.
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleResendVerification}
+                        disabled={isResending}
+                        className="gap-2"
+                      >
+                        <RefreshCw className={`h-3 w-3 ${isResending ? 'animate-spin' : ''}`} />
+                        {isResending ? 'Sending...' : 'Resend Email'}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <Tabs defaultValue="login" className="w-full">
                 <TabsList className="grid w-full grid-cols-2 mb-6">
                   <TabsTrigger value="login">Login</TabsTrigger>

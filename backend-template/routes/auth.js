@@ -11,9 +11,21 @@ const {
   getClientIP 
 } = require('../middleware/security');
 
+// Resend for email verification
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+// Frontend URL for verification links
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://novaerasite.com';
+
 // SHA512 hash function (NosTale standard)
 function sha512(password) {
   return crypto.createHash('sha512').update(password, 'utf8').digest('hex');
+}
+
+// Generate secure random token
+function generateVerificationToken() {
+  return crypto.randomBytes(32).toString('hex');
 }
 
 // Validate email format
@@ -27,6 +39,75 @@ function isValidUsername(username) {
   // Only alphanumeric and underscore, 3-20 chars
   const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/;
   return usernameRegex.test(username);
+}
+
+// Send verification email
+async function sendVerificationEmail(email, username, token) {
+  const verificationUrl = `${FRONTEND_URL}/verify-email?token=${token}`;
+  
+  try {
+    const { data, error } = await resend.emails.send({
+      from: 'NovaEra <noreply@resend.dev>', // Cambiar a tu dominio verificado
+      to: [email],
+      subject: 'Verify your NovaEra account',
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; background-color: #0f0f0f; font-family: Arial, sans-serif;">
+          <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+            <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); border-radius: 16px; padding: 40px; border: 1px solid #d4af37;">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #d4af37; font-size: 32px; margin: 0;">NovaEra</h1>
+                <p style="color: #888; margin-top: 8px;">Account Verification</p>
+              </div>
+              
+              <p style="color: #ffffff; font-size: 16px; line-height: 1.6;">
+                Hello <strong style="color: #d4af37;">${username}</strong>,
+              </p>
+              
+              <p style="color: #cccccc; font-size: 15px; line-height: 1.6;">
+                Thank you for registering at NovaEra! Please verify your email address to activate your account.
+              </p>
+              
+              <div style="text-align: center; margin: 35px 0;">
+                <a href="${verificationUrl}" style="display: inline-block; background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%); color: #000000; font-weight: bold; text-decoration: none; padding: 15px 40px; border-radius: 8px; font-size: 16px;">
+                  Verify My Account
+                </a>
+              </div>
+              
+              <p style="color: #888888; font-size: 13px; line-height: 1.5;">
+                If the button doesn't work, copy and paste this link into your browser:<br>
+                <a href="${verificationUrl}" style="color: #d4af37; word-break: break-all;">${verificationUrl}</a>
+              </p>
+              
+              <hr style="border: none; border-top: 1px solid #333; margin: 30px 0;">
+              
+              <p style="color: #666666; font-size: 12px; text-align: center;">
+                This link will expire in 24 hours.<br>
+                If you didn't create an account, you can safely ignore this email.
+              </p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+    });
+
+    if (error) {
+      console.error('[EMAIL] Failed to send verification email:', error);
+      return false;
+    }
+
+    console.log('[EMAIL] Verification email sent to:', email);
+    return true;
+  } catch (err) {
+    console.error('[EMAIL] Error sending verification email:', err);
+    return false;
+  }
 }
 
 // POST /api/auth/login - with brute force protection
@@ -60,7 +141,7 @@ router.post('/login', authRateLimit, async (req, res) => {
     const result = await pool.request()
       .input('username', sql.NVarChar, username.substring(0, 20)) // Limit length
       .query(`
-        SELECT AccountId, Name, Password, Authority, Email, coins
+        SELECT AccountId, Name, Password, Authority, Email, coins, EmailVerified
         FROM Account 
         WHERE Name = @username
       `);
@@ -76,6 +157,16 @@ router.post('/login', authRateLimit, async (req, res) => {
     }
 
     const user = result.recordset[0];
+
+    // Check if email is verified
+    if (!user.EmailVerified) {
+      return res.status(403).json({ 
+        success: false, 
+        error: 'Please verify your email before logging in. Check your inbox for the verification link.',
+        needsVerification: true,
+        email: user.Email
+      });
+    }
 
     // Check if user is banned
     if (user.Authority === -1) {
@@ -197,22 +288,175 @@ router.post('/register', authRateLimit, async (req, res) => {
     // Get registration IP
     const registrationIP = ip.substring(0, 45); // Limit IP length
 
-    // Insert new user
-    await pool.request()
+    // Generate verification token
+    const verificationToken = generateVerificationToken();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    // Insert new user with EmailVerified = 0
+    const insertResult = await pool.request()
       .input('username', sql.NVarChar, username)
       .input('password', sql.VarChar, hashedPassword)
       .input('email', sql.NVarChar, email.toLowerCase())
       .input('registrationIP', sql.VarChar, registrationIP)
       .query(`
-        INSERT INTO Account (Name, Password, Email, Authority, ReferrerId, IsConnected, coins, DailyRewardSent, CanUseCP, RegistrationIP, RegistrationDate)
-        VALUES (@username, @password, @email, 0, 0, 0, 0, 0, 0, @registrationIP, GETDATE())
+        INSERT INTO Account (Name, Password, Email, Authority, ReferrerId, IsConnected, coins, DailyRewardSent, CanUseCP, RegistrationIP, RegistrationDate, EmailVerified)
+        OUTPUT INSERTED.AccountId
+        VALUES (@username, @password, @email, 0, 0, 0, 0, 0, 0, @registrationIP, GETDATE(), 0)
       `);
 
-    console.log(`[AUTH] New registration: ${username} from ${ip}`);
+    const accountId = insertResult.recordset[0].AccountId;
 
-    res.json({ success: true, message: 'Account created successfully' });
+    // Create verification token entry
+    await pool.request()
+      .input('accountId', sql.BigInt, accountId)
+      .input('token', sql.NVarChar, verificationToken)
+      .input('email', sql.NVarChar, email.toLowerCase())
+      .input('expiresAt', sql.DateTime, expiresAt)
+      .query(`
+        INSERT INTO web_email_verifications (AccountId, Token, Email, ExpiresAt)
+        VALUES (@accountId, @token, @email, @expiresAt)
+      `);
+
+    // Send verification email
+    const emailSent = await sendVerificationEmail(email, username, verificationToken);
+
+    if (!emailSent) {
+      console.error(`[AUTH] Failed to send verification email for ${username}`);
+      // Still return success - user can request resend
+    }
+
+    console.log(`[AUTH] New registration (pending verification): ${username} from ${ip}`);
+
+    res.json({ 
+      success: true, 
+      message: 'Account created! Please check your email to verify your account.',
+      needsVerification: true
+    });
   } catch (err) {
     console.error('Register error:', err);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// POST /api/auth/verify-email - Verify email with token
+router.post('/verify-email', async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token || typeof token !== 'string') {
+      return res.status(400).json({ success: false, error: 'Verification token required' });
+    }
+
+    const pool = await poolPromise;
+    
+    // Find the verification token
+    const result = await pool.request()
+      .input('token', sql.NVarChar, token)
+      .query(`
+        SELECT v.*, a.Name as Username
+        FROM web_email_verifications v
+        JOIN Account a ON v.AccountId = a.AccountId
+        WHERE v.Token = @token
+      `);
+
+    if (result.recordset.length === 0) {
+      return res.status(400).json({ success: false, error: 'Invalid verification token' });
+    }
+
+    const verification = result.recordset[0];
+
+    // Check if already verified
+    if (verification.VerifiedAt) {
+      return res.status(400).json({ success: false, error: 'Email already verified. You can login now.' });
+    }
+
+    // Check if token expired
+    if (new Date(verification.ExpiresAt) < new Date()) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Verification link has expired. Please request a new one.',
+        expired: true 
+      });
+    }
+
+    // Verify the account
+    await pool.request()
+      .input('accountId', sql.BigInt, verification.AccountId)
+      .query('UPDATE Account SET EmailVerified = 1 WHERE AccountId = @accountId');
+
+    // Mark token as used
+    await pool.request()
+      .input('token', sql.NVarChar, token)
+      .query('UPDATE web_email_verifications SET VerifiedAt = GETDATE() WHERE Token = @token');
+
+    console.log(`[AUTH] Email verified for user: ${verification.Username}`);
+
+    res.json({ 
+      success: true, 
+      message: 'Email verified successfully! You can now login.',
+      username: verification.Username
+    });
+  } catch (err) {
+    console.error('Email verification error:', err);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// POST /api/auth/resend-verification - Resend verification email
+router.post('/resend-verification', authRateLimit, async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email || typeof email !== 'string') {
+      return res.status(400).json({ success: false, error: 'Email required' });
+    }
+
+    const pool = await poolPromise;
+    
+    // Find the account
+    const result = await pool.request()
+      .input('email', sql.NVarChar, email.toLowerCase())
+      .query('SELECT AccountId, Name, Email, EmailVerified FROM Account WHERE LOWER(Email) = @email');
+
+    if (result.recordset.length === 0) {
+      // Don't reveal if email exists or not
+      return res.json({ success: true, message: 'If an account exists with this email, a verification link has been sent.' });
+    }
+
+    const user = result.recordset[0];
+
+    // Check if already verified
+    if (user.EmailVerified) {
+      return res.status(400).json({ success: false, error: 'Email is already verified. You can login now.' });
+    }
+
+    // Generate new verification token
+    const verificationToken = generateVerificationToken();
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+    // Delete old tokens and create new one
+    await pool.request()
+      .input('accountId', sql.BigInt, user.AccountId)
+      .query('DELETE FROM web_email_verifications WHERE AccountId = @accountId AND VerifiedAt IS NULL');
+
+    await pool.request()
+      .input('accountId', sql.BigInt, user.AccountId)
+      .input('token', sql.NVarChar, verificationToken)
+      .input('email', sql.NVarChar, user.Email)
+      .input('expiresAt', sql.DateTime, expiresAt)
+      .query(`
+        INSERT INTO web_email_verifications (AccountId, Token, Email, ExpiresAt)
+        VALUES (@accountId, @token, @email, @expiresAt)
+      `);
+
+    // Send verification email
+    await sendVerificationEmail(user.Email, user.Name, verificationToken);
+
+    console.log(`[AUTH] Resent verification email to: ${email}`);
+
+    res.json({ success: true, message: 'Verification email sent. Please check your inbox.' });
+  } catch (err) {
+    console.error('Resend verification error:', err);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });

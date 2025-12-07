@@ -23,6 +23,7 @@ import { Password } from "./pages/dashboard/Password";
 import Characters from "./pages/dashboard/Characters";
 import Rankings from "./pages/dashboard/Rankings";
 import Launcher from "./pages/Launcher";
+import { VerifyEmail } from "./pages/VerifyEmail";
 
 // Admin imports
 import { AdminLayout } from "./components/admin/AdminLayout";
@@ -84,6 +85,7 @@ function AppRoutes() {
       <Route path="/" element={<Index />} />
       <Route path="/launcher" element={<Launcher />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       
       {/* Dashboard Routes */}
       <Route
