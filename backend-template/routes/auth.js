@@ -47,7 +47,7 @@ async function sendVerificationEmail(email, username, token) {
   
   try {
     const { data, error } = await resend.emails.send({
-      from: 'NovaEra <noreply@resend.dev>', // Cambiar a tu dominio verificado
+      from: 'NovaEra <noreply@novaerasite.com>',
       to: [email],
       subject: 'Verify your NovaEra account',
       html: `
