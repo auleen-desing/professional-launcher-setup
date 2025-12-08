@@ -182,8 +182,8 @@ router.post('/purchase', authMiddleware, async (req, res) => {
       .input('price', sql.Int, item.price)
       .query('UPDATE account SET Coins = Coins - @price WHERE AccountId = @accountId');
 
-    // Send item to character mail (SenderId 6 = System/Auleen account)
-    const SYSTEM_SENDER_ID = 6;
+    // Send item to character mail (SenderId 4 = System character "test")
+    const SYSTEM_SENDER_ID = 4;
     
     await pool.request()
       .input('receiverId', sql.BigInt, targetCharId)
