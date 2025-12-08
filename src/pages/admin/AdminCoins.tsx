@@ -1,40 +1,70 @@
 import { useState } from 'react';
-import { Coins, Search, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Coins, Search, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownRight, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAdmin } from '@/contexts/AdminContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
 export function AdminCoins() {
-  const { users, transactions, updateUserCoins, stats } = useAdmin();
+  const { users, transactions, updateUserCoins, stats, refreshData } = useAdmin();
+  const { user } = useAuth();
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedUserId, setSelectedUserId] = useState('');
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
+  const [selfAmount, setSelfAmount] = useState('');
+  const [isAddingSelf, setIsAddingSelf] = useState(false);
 
   const filteredUsers = users.filter(user =>
     user.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleQuickAdd = (userId: string, username: string) => {
+  // Find current admin user in the users list
+  const currentAdminUser = users.find(u => u.id === String(user?.id));
+
+  const handleAddToSelf = async () => {
+    if (!selfAmount || parseInt(selfAmount) <= 0) {
+      toast({ title: 'Error', description: 'Ingresa una cantidad válida', variant: 'destructive' });
+      return;
+    }
+    if (!user?.id) {
+      toast({ title: 'Error', description: 'No se encontró tu usuario', variant: 'destructive' });
+      return;
+    }
+    
+    setIsAddingSelf(true);
+    try {
+      await updateUserCoins(String(user.id), parseInt(selfAmount), 'add', 'Admin self-grant');
+      toast({ title: 'Coins añadidos', description: `+${selfAmount} coins a tu cuenta` });
+      setSelfAmount('');
+      await refreshData();
+    } catch (error) {
+      toast({ title: 'Error', description: 'No se pudieron añadir los coins', variant: 'destructive' });
+    } finally {
+      setIsAddingSelf(false);
+    }
+  };
+
+  const handleQuickAdd = async (userId: string, username: string) => {
     if (!amount || !reason) {
       toast({ title: 'Error', description: 'Completa cantidad y razón', variant: 'destructive' });
       return;
     }
-    updateUserCoins(userId, parseInt(amount), 'add', reason);
+    await updateUserCoins(userId, parseInt(amount), 'add', reason);
     toast({ title: 'Coins añadidos', description: `+${amount} coins a ${username}` });
     setAmount('');
     setReason('');
   };
 
-  const handleQuickRemove = (userId: string, username: string) => {
+  const handleQuickRemove = async (userId: string, username: string) => {
     if (!amount || !reason) {
       toast({ title: 'Error', description: 'Completa cantidad y razón', variant: 'destructive' });
       return;
     }
-    updateUserCoins(userId, parseInt(amount), 'remove', reason);
+    await updateUserCoins(userId, parseInt(amount), 'remove', reason);
     toast({ title: 'Coins removidos', description: `-${amount} coins de ${username}`, variant: 'destructive' });
     setAmount('');
     setReason('');
@@ -105,6 +135,38 @@ export function AdminCoins() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Quick Self Add */}
+      <Card className="border-primary/30 bg-primary/5">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center gap-2">
+            <User className="h-5 w-5 text-primary" />
+            Añadir a Mi Cuenta
+          </CardTitle>
+          <CardDescription>
+            Tu balance actual: <span className="text-primary font-bold">{currentAdminUser?.coins?.toLocaleString() || user?.coins?.toLocaleString() || 0}</span> coins
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-3">
+            <Input
+              type="number"
+              placeholder="Cantidad de coins"
+              value={selfAmount}
+              onChange={(e) => setSelfAmount(e.target.value)}
+              className="max-w-[200px]"
+            />
+            <Button 
+              onClick={handleAddToSelf}
+              disabled={isAddingSelf || !selfAmount}
+              className="gap-2"
+            >
+              <ArrowUpRight className="h-4 w-4" />
+              {isAddingSelf ? 'Añadiendo...' : 'Añadir Coins'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Quick Action */}
