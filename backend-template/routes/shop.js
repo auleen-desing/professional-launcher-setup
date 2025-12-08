@@ -183,29 +183,17 @@ router.post('/purchase', authMiddleware, async (req, res) => {
       .query('UPDATE account SET Coins = Coins - @price WHERE AccountId = @accountId');
 
     // Send item to character mail
-    try {
-      await pool.request()
-        .input('characterId', sql.BigInt, targetCharId)
-        .input('vnum', sql.Int, item.vnum)
-        .input('amount', sql.SmallInt, parseInt(item.amount) || 1)
-        .input('upgrade', sql.TinyInt, item.upgrade || 0)
-        .input('rarity', sql.SmallInt, item.rarity || 0)
-        .query(`
-          INSERT INTO mail (ReceiverId, SenderId, Date, Title, Message, SenderClass, IsSenderCopy, IsOpened, AttachmentVNum, AttachmentAmount, AttachmentUpgrade, AttachmentRarity)
-          VALUES (@characterId, 0, GETDATE(), 'Web Shop', 'Thank you for your purchase!', 0, 0, 0, @vnum, @amount, @upgrade, @rarity)
-        `);
-    } catch (mailError) {
-      console.error('Mail insert error:', mailError);
-      // Try alternative mail format if the first fails
-      await pool.request()
-        .input('characterId', sql.BigInt, targetCharId)
-        .input('vnum', sql.Int, item.vnum)
-        .input('amount', sql.SmallInt, parseInt(item.amount) || 1)
-        .query(`
-          INSERT INTO mail (ReceiverId, SenderId, Date, Title, AttachmentVNum, AttachmentAmount)
-          VALUES (@characterId, 0, GETDATE(), 'Web Shop', @vnum, @amount)
-        `);
-    }
+    await pool.request()
+      .input('characterId', sql.BigInt, targetCharId)
+      .input('vnum', sql.Int, item.vnum)
+      .input('amount', sql.SmallInt, parseInt(item.amount) || 1)
+      .input('upgrade', sql.TinyInt, item.upgrade || 0)
+      .input('rarity', sql.SmallInt, item.rarity || 0)
+      .input('level', sql.TinyInt, item.level || 0)
+      .query(`
+        INSERT INTO mail (ReceiverId, SenderId, Date, Title, Message, SenderClass, IsSenderCopy, IsOpened, AttachmentVNum, AttachmentAmount, AttachmentUpgrade, AttachmentRarity, AttachmentLevel)
+        VALUES (@characterId, 0, GETDATE(), 'Web Shop', 'Thank you for your purchase!', 0, 0, 0, @vnum, @amount, @upgrade, @rarity, @level)
+      `);
 
     // Log the purchase (optional - table may not exist)
     try {
