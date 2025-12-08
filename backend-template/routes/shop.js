@@ -172,23 +172,36 @@ router.post('/purchase', authMiddleware, async (req, res) => {
       targetCharId = charResult.recordset[0].CharacterId;
     }
 
-    // Deduct coins using stored procedure to bypass trigger
+    // Deduct coins directly
     await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
-      .input('amount', sql.Int, item.price)
-      .execute('sp_WebShopDeductCoins');
+      .input('price', sql.Int, item.price)
+      .query('UPDATE account SET Coins = Coins - @price WHERE AccountId = @accountId');
 
     // Send item to character mail
-    await pool.request()
-      .input('characterId', sql.BigInt, targetCharId)
-      .input('vnum', sql.SmallInt, item.vnum)
-      .input('amount', sql.SmallInt, parseInt(item.amount) || 1)
-      .input('upgrade', sql.TinyInt, item.upgrade || 0)
-      .input('rarity', sql.TinyInt, item.rarity || 0)
-      .query(`
-        INSERT INTO mail (ReceiverId, SenderId, Date, Title, Message, SenderClass, IsSenderCopy, IsOpened, AttachmentVNum, AttachmentAmount, AttachmentUpgrade, AttachmentRarity)
-        VALUES (@characterId, 0, GETDATE(), 'Web Shop', 'Thank you for your purchase!', 0, 0, 0, @vnum, @amount, @upgrade, @rarity)
-      `);
+    try {
+      await pool.request()
+        .input('characterId', sql.BigInt, targetCharId)
+        .input('vnum', sql.Int, item.vnum)
+        .input('amount', sql.SmallInt, parseInt(item.amount) || 1)
+        .input('upgrade', sql.TinyInt, item.upgrade || 0)
+        .input('rarity', sql.SmallInt, item.rarity || 0)
+        .query(`
+          INSERT INTO mail (ReceiverId, SenderId, Date, Title, Message, SenderClass, IsSenderCopy, IsOpened, AttachmentVNum, AttachmentAmount, AttachmentUpgrade, AttachmentRarity)
+          VALUES (@characterId, 0, GETDATE(), 'Web Shop', 'Thank you for your purchase!', 0, 0, 0, @vnum, @amount, @upgrade, @rarity)
+        `);
+    } catch (mailError) {
+      console.error('Mail insert error:', mailError);
+      // Try alternative mail format if the first fails
+      await pool.request()
+        .input('characterId', sql.BigInt, targetCharId)
+        .input('vnum', sql.Int, item.vnum)
+        .input('amount', sql.SmallInt, parseInt(item.amount) || 1)
+        .query(`
+          INSERT INTO mail (ReceiverId, SenderId, Date, Title, AttachmentVNum, AttachmentAmount)
+          VALUES (@characterId, 0, GETDATE(), 'Web Shop', @vnum, @amount)
+        `);
+    }
 
     // Log the purchase (optional - table may not exist)
     try {
