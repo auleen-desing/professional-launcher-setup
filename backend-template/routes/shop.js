@@ -185,14 +185,15 @@ router.post('/purchase', authMiddleware, async (req, res) => {
     // Send item to character mail
     await pool.request()
       .input('characterId', sql.BigInt, targetCharId)
-      .input('vnum', sql.Int, item.vnum)
+      .input('vnum', sql.SmallInt, item.vnum)
       .input('amount', sql.SmallInt, parseInt(item.amount) || 1)
       .input('upgrade', sql.TinyInt, item.upgrade || 0)
-      .input('rarity', sql.SmallInt, item.rarity || 0)
+      .input('rarity', sql.TinyInt, item.rarity || 0)
       .input('level', sql.TinyInt, item.level || 0)
+      .input('design', sql.SmallInt, 0)
       .query(`
-        INSERT INTO mail (ReceiverId, SenderId, Date, Title, Message, SenderClass, SenderGender, SenderHairStyle, SenderHairColor, SenderMorphId, IsSenderCopy, IsOpened, AttachmentVNum, AttachmentAmount, AttachmentUpgrade, AttachmentRarity, AttachmentLevel)
-        VALUES (@characterId, @characterId, GETDATE(), 'Web Shop', 'Thank you for your purchase!', 0, 0, 0, 0, 0, 0, 0, @vnum, @amount, @upgrade, @rarity, @level)
+        INSERT INTO mail (ReceiverId, SenderId, Date, Title, Message, SenderClass, SenderGender, SenderHairStyle, SenderHairColor, SenderMorphId, IsSenderCopy, IsOpened, AttachmentVNum, AttachmentAmount, AttachmentUpgrade, AttachmentRarity, AttachmentLevel, AttachmentDesign)
+        VALUES (@characterId, @characterId, GETDATE(), 'Web Shop', 'Thank you for your purchase!', 0, 0, 0, 0, 0, 0, 0, @vnum, @amount, @upgrade, @rarity, @level, @design)
       `);
 
     // Log the purchase (optional - table may not exist)
