@@ -137,22 +137,26 @@ router.post('/purchase', authMiddleware, async (req, res) => {
       });
     }
 
-    // Check if unique purchase and already purchased
+    // Check if unique purchase and already purchased (skip if table doesn't exist)
     if (item.unique_purchase) {
-      const purchaseCheck = await pool.request()
-        .input('accountId', sql.BigInt, req.user.id)
-        .input('itemId', sql.Int, itemId)
-        .query(`
-          SELECT COUNT(*) as count 
-          FROM web_shop_logs 
-          WHERE AccountId = @accountId AND ItemId = @itemId
-        `);
-      
-      if (purchaseCheck.recordset[0].count > 0) {
-        return res.status(400).json({ 
-          success: false, 
-          error: 'You have already purchased this unique item' 
-        });
+      try {
+        const purchaseCheck = await pool.request()
+          .input('accountId', sql.BigInt, req.user.id)
+          .input('itemId', sql.Int, itemId)
+          .query(`
+            SELECT COUNT(*) as count 
+            FROM web_shop_logs 
+            WHERE AccountId = @accountId AND ItemId = @itemId
+          `);
+        
+        if (purchaseCheck.recordset[0].count > 0) {
+          return res.status(400).json({ 
+            success: false, 
+            error: 'You have already purchased this unique item' 
+          });
+        }
+      } catch (checkError) {
+        console.log('Unique purchase check skipped - table may not exist');
       }
     }
 
@@ -231,8 +235,8 @@ router.post('/purchase', authMiddleware, async (req, res) => {
     });
 
   } catch (err) {
-    console.error('Purchase error:', err);
-    res.status(500).json({ success: false, error: 'Purchase failed' });
+    console.error('Purchase error:', err.message, err.stack);
+    res.status(500).json({ success: false, error: `Purchase failed: ${err.message}` });
   }
 });
 
