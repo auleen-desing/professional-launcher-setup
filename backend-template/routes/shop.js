@@ -192,7 +192,7 @@ router.post('/purchase', authMiddleware, async (req, res) => {
       .input('level', sql.TinyInt, item.level || 0)
       .query(`
         INSERT INTO mail (ReceiverId, SenderId, Date, Title, Message, SenderClass, SenderGender, SenderHairStyle, SenderHairColor, SenderMorphId, IsSenderCopy, IsOpened, AttachmentVNum, AttachmentAmount, AttachmentUpgrade, AttachmentRarity, AttachmentLevel)
-        VALUES (@characterId, @characterId, GETDATE(), 'Web Shop', 'Thank you for your purchase!', 0, 0, 0, 0, 0, 0, 0, @vnum, @amount, @upgrade, @rarity, @level)
+        VALUES (@characterId, NULL, GETDATE(), 'Web Shop', 'Thank you for your purchase!', 0, 0, 0, 0, 0, 0, 0, @vnum, @amount, @upgrade, @rarity, @level)
       `);
 
     // Log the purchase (optional - table may not exist)
