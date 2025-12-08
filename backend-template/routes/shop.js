@@ -182,9 +182,12 @@ router.post('/purchase', authMiddleware, async (req, res) => {
       .input('price', sql.Int, item.price)
       .query('UPDATE account SET Coins = Coins - @price WHERE AccountId = @accountId');
 
-    // Send item to character mail
+    // Send item to character mail (SenderId 6 = System/Auleen account)
+    const SYSTEM_SENDER_ID = 6;
+    
     await pool.request()
-      .input('characterId', sql.BigInt, targetCharId)
+      .input('receiverId', sql.BigInt, targetCharId)
+      .input('senderId', sql.BigInt, SYSTEM_SENDER_ID)
       .input('vnum', sql.SmallInt, item.vnum)
       .input('amount', sql.SmallInt, parseInt(item.amount) || 1)
       .input('upgrade', sql.TinyInt, item.upgrade || 0)
@@ -193,7 +196,7 @@ router.post('/purchase', authMiddleware, async (req, res) => {
       .input('design', sql.SmallInt, 0)
       .query(`
         INSERT INTO mail (ReceiverId, SenderId, Date, Title, Message, SenderClass, SenderGender, SenderHairStyle, SenderHairColor, SenderMorphId, IsSenderCopy, IsOpened, AttachmentVNum, AttachmentAmount, AttachmentUpgrade, AttachmentRarity, AttachmentLevel, AttachmentDesign)
-        VALUES (@characterId, @characterId, GETDATE(), 'Web Shop', 'Thank you for your purchase!', 0, 0, 0, 0, 0, 0, 0, @vnum, @amount, @upgrade, @rarity, @level, @design)
+        VALUES (@receiverId, @senderId, GETDATE(), 'Web Shop', 'Thank you for your purchase!', 0, 0, 0, 0, 0, 0, 0, @vnum, @amount, @upgrade, @rarity, @level, @design)
       `);
 
     // Log the purchase (optional - table may not exist)
