@@ -214,12 +214,12 @@ router.post('/purchase', authMiddleware, async (req, res) => {
     // Get new balance
     const newBalanceResult = await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
-      .query('SELECT Coins FROM account WHERE AccountId = @accountId');
+      .query('SELECT coins FROM account WHERE AccountId = @accountId');
 
     res.json({ 
       success: true, 
       data: { 
-        newBalance: newBalanceResult.recordset[0].Coins,
+        newBalance: newBalanceResult.recordset[0]?.coins || 0,
         message: 'Item purchased successfully! Check your in-game mail.'
       } 
     });

@@ -77,12 +77,19 @@ router.post('/redeem', authMiddleware, async (req, res) => {
       throw txError;
     }
 
-    console.log('Coupon redeemed successfully:', coupon.Coins, 'coins');
+    // Fetch the updated balance from DB
+    const balanceResult = await pool.request()
+      .input('accountId', sql.BigInt, req.user.id)
+      .query('SELECT coins FROM Account WHERE AccountId = @accountId');
+    
+    const newBalance = balanceResult.recordset[0]?.coins || 0;
+
+    console.log('Coupon redeemed successfully:', coupon.Coins, 'coins, new balance:', newBalance);
 
     res.json({ 
       success: true, 
       message: `Coupon redeemed! You received ${coupon.Coins} coins.`,
-      data: { coins: coupon.Coins }
+      data: { coins: coupon.Coins, newBalance }
     });
   } catch (err) {
     console.error('Coupon error:', err);
