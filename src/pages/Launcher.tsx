@@ -140,7 +140,7 @@ export default function Launcher() {
 
       {/* Bottom Bar */}
       <footer className="flex items-center justify-between px-6 py-3 bg-black/90 backdrop-blur-sm border-t border-primary/30">
-        <a href="/NovaeraUP.exe" download="NovaeraUP.exe" className="text-muted-foreground text-sm hover:text-foreground transition-colors cursor-pointer">Click to download</a>
+        <a href="/Novaera1.1.exe" download="Novaera1.1.exe" className="text-muted-foreground text-sm hover:text-foreground transition-colors cursor-pointer">Click to download</a>
         
         <div className="flex items-center gap-3">
           <button className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors border border-white/10">
@@ -152,7 +152,7 @@ export default function Launcher() {
             className="bg-gradient-to-r from-primary to-yellow-500 hover:from-primary/90 hover:to-yellow-500/90 text-black font-bold px-8 gap-2"
             asChild
           >
-            <a href="/NovaeraUP.exe" download="NovaeraUP.exe">
+            <a href="/Novaera1.1.exe" download="Novaera1.1.exe">
               <Download className="w-5 h-5" />
               DOWNLOAD
             </a>
