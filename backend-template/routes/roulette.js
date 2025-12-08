@@ -102,13 +102,13 @@ router.post('/spin', authMiddleware, async (req, res) => {
     // Get new balance
     const newBalance = await pool.request()
       .input('id', sql.BigInt, req.user.id)
-      .query('SELECT Coins FROM Account WHERE AccountId = @id');
+      .query('SELECT coins FROM Account WHERE AccountId = @id');
 
     res.json({
       success: true,
       data: {
         prize,
-        newBalance: newBalance.recordset[0]?.Coins || 0
+        newBalance: newBalance.recordset[0]?.coins || 0
       }
     });
   } catch (err) {
