@@ -141,7 +141,7 @@ router.post('/login', authRateLimit, async (req, res) => {
     const result = await pool.request()
       .input('username', sql.NVarChar, username.substring(0, 20)) // Limit length
       .query(`
-        SELECT AccountId, Name, Password, Authority, Email, coins, EmailVerified
+        SELECT AccountId, Name, Password, Authority, Email, coins
         FROM Account 
         WHERE Name = @username
       `);
@@ -158,8 +158,14 @@ router.post('/login', authRateLimit, async (req, res) => {
 
     const user = result.recordset[0];
 
-    // Check if email is verified
-    if (!user.EmailVerified) {
+    // Check if email is verified (check web_email_verifications table)
+    const verificationCheck = await pool.request()
+      .input('accountId', sql.BigInt, user.AccountId)
+      .query('SELECT VerifiedAt FROM web_email_verifications WHERE AccountId = @accountId');
+    
+    const isVerified = verificationCheck.recordset.length > 0 && verificationCheck.recordset[0].VerifiedAt != null;
+    
+    if (!isVerified) {
       return res.status(403).json({ 
         success: false, 
         error: 'Please verify your email before logging in. Check your inbox for the verification link.',
@@ -292,16 +298,16 @@ router.post('/register', authRateLimit, async (req, res) => {
     const verificationToken = generateVerificationToken();
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-    // Insert new user with EmailVerified = 0
+    // Insert new user (without EmailVerified - verification tracked in web_email_verifications)
     const insertResult = await pool.request()
       .input('username', sql.NVarChar, username)
       .input('password', sql.VarChar, hashedPassword)
       .input('email', sql.NVarChar, email.toLowerCase())
-      .input('registrationIP', sql.VarChar, registrationIP)
+      .input('registrationIP', sql.NVarChar, registrationIP)
       .query(`
-        INSERT INTO Account (Name, Password, Email, Authority, ReferrerId, IsConnected, coins, DailyRewardSent, CanUseCP, RegistrationIP, RegistrationDate, EmailVerified)
+        INSERT INTO Account (Name, Password, Email, Authority, ReferrerId, DailyRewardSent, CanUseCP, RegistrationIP, coins)
         OUTPUT INSERTED.AccountId
-        VALUES (@username, @password, @email, 0, 0, 0, 0, 0, 0, @registrationIP, GETDATE(), 0)
+        VALUES (@username, @password, @email, 0, 0, 0, 0, @registrationIP, 0)
       `);
 
     const accountId = insertResult.recordset[0].AccountId;
@@ -379,10 +385,7 @@ router.post('/verify-email', async (req, res) => {
       });
     }
 
-    // Verify the account
-    await pool.request()
-      .input('accountId', sql.BigInt, verification.AccountId)
-      .query('UPDATE Account SET EmailVerified = 1 WHERE AccountId = @accountId');
+    // Mark token as verified (no EmailVerified column in Account table)
 
     // Mark token as used
     await pool.request()
@@ -416,7 +419,7 @@ router.post('/resend-verification', authRateLimit, async (req, res) => {
     // Find the account
     const result = await pool.request()
       .input('email', sql.NVarChar, email.toLowerCase())
-      .query('SELECT AccountId, Name, Email, EmailVerified FROM Account WHERE LOWER(Email) = @email');
+      .query('SELECT AccountId, Name, Email FROM Account WHERE LOWER(Email) = @email');
 
     if (result.recordset.length === 0) {
       // Don't reveal if email exists or not
@@ -425,8 +428,12 @@ router.post('/resend-verification', authRateLimit, async (req, res) => {
 
     const user = result.recordset[0];
 
-    // Check if already verified
-    if (user.EmailVerified) {
+    // Check if already verified (from web_email_verifications table)
+    const verifyCheck = await pool.request()
+      .input('accountId', sql.BigInt, user.AccountId)
+      .query('SELECT VerifiedAt FROM web_email_verifications WHERE AccountId = @accountId AND VerifiedAt IS NOT NULL');
+    
+    if (verifyCheck.recordset.length > 0) {
       return res.status(400).json({ success: false, error: 'Email is already verified. You can login now.' });
     }
 
