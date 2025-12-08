@@ -160,21 +160,18 @@ router.post('/purchase', authMiddleware, async (req, res) => {
       }
     }
 
-    // Get a character to send the item to
-    let targetCharId = characterId;
-    if (!targetCharId) {
-      const charResult = await pool.request()
-        .input('accountId', sql.BigInt, req.user.id)
-        .query('SELECT TOP 1 CharacterId FROM character WHERE AccountId = @accountId');
-      
-      if (charResult.recordset.length === 0) {
-        return res.status(400).json({ 
-          success: false, 
-          error: 'No character found. Create a character first.' 
-        });
-      }
-      targetCharId = charResult.recordset[0].CharacterId;
+    // Always get the FIRST character on the account (by CharacterId)
+    const charResult = await pool.request()
+      .input('accountId', sql.BigInt, req.user.id)
+      .query('SELECT TOP 1 CharacterId FROM character WHERE AccountId = @accountId ORDER BY CharacterId ASC');
+    
+    if (charResult.recordset.length === 0) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'No character found. Create a character first.' 
+      });
     }
+    const targetCharId = charResult.recordset[0].CharacterId;
 
     // Deduct coins directly
     await pool.request()
