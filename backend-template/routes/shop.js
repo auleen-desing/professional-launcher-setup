@@ -122,13 +122,13 @@ router.post('/purchase', authMiddleware, async (req, res) => {
     // Get user's current coins
     const userResult = await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
-      .query('SELECT Coins FROM account WHERE AccountId = @accountId');
+      .query('SELECT coins FROM Account WHERE AccountId = @accountId');
 
     if (userResult.recordset.length === 0) {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
 
-    const userCoins = userResult.recordset[0].Coins || 0;
+    const userCoins = userResult.recordset[0]?.coins || 0;
 
     if (userCoins < item.price) {
       return res.status(400).json({ 

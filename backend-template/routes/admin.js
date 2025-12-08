@@ -93,8 +93,8 @@ router.post('/coins', authMiddleware, adminMiddleware, async (req, res) => {
     const pool = await poolPromise;
 
     const query = type === 'add' 
-      ? 'UPDATE account SET Coins = Coins + @amount WHERE AccountId = @userId'
-      : 'UPDATE account SET Coins = CASE WHEN Coins >= @amount THEN Coins - @amount ELSE 0 END WHERE AccountId = @userId';
+      ? 'UPDATE Account SET coins = coins + @amount WHERE AccountId = @userId'
+      : 'UPDATE Account SET coins = CASE WHEN coins >= @amount THEN coins - @amount ELSE 0 END WHERE AccountId = @userId';
 
     await pool.request()
       .input('userId', sql.Int, userId)
@@ -120,14 +120,14 @@ router.post('/coins', authMiddleware, adminMiddleware, async (req, res) => {
     // Get user info for response
     const userResult = await pool.request()
       .input('userId', sql.Int, userId)
-      .query('SELECT Name, Coins FROM account WHERE AccountId = @userId');
+      .query('SELECT Name, coins FROM Account WHERE AccountId = @userId');
 
     res.json({
       success: true,
       message: `${type === 'add' ? 'Added' : 'Removed'} ${amount} coins`,
       data: {
         username: userResult.recordset[0]?.Name,
-        newBalance: userResult.recordset[0]?.Coins
+        newBalance: userResult.recordset[0]?.coins
       }
     });
   } catch (err) {
