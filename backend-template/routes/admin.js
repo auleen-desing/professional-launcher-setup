@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { sql, poolPromise } = require('../config/database');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
+const security = require('../middleware/security');
 
 // GET /api/admin/stats - Server statistics
 router.get('/stats', authMiddleware, adminMiddleware, async (req, res) => {
@@ -473,6 +474,64 @@ router.delete('/coupons/:id', authMiddleware, adminMiddleware, async (req, res) 
     res.json({ success: true, message: 'Coupon deleted successfully' });
   } catch (err) {
     console.error('Delete coupon error:', err);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// ==================== BLOCKED IPs ====================
+
+// GET /api/admin/blocked-ips - Get all blocked IPs
+router.get('/blocked-ips', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const blockedData = security.getBlockedIPs();
+    
+    res.json({ 
+      success: true, 
+      data: blockedData,
+      config: {
+        blockDuration: security.CONFIG.BLOCK_DURATION / 1000 / 60, // in minutes
+        burstLimit: security.CONFIG.BURST_DETECTION.MAX_REQUESTS,
+        burstWindow: security.CONFIG.BURST_DETECTION.WINDOW_MS / 1000, // in seconds
+        authLimit: security.CONFIG.AUTH_RATE_LIMIT.MAX_REQUESTS,
+        authWindow: security.CONFIG.AUTH_RATE_LIMIT.WINDOW_MS / 1000 / 60, // in minutes
+      }
+    });
+  } catch (err) {
+    console.error('Get blocked IPs error:', err);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// POST /api/admin/block-ip - Manually block an IP
+router.post('/block-ip', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { ip, reason } = req.body;
+    
+    if (!ip || typeof ip !== 'string') {
+      return res.status(400).json({ success: false, error: 'Invalid IP address' });
+    }
+    
+    security.manualBlockIP(ip, reason || 'Blocked by admin');
+    console.log(`[ADMIN] IP manually blocked: ${ip} by admin ${req.user.username}`);
+    
+    res.json({ success: true, message: `IP ${ip} has been blocked` });
+  } catch (err) {
+    console.error('Block IP error:', err);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
+// DELETE /api/admin/unblock-ip/:ip - Unblock an IP
+router.delete('/unblock-ip/:ip', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { ip } = req.params;
+    
+    security.unblockIP(ip);
+    console.log(`[ADMIN] IP unblocked: ${ip} by admin ${req.user.username}`);
+    
+    res.json({ success: true, message: `IP ${ip} has been unblocked` });
+  } catch (err) {
+    console.error('Unblock IP error:', err);
     res.status(500).json({ success: false, error: 'Server error' });
   }
 });

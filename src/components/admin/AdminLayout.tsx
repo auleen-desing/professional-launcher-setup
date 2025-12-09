@@ -34,6 +34,7 @@ const navItems: NavItem[] = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Users', href: '/admin/users', icon: Users },
   { name: 'IP Ban', href: '/admin/ipban', icon: Globe },
+  { name: 'Blocked IPs', href: '/admin/blocked-ips', icon: Shield },
   { name: 'NovaCoins', href: '/admin/coins', icon: Coins },
   { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
   { name: 'Announcements', href: '/admin/announcements', icon: Megaphone },

@@ -104,6 +104,9 @@ export const API_CONFIG = {
       ANNOUNCEMENTS: '/admin/announcements',
       STATS: '/admin/stats',
       LOGS: '/admin/logs',
+      BLOCKED_IPS: '/admin/blocked-ips',
+      BLOCK_IP: '/admin/block-ip',
+      UNBLOCK_IP: '/admin/unblock-ip/:ip',
     },
   },
 };
