@@ -11,9 +11,9 @@ router.post('/unbug', authMiddleware, async (req, res) => {
 
     // Verify character belongs to user
     const charResult = await pool.request()
-      .input('charId', sql.Int, characterId)
-      .input('accountId', sql.Int, req.user.id)
-      .query('SELECT * FROM character WHERE CharacterId = @charId AND AccountId = @accountId');
+      .input('charId', sql.BigInt, characterId)
+      .input('accountId', sql.BigInt, req.user.id)
+      .query('SELECT * FROM Character WHERE CharacterId = @charId AND AccountId = @accountId');
 
     if (charResult.recordset.length === 0) {
       return res.status(404).json({ success: false, error: 'Character not found' });
@@ -21,9 +21,9 @@ router.post('/unbug', authMiddleware, async (req, res) => {
 
     // Reset character position to safe location (NosVille)
     await pool.request()
-      .input('charId', sql.Int, characterId)
+      .input('charId', sql.BigInt, characterId)
       .query(`
-        UPDATE character 
+        UPDATE Character 
         SET MapId = 1, MapX = 79, MapY = 116 
         WHERE CharacterId = @charId
       `);
@@ -40,10 +40,10 @@ router.get('/list', authMiddleware, async (req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
-      .input('accountId', sql.Int, req.user.id)
+      .input('accountId', sql.BigInt, req.user.id)
       .query(`
         SELECT CharacterId, Name, Class, Level, JobLevel, HeroLevel
-        FROM character 
+        FROM Character 
         WHERE AccountId = @accountId
         ORDER BY Level DESC
       `);
@@ -73,8 +73,8 @@ router.get('/:name', async (req, res) => {
       .query(`
         SELECT c.CharacterId, c.Name, c.Class, c.Level, c.JobLevel, c.HeroLevel,
                c.Reputation, c.Compliment, c.Act4Kill, c.Act4Dead
-        FROM character c
-        INNER JOIN account a ON c.AccountId = a.AccountId
+        FROM Character c
+        INNER JOIN Account a ON c.AccountId = a.AccountId
         WHERE c.Name = @name AND a.Authority < 2
       `);
 
