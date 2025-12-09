@@ -168,7 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const isAdmin = user ? user.authority === 100 : false;
+  const isAdmin = user ? user.authority >= 300 : false;
 
   return (
     <AuthContext.Provider value={{ user, isLoading, isAdmin, login, logout, updateCoins, refreshUser }}>
