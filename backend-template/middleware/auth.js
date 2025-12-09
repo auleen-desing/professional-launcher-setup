@@ -24,7 +24,7 @@ const authMiddleware = (req, res, next) => {
 };
 
 const adminMiddleware = (req, res, next) => {
-  if (!req.user || req.user.authority < 100) {
+  if (!req.user || req.user.authority < 300) {
     return res.status(403).json({ success: false, error: 'Admin access required' });
   }
   next();
@@ -36,7 +36,7 @@ const generateToken = (user) => {
       id: user.AccountId, 
       username: user.Name, 
       authority: user.Authority,
-      isAdmin: user.Authority >= 100 
+      isAdmin: user.Authority >= 300 
     },
     JWT_SECRET,
     { expiresIn: '7d' }
