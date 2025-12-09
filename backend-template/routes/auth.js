@@ -208,6 +208,8 @@ router.post('/login', authRateLimit, async (req, res) => {
     // Successful login - clear failed attempts
     clearLoginAttempts(username, ip);
     
+    console.log(`[AUTH DEBUG] User ${username} - Authority: ${user.Authority}, isAdmin: ${user.Authority >= 300}`);
+    
     const token = generateToken(user);
 
     console.log(`[AUTH] Successful login: ${username} from ${ip}`);
