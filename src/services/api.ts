@@ -6,6 +6,8 @@ interface ApiResponse<T = any> {
   data?: T;
   message?: string;
   error?: string;
+  needsVerification?: boolean;
+  email?: string;
 }
 
 interface LoginResponse {
@@ -86,7 +88,9 @@ class ApiService {
         return {
           success: false,
           error: json.message || json.error || 'Request failed',
-        };
+          needsVerification: json.needsVerification,
+          email: json.email,
+        } as ApiResponse<T>;
       }
 
       // Backend returns { success, data, error } - pass through directly

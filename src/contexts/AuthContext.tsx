@@ -109,13 +109,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       // Check for email verification needed
-      const responseAny = response as any;
-      if (responseAny.needsVerification) {
+      if (response.needsVerification) {
         return { 
           success: false, 
           error: response.error || 'Please verify your email.',
           needsVerification: true,
-          email: responseAny.email
+          email: response.email
         };
       }
 
