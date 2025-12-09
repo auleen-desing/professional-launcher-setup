@@ -393,6 +393,58 @@ function createCorsConfig(allowedOrigins = ['*']) {
   };
 }
 
+/**
+ * Get all blocked IPs with metadata (for admin panel)
+ */
+function getBlockedIPs() {
+  const now = Date.now();
+  const result = [];
+  
+  for (const ip of blockedIPs) {
+    const blockData = rateLimitStore.get(`block_${ip}`);
+    const burstData = rateLimitStore.get(`burst_${ip}`);
+    const authData = rateLimitStore.get(`auth_${ip}`);
+    
+    const blockedAt = blockData?.timestamp || now;
+    const expiresAt = blockedAt + CONFIG.BLOCK_DURATION;
+    const remainingMs = Math.max(0, expiresAt - now);
+    
+    result.push({
+      ip,
+      blockedAt: new Date(blockedAt).toISOString(),
+      expiresAt: new Date(expiresAt).toISOString(),
+      remainingMinutes: Math.ceil(remainingMs / 1000 / 60),
+      reason: blockData?.reason || 'Rate limit exceeded',
+      burstCount: burstData?.requests?.length || 0,
+      authAttempts: authData?.count || 0
+    });
+  }
+  
+  return result;
+}
+
+/**
+ * Manually block an IP (from admin panel)
+ */
+function manualBlockIP(ip, reason = 'Blocked by admin') {
+  blockedIPs.add(ip);
+  rateLimitStore.set(`block_${ip}`, { 
+    timestamp: Date.now(),
+    reason: reason
+  });
+}
+
+/**
+ * Unblock an IP (from admin panel)
+ */
+function unblockIP(ip) {
+  blockedIPs.delete(ip);
+  rateLimitStore.delete(`block_${ip}`);
+  rateLimitStore.delete(`burst_${ip}`);
+  rateLimitStore.delete(`auth_${ip}`);
+  rateLimitStore.delete(`rate_${ip}`);
+}
+
 module.exports = {
   securityHeaders,
   rateLimit,
@@ -404,5 +456,8 @@ module.exports = {
   isLoginAllowed,
   clearLoginAttempts,
   getClientIP,
+  getBlockedIPs,
+  manualBlockIP,
+  unblockIP,
   CONFIG
 };
