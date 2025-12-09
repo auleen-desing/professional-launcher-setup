@@ -8,25 +8,30 @@ const rateLimitStore = new Map();
 const loginAttemptsStore = new Map();
 const blockedIPs = new Set();
 
-// Configuration
+// Configuration - HARDENED against brute force attacks
 const CONFIG = {
   // General rate limiting
   RATE_LIMIT: {
     WINDOW_MS: 60 * 1000, // 1 minute
-    MAX_REQUESTS: 100, // 100 requests per minute per IP
+    MAX_REQUESTS: 60, // 60 requests per minute per IP (reduced from 100)
   },
-  // Stricter limits for sensitive endpoints
+  // Stricter limits for auth endpoints (login/register)
   AUTH_RATE_LIMIT: {
-    WINDOW_MS: 15 * 60 * 1000, // 15 minutes
-    MAX_REQUESTS: 10, // 10 login attempts per 15 minutes
+    WINDOW_MS: 5 * 60 * 1000, // 5 minutes (reduced from 15)
+    MAX_REQUESTS: 5, // Only 5 login attempts per 5 minutes (reduced from 10)
   },
   // Account lockout
   LOGIN_PROTECTION: {
-    MAX_ATTEMPTS: 5, // Lock after 5 failed attempts
-    LOCKOUT_TIME: 15 * 60 * 1000, // 15 minutes lockout
+    MAX_ATTEMPTS: 3, // Lock after 3 failed attempts (reduced from 5)
+    LOCKOUT_TIME: 30 * 60 * 1000, // 30 minutes lockout (increased from 15)
   },
   // IP blocking
-  BLOCK_DURATION: 60 * 60 * 1000, // 1 hour block for malicious IPs
+  BLOCK_DURATION: 2 * 60 * 60 * 1000, // 2 hours block for malicious IPs (increased from 1 hour)
+  // Burst detection - NEW
+  BURST_DETECTION: {
+    WINDOW_MS: 10 * 1000, // 10 seconds
+    MAX_REQUESTS: 10, // Max 10 requests in 10 seconds
+  }
 };
 
 // Clean up old entries periodically
@@ -98,10 +103,34 @@ function securityHeaders(req, res, next) {
 }
 
 /**
+ * Burst Detection - Block rapid-fire requests
+ */
+function checkBurst(ip) {
+  const key = `burst_${ip}`;
+  const now = Date.now();
+  const data = rateLimitStore.get(key) || { requests: [], blocked: false };
+  
+  // Remove old requests outside the window
+  data.requests = data.requests.filter(t => now - t < CONFIG.BURST_DETECTION.WINDOW_MS);
+  
+  // Add current request
+  data.requests.push(now);
+  rateLimitStore.set(key, data);
+  
+  // Check if burst detected
+  if (data.requests.length > CONFIG.BURST_DETECTION.MAX_REQUESTS) {
+    return true;
+  }
+  
+  return false;
+}
+
+/**
  * General Rate Limiting Middleware
  */
 function rateLimit(req, res, next) {
   const ip = getClientIP(req);
+  const now = Date.now();
   
   // Check if IP is blocked
   if (blockedIPs.has(ip)) {
@@ -112,8 +141,19 @@ function rateLimit(req, res, next) {
     });
   }
   
+  // Check for burst attack (many requests in short time)
+  if (checkBurst(ip)) {
+    blockedIPs.add(ip);
+    rateLimitStore.set(`block_${ip}`, { timestamp: now });
+    console.log(`[SECURITY] IP blocked for burst attack: ${ip} (>10 requests in 10 seconds)`);
+    return res.status(429).json({ 
+      success: false, 
+      error: 'Too many requests in short time. IP temporarily blocked.',
+      retryAfter: CONFIG.BLOCK_DURATION / 1000
+    });
+  }
+  
   const key = `rate_${ip}`;
-  const now = Date.now();
   const data = rateLimitStore.get(key) || { count: 0, timestamp: now };
   
   // Reset if window has passed
@@ -133,8 +173,8 @@ function rateLimit(req, res, next) {
   if (data.count > CONFIG.RATE_LIMIT.MAX_REQUESTS) {
     console.log(`[SECURITY] Rate limit exceeded for IP: ${ip}`);
     
-    // If exceeding by a lot, block the IP
-    if (data.count > CONFIG.RATE_LIMIT.MAX_REQUESTS * 3) {
+    // Block IP immediately if exceeding by 50%
+    if (data.count > CONFIG.RATE_LIMIT.MAX_REQUESTS * 1.5) {
       blockedIPs.add(ip);
       rateLimitStore.set(`block_${ip}`, { timestamp: now });
       console.log(`[SECURITY] IP blocked for excessive requests: ${ip}`);
