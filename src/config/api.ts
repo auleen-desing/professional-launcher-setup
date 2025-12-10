@@ -4,7 +4,7 @@ export const API_CONFIG = {
   BASE_URL: '/api',
   
   // Server Configuration
-  SERVER_IP: '127.0.0.1',
+  SERVER_IP: '148.113.198.241',
   LOGIN_PORT: 4000,
   CHANNELS: {
     CH1: { port: 1337, name: 'Channel 1' },
