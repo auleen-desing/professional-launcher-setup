@@ -8,29 +8,29 @@ const rateLimitStore = new Map();
 const loginAttemptsStore = new Map();
 const blockedIPs = new Set();
 
-// Configuration - HARDENED against brute force attacks
+// Configuration - Balanced security
 const CONFIG = {
   // General rate limiting
   RATE_LIMIT: {
     WINDOW_MS: 60 * 1000, // 1 minute
-    MAX_REQUESTS: 60, // 60 requests per minute per IP (reduced from 100)
+    MAX_REQUESTS: 200, // 200 requests per minute per IP
   },
-  // Stricter limits for auth endpoints (login/register)
+  // Limits for auth endpoints (login/register)
   AUTH_RATE_LIMIT: {
-    WINDOW_MS: 5 * 60 * 1000, // 5 minutes (reduced from 15)
-    MAX_REQUESTS: 5, // Only 5 login attempts per 5 minutes (reduced from 10)
+    WINDOW_MS: 5 * 60 * 1000, // 5 minutes
+    MAX_REQUESTS: 20, // 20 login attempts per 5 minutes
   },
   // Account lockout
   LOGIN_PROTECTION: {
-    MAX_ATTEMPTS: 3, // Lock after 3 failed attempts (reduced from 5)
-    LOCKOUT_TIME: 30 * 60 * 1000, // 30 minutes lockout (increased from 15)
+    MAX_ATTEMPTS: 10, // Lock after 10 failed attempts
+    LOCKOUT_TIME: 5 * 60 * 1000, // 5 minutes lockout
   },
   // IP blocking
-  BLOCK_DURATION: 2 * 60 * 60 * 1000, // 2 hours block for malicious IPs (increased from 1 hour)
-  // Burst detection - NEW
+  BLOCK_DURATION: 15 * 60 * 1000, // 15 minutes block
+  // Burst detection
   BURST_DETECTION: {
-    WINDOW_MS: 10 * 1000, // 10 seconds
-    MAX_REQUESTS: 10, // Max 10 requests in 10 seconds
+    WINDOW_MS: 5 * 1000, // 5 seconds
+    MAX_REQUESTS: 30, // Max 30 requests in 5 seconds
   }
 };
 
