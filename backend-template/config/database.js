@@ -1,15 +1,17 @@
 const sql = require('mssql');
+require('dotenv').config();
 
 const config = {
-  server: '127.0.0.1',
-  database: 'Novaera',
-  user: 'sa',
-  password: 'prueba1298@',
+  server: process.env.DB_SERVER || 'localhost',
+  database: process.env.DB_NAME || 'Novaera',
+  user: process.env.DB_USER || 'sa',
+  password: process.env.DB_PASSWORD || '',
   port: 1433,
   options: {
     encrypt: false,
     trustServerCertificate: true,
-    enableArithAbort: true
+    enableArithAbort: true,
+    instanceName: process.env.DB_SERVER?.includes('\\') ? process.env.DB_SERVER.split('\\')[1] : undefined
   },
   pool: {
     max: 10,
@@ -17,6 +19,12 @@ const config = {
     idleTimeoutMillis: 30000
   }
 };
+
+// If using named instance, remove port and use instance name
+if (process.env.DB_SERVER?.includes('\\')) {
+  config.server = process.env.DB_SERVER.split('\\')[0];
+  delete config.port;
+}
 
 const poolPromise = new sql.ConnectionPool(config)
   .connect()
@@ -26,7 +34,6 @@ const poolPromise = new sql.ConnectionPool(config)
   })
   .catch(err => {
     console.error('Database connection failed:', err);
-    process.exit(1);
   });
 
 module.exports = { sql, poolPromise };
