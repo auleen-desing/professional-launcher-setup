@@ -43,7 +43,7 @@ export function DownloadSection() {
                   <Download className="w-10 h-10 text-primary" />
                 </div>
                 <h3 className="text-2xl font-bold text-foreground mb-2">NovaEra Launcher</h3>
-                <p className="text-muted-foreground">Version 1.0.0 • 103 MB</p>
+                <p className="text-muted-foreground">Version 1.0.0 • 103 KB</p>
               </div>
 
               <Button 
