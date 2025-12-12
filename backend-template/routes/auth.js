@@ -387,14 +387,17 @@ router.post('/verify-email', async (req, res) => {
       });
     }
 
-    // Mark token as verified (no EmailVerified column in Account table)
-
     // Mark token as used
     await pool.request()
       .input('token', sql.NVarChar, token)
       .query('UPDATE web_email_verifications SET VerifiedAt = GETDATE() WHERE Token = @token');
 
-    console.log(`[AUTH] Email verified for user: ${verification.Username}`);
+    // Update Authority to 1 upon email verification
+    await pool.request()
+      .input('accountId', sql.BigInt, verification.AccountId)
+      .query('UPDATE Account SET Authority = 1 WHERE AccountId = @accountId AND Authority = 0');
+
+    console.log(`[AUTH] Email verified for user: ${verification.Username}, Authority updated to 1`);
 
     res.json({ 
       success: true, 
