@@ -23,6 +23,7 @@ router.get('/items', async (req, res) => {
         i.category_id,
         i.speed,
         i.level,
+        i.discount,
         c.name as category_name
       FROM web_item_shop_items i
       LEFT JOIN web_item_shop_categories c ON i.category_id = c.id
@@ -43,7 +44,8 @@ router.get('/items', async (req, res) => {
       speed: item.speed,
       level: item.level,
       uniquePurchase: item.unique_purchase,
-      showInHome: item.show_in_home
+      showInHome: item.show_in_home,
+      discount: item.discount || 0
     }));
 
     res.json({ success: true, data: items });
@@ -118,6 +120,12 @@ router.post('/purchase', authMiddleware, async (req, res) => {
     }
 
     const item = itemResult.recordset[0];
+    
+    // Calculate final price with discount
+    const discountPercent = item.discount || 0;
+    const finalPrice = discountPercent > 0 
+      ? Math.floor(item.price * (1 - discountPercent / 100)) 
+      : item.price;
 
     // Get user's current coins
     const userResult = await pool.request()
@@ -130,10 +138,10 @@ router.post('/purchase', authMiddleware, async (req, res) => {
 
     const userCoins = userResult.recordset[0]?.coins || 0;
 
-    if (userCoins < item.price) {
+    if (userCoins < finalPrice) {
       return res.status(400).json({ 
         success: false, 
-        error: `Insufficient coins. You need ${item.price} coins.` 
+        error: `Insufficient coins. You need ${finalPrice} coins.` 
       });
     }
 
@@ -173,10 +181,10 @@ router.post('/purchase', authMiddleware, async (req, res) => {
     }
     const targetCharId = charResult.recordset[0].CharacterId;
 
-    // Deduct coins directly
+    // Deduct coins directly (using discounted price)
     await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
-      .input('price', sql.Int, item.price)
+      .input('price', sql.Int, finalPrice)
       .query('UPDATE account SET Coins = Coins - @price WHERE AccountId = @accountId');
 
     // Send item to character mail (SenderId 164 = System character "testtest")
@@ -202,7 +210,7 @@ router.post('/purchase', authMiddleware, async (req, res) => {
       await pool.request()
         .input('accountId', sql.BigInt, req.user.id)
         .input('itemId', sql.Int, itemId)
-        .input('price', sql.Int, item.price)
+        .input('price', sql.Int, finalPrice)
         .query(`
           INSERT INTO web_shop_logs (AccountId, ItemId, Price, PurchaseDate)
           VALUES (@accountId, @itemId, @price, GETDATE())
