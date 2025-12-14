@@ -301,15 +301,16 @@ router.post('/register', authRateLimit, async (req, res) => {
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
     // Insert new user (without EmailVerified - verification tracked in web_email_verifications)
+    // Use only base columns that exist in standard NosTale Account table
     const insertResult = await pool.request()
       .input('username', sql.NVarChar, username)
       .input('password', sql.VarChar, hashedPassword)
       .input('email', sql.NVarChar, email.toLowerCase())
       .input('registrationIP', sql.NVarChar, registrationIP)
       .query(`
-        INSERT INTO Account (Name, Password, Email, Authority, ReferrerId, DailyRewardSent, CanUseCP, RegistrationIP, coins)
+        INSERT INTO Account (Name, Password, Email, Authority, RegistrationIP, Coins)
         OUTPUT INSERTED.AccountId
-        VALUES (@username, @password, @email, 0, 0, 0, 0, @registrationIP, 0)
+        VALUES (@username, @password, @email, 0, @registrationIP, 0)
       `);
 
     const accountId = insertResult.recordset[0].AccountId;
