@@ -187,12 +187,10 @@ router.post('/purchase', authMiddleware, async (req, res) => {
       .input('price', sql.Int, finalPrice)
       .query('UPDATE account SET Coins = Coins - @price WHERE AccountId = @accountId');
 
-    // Send item to character mail (SenderId 164 = System character "testtest")
-    const SYSTEM_SENDER_ID = 164;
-    
+    // Send item to character mail (use buyer's own character as sender - self-mail)
     await pool.request()
       .input('receiverId', sql.BigInt, targetCharId)
-      .input('senderId', sql.BigInt, SYSTEM_SENDER_ID)
+      .input('senderId', sql.BigInt, targetCharId)
       .input('vnum', sql.SmallInt, item.vnum)
       .input('amount', sql.SmallInt, parseInt(item.amount) || 1)
       .input('upgrade', sql.TinyInt, item.upgrade || 0)
