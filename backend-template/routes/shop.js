@@ -169,9 +169,12 @@ router.post('/purchase', authMiddleware, async (req, res) => {
     }
 
     // Always get the FIRST character on the account (by CharacterId)
+    console.log('[SHOP] Looking for character for AccountId:', req.user.id);
     const charResult = await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
-      .query('SELECT TOP 1 CharacterId FROM character WHERE AccountId = @accountId ORDER BY CharacterId ASC');
+      .query('SELECT TOP 1 CharacterId, Name FROM Character WHERE AccountId = @accountId ORDER BY CharacterId ASC');
+    
+    console.log('[SHOP] Character query result:', JSON.stringify(charResult.recordset));
     
     if (charResult.recordset.length === 0) {
       return res.status(400).json({ 
@@ -180,6 +183,7 @@ router.post('/purchase', authMiddleware, async (req, res) => {
       });
     }
     const targetCharId = charResult.recordset[0].CharacterId;
+    console.log('[SHOP] Using CharacterId:', targetCharId, 'Name:', charResult.recordset[0].Name);
 
     // Deduct coins directly (using discounted price)
     await pool.request()
