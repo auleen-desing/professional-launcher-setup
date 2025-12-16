@@ -20,7 +20,6 @@ interface ShopItem {
   quantity: number;
   category: string;
   categoryId: number;
-  discount?: number;
 }
 
 interface Category {
@@ -45,6 +44,7 @@ export function Shop() {
   const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<number | null>(null);
+  const [globalDiscount, setGlobalDiscount] = useState(API_CONFIG.GLOBAL_DISCOUNT);
   const { toast } = useToast();
   const { user, updateCoins } = useAuth();
 
@@ -140,7 +140,7 @@ export function Shop() {
     : items.filter(item => getSelectedCategoryIds().includes(item.categoryId));
 
   const handlePurchase = async (item: ShopItem) => {
-    const finalPrice = item.discount ? Math.floor(item.price * (1 - item.discount / 100)) : item.price;
+    const finalPrice = globalDiscount > 0 ? Math.floor(item.price * (1 - globalDiscount / 100)) : item.price;
 
     if (!selectedCharacter) {
       toast({
@@ -279,6 +279,17 @@ export function Shop() {
 
   return (
     <div className="space-y-6">
+      {/* Global Discount Banner */}
+      {globalDiscount > 0 && (
+        <div className="bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 border border-primary/30 rounded-lg p-4 flex items-center justify-center gap-3">
+          <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+          <span className="text-lg font-bold text-primary">
+            {globalDiscount}% OFF on ALL items!
+          </span>
+          <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gradient-gold">Shop</h1>
@@ -356,7 +367,7 @@ export function Shop() {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               {filteredItems.map((item) => {
-                const finalPrice = item.discount ? Math.floor(item.price * (1 - item.discount / 100)) : item.price;
+                const finalPrice = globalDiscount > 0 ? Math.floor(item.price * (1 - globalDiscount / 100)) : item.price;
 
                 return (
                   <Card key={item.id} className="hover:border-primary/50 transition-all group">
@@ -386,7 +397,7 @@ export function Shop() {
                     <CardContent>
                       <div className="flex items-center justify-between">
                         <div>
-                          {item.discount && item.discount > 0 && (
+                          {globalDiscount > 0 && (
                             <span className="text-sm text-muted-foreground line-through mr-2">
                               {item.price.toLocaleString()}
                             </span>
