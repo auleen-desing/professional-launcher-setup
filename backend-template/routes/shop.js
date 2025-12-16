@@ -168,22 +168,36 @@ router.post('/purchase', authMiddleware, async (req, res) => {
       }
     }
 
-    // Always get the FIRST character on the account (by CharacterId)
-    console.log('[SHOP] Looking for character for AccountId:', req.user.id);
-    const charResult = await pool.request()
-      .input('accountId', sql.BigInt, req.user.id)
-      .query('SELECT TOP 1 CharacterId, Name FROM Character WHERE AccountId = @accountId ORDER BY CharacterId ASC');
-    
-    console.log('[SHOP] Character query result:', JSON.stringify(charResult.recordset));
-    
-    if (charResult.recordset.length === 0) {
-      return res.status(400).json({ 
-        success: false, 
-        error: 'No character found. Create a character first.' 
-      });
+    // Use provided characterId or fallback to first character
+    let targetCharId;
+    if (characterId) {
+      // Verify the character belongs to this account
+      const verifyChar = await pool.request()
+        .input('charId', sql.BigInt, characterId)
+        .input('accountId', sql.BigInt, req.user.id)
+        .query('SELECT CharacterId FROM Character WHERE CharacterId = @charId AND AccountId = @accountId');
+      
+      if (verifyChar.recordset.length === 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'Invalid character selected.' 
+        });
+      }
+      targetCharId = characterId;
+    } else {
+      // Fallback: get first character
+      const charResult = await pool.request()
+        .input('accountId', sql.BigInt, req.user.id)
+        .query('SELECT TOP 1 CharacterId FROM Character WHERE AccountId = @accountId ORDER BY CharacterId ASC');
+      
+      if (charResult.recordset.length === 0) {
+        return res.status(400).json({ 
+          success: false, 
+          error: 'No character found. Create a character first.' 
+        });
+      }
+      targetCharId = charResult.recordset[0].CharacterId;
     }
-    const targetCharId = charResult.recordset[0].CharacterId;
-    console.log('[SHOP] Using CharacterId:', targetCharId, 'Name:', charResult.recordset[0].Name);
 
     // Deduct coins directly (using discounted price)
     await pool.request()
