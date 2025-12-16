@@ -52,31 +52,44 @@ export function BuyCoins() {
       const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.SHOP.PACKAGES));
       const data = await response.json();
       
+      // Apply global bonus to all packages
+      const bonusPercent = API_CONFIG.GLOBAL_DISCOUNT;
+      
       if (data.success && data.data && data.data.length > 0) {
-        const packagesWithPopular = data.data.map((pkg: CoinPackage, index: number) => ({
+        const packagesWithBonus = data.data.map((pkg: CoinPackage, index: number) => ({
           ...pkg,
+          bonus: bonusPercent > 0 ? Math.floor(pkg.coins * bonusPercent / 100) : 0,
           popular: index === 1 && data.data.length > 1
         }));
-        setPackages(packagesWithPopular);
+        setPackages(packagesWithBonus);
       } else {
         // Fallback packages if database is empty
-        setPackages([
-          { id: '1', name: 'Básico', coins: 8000, price: 10 },
-          { id: '2', name: 'Popular', coins: 24500, price: 30, popular: true },
-          { id: '3', name: 'Premium', coins: 55000, price: 50 },
-          { id: '4', name: 'Élite', coins: 110000, price: 100 },
+        const fallbackPkgs = [
+          { id: '1', name: 'Popular', coins: 8000, price: 10 },
+          { id: '2', name: 'Premium', coins: 24500, price: 30, popular: true },
+          { id: '3', name: 'Ultimate', coins: 55000, price: 50 },
+          { id: '4', name: 'Ultimate', coins: 110000, price: 100 },
           { id: '5', name: 'Ultimate', coins: 240000, price: 200 },
-        ]);
+        ];
+        setPackages(fallbackPkgs.map(pkg => ({
+          ...pkg,
+          bonus: bonusPercent > 0 ? Math.floor(pkg.coins * bonusPercent / 100) : 0
+        })));
       }
     } catch (error) {
       console.error('Error fetching packages:', error);
-      setPackages([
-        { id: '1', name: 'Básico', coins: 8000, price: 10 },
-        { id: '2', name: 'Popular', coins: 24500, price: 30, popular: true },
-        { id: '3', name: 'Premium', coins: 55000, price: 50 },
-        { id: '4', name: 'Élite', coins: 110000, price: 100 },
+      const bonusPercent = API_CONFIG.GLOBAL_DISCOUNT;
+      const fallbackPkgs = [
+        { id: '1', name: 'Popular', coins: 8000, price: 10 },
+        { id: '2', name: 'Premium', coins: 24500, price: 30, popular: true },
+        { id: '3', name: 'Ultimate', coins: 55000, price: 50 },
+        { id: '4', name: 'Ultimate', coins: 110000, price: 100 },
         { id: '5', name: 'Ultimate', coins: 240000, price: 200 },
-      ]);
+      ];
+      setPackages(fallbackPkgs.map(pkg => ({
+        ...pkg,
+        bonus: bonusPercent > 0 ? Math.floor(pkg.coins * bonusPercent / 100) : 0
+      })));
     } finally {
       setIsLoading(false);
     }
@@ -224,6 +237,17 @@ export function BuyCoins() {
 
   return (
     <div className="space-y-8">
+      {/* Global Bonus Banner */}
+      {API_CONFIG.GLOBAL_DISCOUNT > 0 && (
+        <div className="bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 border border-primary/30 rounded-lg p-4 flex items-center justify-center gap-3">
+          <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+          <span className="text-lg font-bold text-primary">
+            +{API_CONFIG.GLOBAL_DISCOUNT}% BONUS COINS on all packages!
+          </span>
+          <Sparkles className="h-5 w-5 text-primary animate-pulse" />
+        </div>
+      )}
+
       <div>
         <h1 className="text-3xl font-display font-bold text-gradient-cyan">Support NovaEra</h1>
         <p className="text-muted-foreground mt-2">Donate to receive NovaCoins - PayPal donations only</p>
