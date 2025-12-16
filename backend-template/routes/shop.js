@@ -3,6 +3,19 @@ const router = express.Router();
 const { sql, poolPromise } = require('../config/database');
 const { authMiddleware } = require('../middleware/auth');
 
+// Global discount percentage (0-100) - applies to ALL purchases
+const GLOBAL_DISCOUNT = parseInt(process.env.GLOBAL_DISCOUNT) || 10;
+
+// GET /api/shop/config - Get shop configuration (global discount, etc.)
+router.get('/config', (req, res) => {
+  res.json({ 
+    success: true, 
+    data: { 
+      globalDiscount: GLOBAL_DISCOUNT 
+    } 
+  });
+});
+
 // GET /api/shop/items - Get all shop items with categories
 router.get('/items', async (req, res) => {
   try {
@@ -121,10 +134,9 @@ router.post('/purchase', authMiddleware, async (req, res) => {
 
     const item = itemResult.recordset[0];
     
-    // Calculate final price with discount
-    const discountPercent = item.discount || 0;
-    const finalPrice = discountPercent > 0 
-      ? Math.floor(item.price * (1 - discountPercent / 100)) 
+    // Calculate final price with GLOBAL discount
+    const finalPrice = GLOBAL_DISCOUNT > 0 
+      ? Math.floor(item.price * (1 - GLOBAL_DISCOUNT / 100)) 
       : item.price;
 
     // Get user's current coins
