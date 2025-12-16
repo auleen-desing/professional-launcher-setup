@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { ShoppingCart, Sparkles, ChevronRight, Loader2, Package, FolderOpen } from 'lucide-react';
+import { ShoppingCart, Sparkles, ChevronRight, Loader2, Package, FolderOpen, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { API_CONFIG, buildApiUrl } from '@/config/api';
@@ -28,9 +29,18 @@ interface Category {
   master_category: number;
 }
 
+interface Character {
+  id: number;
+  name: string;
+  level: number;
+  class: string;
+}
+
 export function Shop() {
   const [items, setItems] = useState<ShopItem[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [characters, setCharacters] = useState<Character[]>([]);
+  const [selectedCharacter, setSelectedCharacter] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -40,6 +50,7 @@ export function Shop() {
 
   useEffect(() => {
     fetchData();
+    fetchCharacters();
   }, []);
 
   const fetchData = async () => {
@@ -69,6 +80,24 @@ export function Shop() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchCharacters = async () => {
+    try {
+      const token = localStorage.getItem('novaera_token');
+      const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.CHARACTER.LIST), {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      const data = await response.json();
+      if (data.success && data.data.length > 0) {
+        setCharacters(data.data);
+        setSelectedCharacter(data.data[0].id.toString());
+      }
+    } catch (error) {
+      console.error('Characters error:', error);
     }
   };
 
@@ -113,6 +142,15 @@ export function Shop() {
   const handlePurchase = async (item: ShopItem) => {
     const finalPrice = item.discount ? Math.floor(item.price * (1 - item.discount / 100)) : item.price;
 
+    if (!selectedCharacter) {
+      toast({
+        title: 'Select a character',
+        description: 'Please select a character to receive the item.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     if ((user?.coins || 0) < finalPrice) {
       toast({
         title: 'Insufficient coins',
@@ -132,7 +170,7 @@ export function Shop() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ itemId: item.id }),
+        body: JSON.stringify({ itemId: item.id, characterId: parseInt(selectedCharacter) }),
       });
 
       const data = await response.json();
@@ -241,14 +279,34 @@ export function Shop() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-gradient-gold">Shop</h1>
-        <p className="text-muted-foreground mt-2">
-          Buy items with your coins • 
-          <span className="text-primary font-medium ml-1">
-            {user?.coins?.toLocaleString() || 0} coins available
-          </span>
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gradient-gold">Shop</h1>
+          <p className="text-muted-foreground mt-2">
+            Buy items with your coins • 
+            <span className="text-primary font-medium ml-1">
+              {user?.coins?.toLocaleString() || 0} coins available
+            </span>
+          </p>
+        </div>
+        
+        {characters.length > 0 && (
+          <div className="flex items-center gap-2">
+            <User className="h-4 w-4 text-muted-foreground" />
+            <Select value={selectedCharacter} onValueChange={setSelectedCharacter}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select character" />
+              </SelectTrigger>
+              <SelectContent>
+                {characters.map((char) => (
+                  <SelectItem key={char.id} value={char.id.toString()}>
+                    {char.name} (Lv.{char.level})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
