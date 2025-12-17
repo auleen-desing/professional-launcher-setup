@@ -44,7 +44,7 @@ export function Shop() {
   const [expandedCategories, setExpandedCategories] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [purchasing, setPurchasing] = useState<number | null>(null);
-  const [globalDiscount, setGlobalDiscount] = useState(API_CONFIG.GLOBAL_DISCOUNT);
+  const [globalDiscount, setGlobalDiscount] = useState(API_CONFIG.SHOP_DISCOUNT);
   const { toast } = useToast();
   const { user, updateCoins } = useAuth();
 

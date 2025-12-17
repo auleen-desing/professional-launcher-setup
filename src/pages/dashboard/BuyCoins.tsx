@@ -52,8 +52,8 @@ export function BuyCoins() {
       const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.SHOP.PACKAGES));
       const data = await response.json();
       
-      // Apply global bonus to all packages
-      const bonusPercent = API_CONFIG.GLOBAL_DISCOUNT;
+      // Apply coin bonus to all packages (30%)
+      const bonusPercent = API_CONFIG.COIN_BONUS;
       
       if (data.success && data.data && data.data.length > 0) {
         const packagesWithBonus = data.data.map((pkg: CoinPackage, index: number) => ({
@@ -78,7 +78,7 @@ export function BuyCoins() {
       }
     } catch (error) {
       console.error('Error fetching packages:', error);
-      const bonusPercent = API_CONFIG.GLOBAL_DISCOUNT;
+      const bonusPercent = API_CONFIG.COIN_BONUS;
       const fallbackPkgs = [
         { id: '1', name: 'Popular', coins: 8000, price: 10 },
         { id: '2', name: 'Premium', coins: 24500, price: 30, popular: true },
@@ -237,12 +237,12 @@ export function BuyCoins() {
 
   return (
     <div className="space-y-8">
-      {/* Global Bonus Banner */}
-      {API_CONFIG.GLOBAL_DISCOUNT > 0 && (
+      {/* Coin Bonus Banner */}
+      {API_CONFIG.COIN_BONUS > 0 && (
         <div className="bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 border border-primary/30 rounded-lg p-4 flex items-center justify-center gap-3">
           <Sparkles className="h-5 w-5 text-primary animate-pulse" />
           <span className="text-lg font-bold text-primary">
-            +{API_CONFIG.GLOBAL_DISCOUNT}% BONUS COINS on all packages!
+            +{API_CONFIG.COIN_BONUS}% BONUS COINS on all packages!
           </span>
           <Sparkles className="h-5 w-5 text-primary animate-pulse" />
         </div>
