@@ -28,7 +28,8 @@ export const API_CONFIG = {
   
   // Shop Configuration
   COIN_NAME: 'NovaCoins',
-  GLOBAL_DISCOUNT: 50, // Descuento global en porcentaje (0-100) aplicado a TODAS las compras
+  COIN_BONUS: 30, // Bonus en porcentaje (0-100) para compras de coins
+  SHOP_DISCOUNT: 50, // Descuento en porcentaje (0-100) para items de la tienda
   FORTUNE_WHEEL: {
     DAILY_FREE_SPIN: 0,
     SPIN_COST: 2500,
