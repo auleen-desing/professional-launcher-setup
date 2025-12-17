@@ -4,7 +4,10 @@ const { sql, poolPromise } = require('../config/database');
 const { authMiddleware } = require('../middleware/auth');
 
 // Global discount percentage (0-100) - applies to ALL purchases
-const GLOBAL_DISCOUNT = parseInt(process.env.GLOBAL_DISCOUNT) || 30;
+const envDiscount = Number(process.env.GLOBAL_DISCOUNT);
+const GLOBAL_DISCOUNT = Number.isFinite(envDiscount)
+  ? Math.min(100, Math.max(0, Math.floor(envDiscount)))
+  : 50;
 
 // GET /api/shop/config - Get shop configuration (global discount, etc.)
 router.get('/config', (req, res) => {
