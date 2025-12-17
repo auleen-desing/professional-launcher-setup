@@ -49,9 +49,22 @@ export function Shop() {
   const { user, updateCoins } = useAuth();
 
   useEffect(() => {
+    fetchConfig();
     fetchData();
     fetchCharacters();
   }, []);
+
+  const fetchConfig = async () => {
+    try {
+      const res = await fetch(buildApiUrl('/shop/config'));
+      const data = await res.json();
+      if (data?.success && typeof data?.data?.globalDiscount === 'number') {
+        setGlobalDiscount(data.data.globalDiscount);
+      }
+    } catch {
+      // Keep fallback from API_CONFIG.GLOBAL_DISCOUNT
+    }
+  };
 
   const fetchData = async () => {
     setIsLoading(true);
