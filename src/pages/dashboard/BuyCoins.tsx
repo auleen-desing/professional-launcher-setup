@@ -30,9 +30,12 @@ export function BuyCoins() {
   const CANCEL_URL = `${window.location.origin}/dashboard/buy-coins?donation=canceled`;
   const IPN_URL = `${window.location.origin}/api/payments/paypal/ipn`;
 
+  const [coinBonus, setCoinBonus] = useState(API_CONFIG.COIN_BONUS);
+
   useEffect(() => {
     fetchPackages();
     fetchPaypalConfig();
+    fetchCoinBonus();
   }, []);
 
   const fetchPaypalConfig = async () => {
@@ -47,18 +50,29 @@ export function BuyCoins() {
     }
   };
 
+  const fetchCoinBonus = async () => {
+    try {
+      const response = await fetch(buildApiUrl('/config'));
+      const contentType = response.headers.get('content-type') ?? '';
+      if (!response.ok || !contentType.includes('application/json')) return;
+      const data = await response.json();
+      if (data.success && typeof data.data?.COIN_BONUS === 'number') {
+        setCoinBonus(data.data.COIN_BONUS);
+      }
+    } catch {
+      // Keep default from API_CONFIG
+    }
+  };
+
   const fetchPackages = async () => {
     try {
       const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.SHOP.PACKAGES));
       const data = await response.json();
       
-      // Apply coin bonus to all packages (30%)
-      const bonusPercent = API_CONFIG.COIN_BONUS;
-      
       if (data.success && data.data && data.data.length > 0) {
         const packagesWithBonus = data.data.map((pkg: CoinPackage, index: number) => ({
           ...pkg,
-          bonus: bonusPercent > 0 ? Math.floor(pkg.coins * bonusPercent / 100) : 0,
+          bonus: coinBonus > 0 ? Math.floor(pkg.coins * coinBonus / 100) : 0,
           popular: index === 1 && data.data.length > 1
         }));
         setPackages(packagesWithBonus);
@@ -73,12 +87,11 @@ export function BuyCoins() {
         ];
         setPackages(fallbackPkgs.map(pkg => ({
           ...pkg,
-          bonus: bonusPercent > 0 ? Math.floor(pkg.coins * bonusPercent / 100) : 0
+          bonus: coinBonus > 0 ? Math.floor(pkg.coins * coinBonus / 100) : 0
         })));
       }
     } catch (error) {
       console.error('Error fetching packages:', error);
-      const bonusPercent = API_CONFIG.COIN_BONUS;
       const fallbackPkgs = [
         { id: '1', name: 'Popular', coins: 8000, price: 10 },
         { id: '2', name: 'Premium', coins: 24500, price: 30, popular: true },
@@ -88,12 +101,19 @@ export function BuyCoins() {
       ];
       setPackages(fallbackPkgs.map(pkg => ({
         ...pkg,
-        bonus: bonusPercent > 0 ? Math.floor(pkg.coins * bonusPercent / 100) : 0
+        bonus: coinBonus > 0 ? Math.floor(pkg.coins * coinBonus / 100) : 0
       })));
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Refetch packages when coinBonus changes
+  useEffect(() => {
+    if (!isLoading) {
+      fetchPackages();
+    }
+  }, [coinBonus]);
 
   const handleDonation = async () => {
     if (!selectedPackage) {
@@ -238,11 +258,11 @@ export function BuyCoins() {
   return (
     <div className="space-y-8">
       {/* Coin Bonus Banner */}
-      {API_CONFIG.COIN_BONUS > 0 && (
+      {coinBonus > 0 && (
         <div className="bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 border border-primary/30 rounded-lg p-4 flex items-center justify-center gap-3">
           <Sparkles className="h-5 w-5 text-primary animate-pulse" />
           <span className="text-lg font-bold text-primary">
-            +{API_CONFIG.COIN_BONUS}% BONUS COINS on all packages!
+            +{coinBonus}% BONUS COINS on all packages!
           </span>
           <Sparkles className="h-5 w-5 text-primary animate-pulse" />
         </div>

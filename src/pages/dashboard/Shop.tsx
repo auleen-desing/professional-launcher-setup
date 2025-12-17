@@ -56,23 +56,18 @@ export function Shop() {
 
   const fetchConfig = async () => {
     try {
-      const res = await fetch(buildApiUrl('/shop/config'));
+      const res = await fetch(buildApiUrl('/config'));
       const contentType = res.headers.get('content-type') ?? '';
 
-      // In Lovable preview there is no Node backend behind /api, so it can return index.html.
       if (!res.ok || !contentType.includes('application/json')) {
         throw new Error('API not reachable');
       }
 
       const data = await res.json();
-      if (data?.success && typeof data?.data?.globalDiscount === 'number') {
-        setGlobalDiscount(data.data.globalDiscount);
+      if (data?.success && typeof data?.data?.SHOP_DISCOUNT === 'number') {
+        setGlobalDiscount(data.data.SHOP_DISCOUNT);
       }
     } catch {
-      toast({
-        title: 'API not connected in preview',
-        description: `Using default shop discount (${API_CONFIG.SHOP_DISCOUNT}%).`,
-      });
       // Keep fallback from API_CONFIG.SHOP_DISCOUNT
     }
   };
