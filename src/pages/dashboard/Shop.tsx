@@ -62,7 +62,7 @@ export function Shop() {
         setGlobalDiscount(data.data.globalDiscount);
       }
     } catch {
-      // Keep fallback from API_CONFIG.GLOBAL_DISCOUNT
+      // Keep fallback from API_CONFIG.SHOP_DISCOUNT
     }
   };
 
