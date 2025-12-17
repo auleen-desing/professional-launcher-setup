@@ -3,19 +3,20 @@ const router = express.Router();
 const { sql, poolPromise } = require('../config/database');
 const { authMiddleware } = require('../middleware/auth');
 
-// Global discount percentage (0-100) - applies to ALL purchases
-const envDiscount = Number(process.env.GLOBAL_DISCOUNT);
-const GLOBAL_DISCOUNT = Number.isFinite(envDiscount)
-  ? Math.min(100, Math.max(0, Math.floor(envDiscount)))
+// Item shop discount percentage (0-100) - applies to ALL item purchases
+// Prefer SHOP_DISCOUNT, fallback to legacy GLOBAL_DISCOUNT, default to 50
+const envShopDiscount = Number(process.env.SHOP_DISCOUNT ?? process.env.GLOBAL_DISCOUNT);
+const SHOP_DISCOUNT = Number.isFinite(envShopDiscount)
+  ? Math.min(100, Math.max(0, Math.floor(envShopDiscount)))
   : 50;
 
-// GET /api/shop/config - Get shop configuration (global discount, etc.)
+// GET /api/shop/config - Get shop configuration (discount, etc.)
 router.get('/config', (req, res) => {
-  res.json({ 
-    success: true, 
-    data: { 
-      globalDiscount: GLOBAL_DISCOUNT 
-    } 
+  res.json({
+    success: true,
+    data: {
+      globalDiscount: SHOP_DISCOUNT,
+    },
   });
 });
 
@@ -137,9 +138,9 @@ router.post('/purchase', authMiddleware, async (req, res) => {
 
     const item = itemResult.recordset[0];
     
-    // Calculate final price with GLOBAL discount
-    const finalPrice = GLOBAL_DISCOUNT > 0 
-      ? Math.floor(item.price * (1 - GLOBAL_DISCOUNT / 100)) 
+    // Calculate final price with global item discount
+    const finalPrice = SHOP_DISCOUNT > 0 
+      ? Math.floor(item.price * (1 - SHOP_DISCOUNT / 100)) 
       : item.price;
 
     // Get user's current coins

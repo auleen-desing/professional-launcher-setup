@@ -184,3 +184,9 @@ export function useAuth() {
   }
   return context;
 }
+
+// Safe accessor for components that can render outside the provider (e.g. public header)
+export function useOptionalAuth() {
+  return useContext(AuthContext);
+}
+

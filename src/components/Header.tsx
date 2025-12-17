@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Menu, X, Download, Users, Newspaper, ShoppingBag, MessageSquare, LayoutDashboard, Home, Gamepad2, Shield, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
+import { useOptionalAuth } from '@/contexts/AuthContext';
 import novaLogo from '@/assets/novaera-logo.png';
 
 const navItems = [
@@ -17,7 +17,9 @@ const navItems = [
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, isAdmin } = useAuth();
+  const auth = useOptionalAuth();
+  const user = auth?.user ?? null;
+  const isAdmin = auth?.isAdmin ?? false;
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
