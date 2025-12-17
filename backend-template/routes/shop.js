@@ -3,19 +3,29 @@ const router = express.Router();
 const { sql, poolPromise } = require('../config/database');
 const { authMiddleware } = require('../middleware/auth');
 
-// Item shop discount percentage (0-100) - applies to ALL item purchases
-// Use SHOP_DISCOUNT only (default 50). This avoids accidentally inheriting coin bonus or other legacy env vars.
-const envShopDiscount = Number(process.env.SHOP_DISCOUNT);
-const SHOP_DISCOUNT = Number.isFinite(envShopDiscount)
-  ? Math.min(100, Math.max(0, Math.floor(envShopDiscount)))
-  : 50;
+// Helper to get SHOP_DISCOUNT from database (with fallback)
+async function getShopDiscount() {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request()
+      .query("SELECT config_value FROM web_config WHERE config_key = 'SHOP_DISCOUNT'");
+    if (result.recordset.length > 0) {
+      const val = Number(result.recordset[0].config_value);
+      if (Number.isFinite(val) && val >= 0 && val <= 100) return val;
+    }
+  } catch (e) {
+    console.log('Could not read SHOP_DISCOUNT from DB, using default');
+  }
+  return 50; // default
+}
 
 // GET /api/shop/config - Get shop configuration (discount, etc.)
-router.get('/config', (req, res) => {
+router.get('/config', async (req, res) => {
+  const discount = await getShopDiscount();
   res.json({
     success: true,
     data: {
-      globalDiscount: SHOP_DISCOUNT,
+      globalDiscount: discount,
     },
   });
 });
@@ -138,7 +148,8 @@ router.post('/purchase', authMiddleware, async (req, res) => {
 
     const item = itemResult.recordset[0];
     
-    // Calculate final price with global item discount
+    // Calculate final price with global item discount from DB
+    const SHOP_DISCOUNT = await getShopDiscount();
     const finalPrice = SHOP_DISCOUNT > 0 
       ? Math.floor(item.price * (1 - SHOP_DISCOUNT / 100)) 
       : item.price;
