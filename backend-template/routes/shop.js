@@ -4,8 +4,8 @@ const { sql, poolPromise } = require('../config/database');
 const { authMiddleware } = require('../middleware/auth');
 
 // Item shop discount percentage (0-100) - applies to ALL item purchases
-// Prefer SHOP_DISCOUNT, fallback to legacy GLOBAL_DISCOUNT, default to 50
-const envShopDiscount = Number(process.env.SHOP_DISCOUNT ?? process.env.GLOBAL_DISCOUNT);
+// Use SHOP_DISCOUNT only (default 50). This avoids accidentally inheriting coin bonus or other legacy env vars.
+const envShopDiscount = Number(process.env.SHOP_DISCOUNT);
 const SHOP_DISCOUNT = Number.isFinite(envShopDiscount)
   ? Math.min(100, Math.max(0, Math.floor(envShopDiscount)))
   : 50;
