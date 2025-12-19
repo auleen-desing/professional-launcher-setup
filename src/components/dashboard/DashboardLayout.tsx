@@ -21,7 +21,9 @@ import {
   Users,
   Trophy,
   Shield,
-  Crown
+  Crown,
+  Gift,
+  History
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -39,6 +41,8 @@ const navItems: NavItem[] = [
   { name: 'My Characters', href: '/dashboard/characters', icon: Users },
   { name: 'Rankings', href: '/dashboard/rankings', icon: Trophy },
   { name: 'Buy NovaCoins', href: '/dashboard/buy-coins', icon: Coins },
+  { name: 'Send Gift', href: '/dashboard/gifts', icon: Gift },
+  { name: 'Transactions', href: '/dashboard/transactions', icon: History },
   { name: 'Coupon', href: '/dashboard/coupon', icon: Ticket },
   { name: 'Daily Reward', href: '/dashboard/daily', icon: Calendar },
   { name: 'Title Shop', href: '/dashboard/titles', icon: Crown },

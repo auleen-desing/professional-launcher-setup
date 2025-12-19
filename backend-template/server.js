@@ -54,6 +54,9 @@ app.use('/api/character', require('./routes/character'));
 app.use('/api/payments/paypal', require('./routes/paypal'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/config', require('./routes/config'));
+app.use('/api/transactions', require('./routes/transactions'));
+app.use('/api/gifts', require('./routes/gifts'));
+app.use('/api/emails', require('./routes/emails'));
 
 // Health check
 app.get('/api/health', (req, res) => {
