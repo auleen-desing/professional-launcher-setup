@@ -7,9 +7,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { buildApiUrl } from '@/config/api';
-import { Mail, Send, History, Users, Clock, AlertTriangle, FileText, PartyPopper, Wrench, Gift, Sparkles } from 'lucide-react';
+import { Mail, Send, History, Users, Clock, AlertTriangle, FileText, PartyPopper, Wrench, Gift, Sparkles, Eye, X } from 'lucide-react';
 
 interface EmailHistory {
   id: number;
@@ -164,7 +165,16 @@ export default function AdminEmails() {
   const [history, setHistory] = useState<EmailHistory[]>([]);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
   const { toast } = useToast();
+
+  const getPreviewContent = () => {
+    return content.replace(/\{username\}/g, 'ExampleUser');
+  };
+
+  const getPreviewSubject = () => {
+    return subject.replace(/\{username\}/g, 'ExampleUser');
+  };
 
   useEffect(() => {
     fetchHistory();
@@ -370,20 +380,31 @@ export default function AdminEmails() {
               </div>
             </div>
 
-            <Button 
-              onClick={handleSend} 
-              disabled={isSending || !subject.trim() || !content.trim()}
-              className="w-full"
-            >
-              {isSending ? (
-                'Sending...'
-              ) : (
-                <>
-                  <Send className="h-4 w-4 mr-2" />
-                  Send to {targetLabels[targetGroup]}
-                </>
-              )}
-            </Button>
+            <div className="flex gap-3">
+              <Button 
+                variant="outline"
+                onClick={() => setShowPreview(true)} 
+                disabled={!subject.trim() || !content.trim()}
+                className="flex-1"
+              >
+                <Eye className="h-4 w-4 mr-2" />
+                Vista Previa
+              </Button>
+              <Button 
+                onClick={handleSend} 
+                disabled={isSending || !subject.trim() || !content.trim()}
+                className="flex-1"
+              >
+                {isSending ? (
+                  'Sending...'
+                ) : (
+                  <>
+                    <Send className="h-4 w-4 mr-2" />
+                    Enviar
+                  </>
+                )}
+              </Button>
+            </div>
           </CardContent>
         </Card>
 
@@ -441,6 +462,61 @@ export default function AdminEmails() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Preview Modal */}
+      <Dialog open={showPreview} onOpenChange={setShowPreview}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              Vista Previa del Email
+            </DialogTitle>
+            <DialogDescription>
+              Así se verá el email para los destinatarios. Los valores como {'{username}'} se reemplazan con datos reales.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-auto space-y-4">
+            {/* Subject Preview */}
+            <div className="p-4 bg-muted/50 rounded-lg border">
+              <Label className="text-xs text-muted-foreground">Asunto:</Label>
+              <p className="font-medium mt-1">{getPreviewSubject()}</p>
+            </div>
+            
+            {/* Email Content Preview */}
+            <div className="border rounded-lg overflow-hidden">
+              <div className="bg-muted/30 px-4 py-2 border-b flex items-center gap-2">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Contenido del Email</span>
+                <Badge variant="outline" className="ml-auto text-xs">
+                  {targetLabels[targetGroup]}
+                </Badge>
+              </div>
+              <div 
+                className="p-4 bg-white min-h-[300px] max-h-[400px] overflow-auto"
+                dangerouslySetInnerHTML={{ __html: getPreviewContent() }}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setShowPreview(false)}>
+              <X className="h-4 w-4 mr-2" />
+              Cerrar
+            </Button>
+            <Button 
+              onClick={() => {
+                setShowPreview(false);
+                handleSend();
+              }}
+              disabled={isSending}
+            >
+              <Send className="h-4 w-4 mr-2" />
+              Enviar a {targetLabels[targetGroup]}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
