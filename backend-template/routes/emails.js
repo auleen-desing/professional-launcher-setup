@@ -71,7 +71,7 @@ router.post('/mass-send', authMiddleware, adminMiddleware, async (req, res) => {
           const personalizedContent = content.replace(/\{username\}/g, recipient.Name);
           
           await resend.emails.send({
-            from: 'NovaEra <onboarding@resend.dev>', // Change to your verified domain
+            from: 'NovaEra <noreply@novaerasite.com>',
             to: [recipient.Email],
             subject: subject,
             html: personalizedContent
