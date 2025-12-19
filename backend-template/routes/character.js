@@ -42,7 +42,15 @@ router.get('/list', authMiddleware, async (req, res) => {
     const result = await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
       .query(`
-        SELECT CharacterId, Name, Class, Level, JobLevel, HeroLevel
+        SELECT CharacterId, Name, Class, Level, JobLevel, HeroLevel, Gender,
+               Gold, GoldBank, Reputation, Compliment, Dignity, Faction,
+               Act4Kill, Act4Dead, Act4Points, Act4MonthlyPoints,
+               ArenaKill, ArenaDeath, ArenaWinner, RBBWin, RBBLose,
+               TalentWin, TalentLose, TalentSurrender,
+               HeroXp, LevelXp, JobLevelXp, SpPoint, SpAdditionPoint,
+               MasterPoints, MasterTicket, Prestige, Legacy,
+               CompletedTimeSpaces, BattlePassPoints, HavePremiumBattlePass,
+               IsConnected
         FROM Character 
         WHERE AccountId = @accountId
         ORDER BY Level DESC
@@ -54,7 +62,39 @@ router.get('/list', authMiddleware, async (req, res) => {
       class: getClassName(char.Class),
       level: char.Level,
       jobLevel: char.JobLevel,
-      heroLevel: char.HeroLevel || 0
+      heroLevel: char.HeroLevel || 0,
+      gender: char.Gender === 0 ? 'Male' : 'Female',
+      gold: char.Gold || 0,
+      goldBank: char.GoldBank || 0,
+      reputation: char.Reputation || 0,
+      compliment: char.Compliment || 0,
+      dignity: char.Dignity || 0,
+      faction: getFactionName(char.Faction),
+      act4Kills: char.Act4Kill || 0,
+      act4Deaths: char.Act4Dead || 0,
+      act4Points: char.Act4Points || 0,
+      act4MonthlyPoints: char.Act4MonthlyPoints || 0,
+      arenaKills: char.ArenaKill || 0,
+      arenaDeaths: char.ArenaDeath || 0,
+      arenaWinner: char.ArenaWinner || 0,
+      rbbWins: char.RBBWin || 0,
+      rbbLosses: char.RBBLose || 0,
+      talentWins: char.TalentWin || 0,
+      talentLosses: char.TalentLose || 0,
+      talentSurrenders: char.TalentSurrender || 0,
+      heroXp: char.HeroXp || 0,
+      levelXp: char.LevelXp || 0,
+      jobLevelXp: char.JobLevelXp || 0,
+      spPoint: char.SpPoint || 0,
+      spAdditionPoint: char.SpAdditionPoint || 0,
+      masterPoints: char.MasterPoints || 0,
+      masterTicket: char.MasterTicket || 0,
+      prestige: char.Prestige || 0,
+      legacy: char.Legacy || 0,
+      completedTimeSpaces: char.CompletedTimeSpaces || 0,
+      battlePassPoints: char.BattlePassPoints || 0,
+      hasPremiumBattlePass: char.HavePremiumBattlePass || false,
+      isOnline: char.IsConnected || false
     }));
 
     res.json({ success: true, data: characters });
@@ -112,6 +152,15 @@ function getClassName(classId) {
     4: 'Martial Artist'
   };
   return classes[classId] || 'Unknown';
+}
+
+function getFactionName(factionId) {
+  const factions = {
+    0: 'None',
+    1: 'Angel',
+    2: 'Demon'
+  };
+  return factions[factionId] || 'None';
 }
 
 module.exports = router;
