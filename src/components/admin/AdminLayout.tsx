@@ -16,7 +16,8 @@ import {
   Search,
   BarChart3,
   Ticket,
-  Globe
+  Globe,
+  Mail
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +38,7 @@ const navItems: NavItem[] = [
   { name: 'Blocked IPs', href: '/admin/blocked-ips', icon: Shield },
   { name: 'NovaCoins', href: '/admin/coins', icon: Coins },
   { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
+  { name: 'Mass Email', href: '/admin/emails', icon: Mail },
   { name: 'Announcements', href: '/admin/announcements', icon: Megaphone },
   { name: 'Moderation', href: '/admin/moderation', icon: Shield, badge: 3 },
   { name: 'Statistics', href: '/admin/stats', icon: BarChart3 },
