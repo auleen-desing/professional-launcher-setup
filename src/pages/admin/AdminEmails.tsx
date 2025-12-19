@@ -33,101 +33,101 @@ interface EmailTemplate {
 const emailTemplates: EmailTemplate[] = [
   {
     id: 'welcome',
-    name: 'Bienvenida',
+    name: 'Welcome',
     icon: PartyPopper,
     color: 'text-green-500',
-    subject: '¡Bienvenido a NovaEra, {username}!',
+    subject: 'Welcome to NovaEra, {username}!',
     content: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 40px; border-radius: 16px;">
   <div style="text-align: center; margin-bottom: 30px;">
-    <h1 style="color: #fbbf24; font-size: 28px; margin: 0;">¡Bienvenido a NovaEra!</h1>
-    <p style="color: #9ca3af; font-size: 16px;">Una nueva era comienza para ti, {username}</p>
+    <h1 style="color: #fbbf24; font-size: 28px; margin: 0;">Welcome to NovaEra!</h1>
+    <p style="color: #9ca3af; font-size: 16px;">A new era begins for you, {username}</p>
   </div>
   <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-    <h2 style="color: #fbbf24; font-size: 18px; margin: 0 0 10px 0;">🎮 Tu aventura comienza ahora</h2>
-    <p style="color: #d1d5db; font-size: 14px; line-height: 1.6; margin: 0;">Gracias por unirte a nuestra comunidad. Estamos emocionados de tenerte con nosotros.</p>
+    <h2 style="color: #fbbf24; font-size: 18px; margin: 0 0 10px 0;">🎮 Your adventure begins now</h2>
+    <p style="color: #d1d5db; font-size: 14px; line-height: 1.6; margin: 0;">Thank you for joining our community. We are excited to have you with us.</p>
   </div>
   <div style="text-align: center; margin-top: 30px;">
-    <a href="https://novaerasite.com/dashboard" style="display: inline-block; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold;">Acceder al Panel</a>
+    <a href="https://novaerasite.com/dashboard" style="display: inline-block; background: linear-gradient(135deg, #fbbf24, #f59e0b); color: #000; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold;">Access Dashboard</a>
   </div>
-  <p style="color: #6b7280; font-size: 12px; text-align: center; margin-top: 30px;">© 2024 NovaEra. Todos los derechos reservados.</p>
+  <p style="color: #6b7280; font-size: 12px; text-align: center; margin-top: 30px;">© 2024 NovaEra. All rights reserved.</p>
 </div>`
   },
   {
     id: 'event',
-    name: 'Evento',
+    name: 'Event',
     icon: Sparkles,
     color: 'text-purple-500',
-    subject: '🎉 ¡Nuevo Evento en NovaEra!',
+    subject: '🎉 New Event in NovaEra!',
     content: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #1a1a2e 0%, #2d1b4e 100%); padding: 40px; border-radius: 16px;">
   <div style="text-align: center; margin-bottom: 30px;">
-    <h1 style="color: #a855f7; font-size: 28px; margin: 0;">🎉 ¡Evento Especial!</h1>
-    <p style="color: #9ca3af; font-size: 16px;">¡No te lo puedes perder, {username}!</p>
+    <h1 style="color: #a855f7; font-size: 28px; margin: 0;">🎉 Special Event!</h1>
+    <p style="color: #9ca3af; font-size: 16px;">Don't miss it, {username}!</p>
   </div>
   <div style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-    <h2 style="color: #a855f7; font-size: 18px; margin: 0 0 10px 0;">📅 Detalles del Evento</h2>
+    <h2 style="color: #a855f7; font-size: 18px; margin: 0 0 10px 0;">📅 Event Details</h2>
     <ul style="color: #d1d5db; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
-      <li><strong>Fecha:</strong> [FECHA DEL EVENTO]</li>
-      <li><strong>Hora:</strong> [HORA DEL EVENTO]</li>
-      <li><strong>Duración:</strong> [DURACIÓN]</li>
+      <li><strong>Date:</strong> [EVENT DATE]</li>
+      <li><strong>Time:</strong> [EVENT TIME]</li>
+      <li><strong>Duration:</strong> [DURATION]</li>
     </ul>
   </div>
   <div style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-    <h2 style="color: #a855f7; font-size: 18px; margin: 0 0 10px 0;">🎁 Recompensas</h2>
-    <p style="color: #d1d5db; font-size: 14px; line-height: 1.6; margin: 0;">[DESCRIPCIÓN DE LAS RECOMPENSAS]</p>
+    <h2 style="color: #a855f7; font-size: 18px; margin: 0 0 10px 0;">🎁 Rewards</h2>
+    <p style="color: #d1d5db; font-size: 14px; line-height: 1.6; margin: 0;">[REWARDS DESCRIPTION]</p>
   </div>
   <div style="text-align: center; margin-top: 30px;">
-    <a href="https://novaerasite.com" style="display: inline-block; background: linear-gradient(135deg, #a855f7, #7c3aed); color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold;">¡Participar Ahora!</a>
+    <a href="https://novaerasite.com" style="display: inline-block; background: linear-gradient(135deg, #a855f7, #7c3aed); color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold;">Join Now!</a>
   </div>
-  <p style="color: #6b7280; font-size: 12px; text-align: center; margin-top: 30px;">© 2024 NovaEra. Todos los derechos reservados.</p>
+  <p style="color: #6b7280; font-size: 12px; text-align: center; margin-top: 30px;">© 2024 NovaEra. All rights reserved.</p>
 </div>`
   },
   {
     id: 'maintenance',
-    name: 'Mantenimiento',
+    name: 'Maintenance',
     icon: Wrench,
     color: 'text-orange-500',
-    subject: '🔧 Mantenimiento Programado - NovaEra',
+    subject: '🔧 Scheduled Maintenance - NovaEra',
     content: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #1a1a2e 0%, #2d2416 100%); padding: 40px; border-radius: 16px;">
   <div style="text-align: center; margin-bottom: 30px;">
-    <h1 style="color: #f97316; font-size: 28px; margin: 0;">🔧 Mantenimiento Programado</h1>
-    <p style="color: #9ca3af; font-size: 16px;">Información importante, {username}</p>
+    <h1 style="color: #f97316; font-size: 28px; margin: 0;">🔧 Scheduled Maintenance</h1>
+    <p style="color: #9ca3af; font-size: 16px;">Important information, {username}</p>
   </div>
   <div style="background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-    <h2 style="color: #f97316; font-size: 18px; margin: 0 0 10px 0;">⏰ Horario de Mantenimiento</h2>
+    <h2 style="color: #f97316; font-size: 18px; margin: 0 0 10px 0;">⏰ Maintenance Schedule</h2>
     <ul style="color: #d1d5db; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
-      <li><strong>Inicio:</strong> [FECHA Y HORA DE INICIO]</li>
-      <li><strong>Fin estimado:</strong> [FECHA Y HORA DE FIN]</li>
-      <li><strong>Duración aproximada:</strong> [DURACIÓN]</li>
+      <li><strong>Start:</strong> [START DATE AND TIME]</li>
+      <li><strong>Estimated End:</strong> [END DATE AND TIME]</li>
+      <li><strong>Approximate Duration:</strong> [DURATION]</li>
     </ul>
   </div>
   <div style="background: rgba(249, 115, 22, 0.1); border: 1px solid rgba(249, 115, 22, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-    <h2 style="color: #f97316; font-size: 18px; margin: 0 0 10px 0;">📋 Cambios Incluidos</h2>
-    <p style="color: #d1d5db; font-size: 14px; line-height: 1.6; margin: 0;">[DESCRIPCIÓN DE LOS CAMBIOS O MEJORAS]</p>
+    <h2 style="color: #f97316; font-size: 18px; margin: 0 0 10px 0;">📋 Changes Included</h2>
+    <p style="color: #d1d5db; font-size: 14px; line-height: 1.6; margin: 0;">[DESCRIPTION OF CHANGES OR IMPROVEMENTS]</p>
   </div>
-  <p style="color: #d1d5db; font-size: 14px; text-align: center; margin-top: 20px;">Disculpa las molestias. ¡Volveremos mejor que nunca!</p>
-  <p style="color: #6b7280; font-size: 12px; text-align: center; margin-top: 30px;">© 2024 NovaEra. Todos los derechos reservados.</p>
+  <p style="color: #d1d5db; font-size: 14px; text-align: center; margin-top: 20px;">We apologize for the inconvenience. We'll be back better than ever!</p>
+  <p style="color: #6b7280; font-size: 12px; text-align: center; margin-top: 30px;">© 2024 NovaEra. All rights reserved.</p>
 </div>`
   },
   {
     id: 'reward',
-    name: 'Recompensa',
+    name: 'Reward',
     icon: Gift,
     color: 'text-cyan-500',
-    subject: '🎁 ¡Tienes una recompensa esperándote!',
+    subject: '🎁 You have a reward waiting!',
     content: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #1a1a2e 0%, #0d2d3d 100%); padding: 40px; border-radius: 16px;">
   <div style="text-align: center; margin-bottom: 30px;">
-    <h1 style="color: #06b6d4; font-size: 28px; margin: 0;">🎁 ¡Regalo Especial!</h1>
-    <p style="color: #9ca3af; font-size: 16px;">¡Hola {username}! Tenemos algo para ti</p>
+    <h1 style="color: #06b6d4; font-size: 28px; margin: 0;">🎁 Special Gift!</h1>
+    <p style="color: #9ca3af; font-size: 16px;">Hello {username}! We have something for you</p>
   </div>
   <div style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 20px; text-align: center;">
-    <h2 style="color: #06b6d4; font-size: 24px; margin: 0 0 10px 0;">Tu Recompensa</h2>
-    <p style="color: #fbbf24; font-size: 32px; font-weight: bold; margin: 10px 0;">[CANTIDAD] NovaCoins</p>
-    <p style="color: #d1d5db; font-size: 14px; margin: 0;">[MOTIVO DE LA RECOMPENSA]</p>
+    <h2 style="color: #06b6d4; font-size: 24px; margin: 0 0 10px 0;">Your Reward</h2>
+    <p style="color: #fbbf24; font-size: 32px; font-weight: bold; margin: 10px 0;">[AMOUNT] NovaCoins</p>
+    <p style="color: #d1d5db; font-size: 14px; margin: 0;">[REWARD REASON]</p>
   </div>
   <div style="text-align: center; margin-top: 30px;">
-    <a href="https://novaerasite.com/dashboard" style="display: inline-block; background: linear-gradient(135deg, #06b6d4, #0891b2); color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold;">Reclamar Recompensa</a>
+    <a href="https://novaerasite.com/dashboard" style="display: inline-block; background: linear-gradient(135deg, #06b6d4, #0891b2); color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold;">Claim Reward</a>
   </div>
-  <p style="color: #6b7280; font-size: 12px; text-align: center; margin-top: 30px;">© 2024 NovaEra. Todos los derechos reservados.</p>
+  <p style="color: #6b7280; font-size: 12px; text-align: center; margin-top: 30px;">© 2024 NovaEra. All rights reserved.</p>
 </div>`
   },
   {
@@ -135,24 +135,24 @@ const emailTemplates: EmailTemplate[] = [
     name: 'Newsletter',
     icon: FileText,
     color: 'text-blue-500',
-    subject: '📰 Novedades de NovaEra - {username}',
+    subject: '📰 NovaEra News - {username}',
     content: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #1a1a2e 0%, #1e3a5f 100%); padding: 40px; border-radius: 16px;">
   <div style="text-align: center; margin-bottom: 30px;">
-    <h1 style="color: #3b82f6; font-size: 28px; margin: 0;">📰 Newsletter NovaEra</h1>
-    <p style="color: #9ca3af; font-size: 16px;">Las últimas novedades para ti, {username}</p>
+    <h1 style="color: #3b82f6; font-size: 28px; margin: 0;">📰 NovaEra Newsletter</h1>
+    <p style="color: #9ca3af; font-size: 16px;">The latest news for you, {username}</p>
   </div>
   <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-    <h2 style="color: #3b82f6; font-size: 18px; margin: 0 0 10px 0;">🆕 Novedades</h2>
-    <p style="color: #d1d5db; font-size: 14px; line-height: 1.6; margin: 0;">[CONTENIDO DE LAS NOVEDADES]</p>
+    <h2 style="color: #3b82f6; font-size: 18px; margin: 0 0 10px 0;">🆕 What's New</h2>
+    <p style="color: #d1d5db; font-size: 14px; line-height: 1.6; margin: 0;">[NEWS CONTENT]</p>
   </div>
   <div style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-    <h2 style="color: #3b82f6; font-size: 18px; margin: 0 0 10px 0;">📊 Estadísticas del Servidor</h2>
-    <p style="color: #d1d5db; font-size: 14px; line-height: 1.6; margin: 0;">[ESTADÍSTICAS RELEVANTES]</p>
+    <h2 style="color: #3b82f6; font-size: 18px; margin: 0 0 10px 0;">📊 Server Statistics</h2>
+    <p style="color: #d1d5db; font-size: 14px; line-height: 1.6; margin: 0;">[RELEVANT STATISTICS]</p>
   </div>
   <div style="text-align: center; margin-top: 30px;">
-    <a href="https://novaerasite.com" style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold;">Visitar NovaEra</a>
+    <a href="https://novaerasite.com" style="display: inline-block; background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold;">Visit NovaEra</a>
   </div>
-  <p style="color: #6b7280; font-size: 12px; text-align: center; margin-top: 30px;">© 2024 NovaEra. Todos los derechos reservados.</p>
+  <p style="color: #6b7280; font-size: 12px; text-align: center; margin-top: 30px;">© 2024 NovaEra. All rights reserved.</p>
 </div>`
   }
 ];
@@ -203,8 +203,8 @@ export default function AdminEmails() {
     setContent(template.content);
     setSelectedTemplate(template.id);
     toast({ 
-      title: 'Template cargado', 
-      description: `Template "${template.name}" aplicado. Personaliza el contenido antes de enviar.` 
+      title: 'Template loaded', 
+      description: `Template "${template.name}" applied. Customize the content before sending.` 
     });
   };
 
@@ -281,10 +281,10 @@ export default function AdminEmails() {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <FileText className="h-5 w-5" />
-            Templates Predefinidos
+            Predefined Templates
           </CardTitle>
           <CardDescription>
-            Selecciona un template para cargar automáticamente el contenido
+            Select a template to automatically load the content
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -311,7 +311,7 @@ export default function AdminEmails() {
                 Template: {emailTemplates.find(t => t.id === selectedTemplate)?.name}
               </Badge>
               <Button variant="ghost" size="sm" onClick={clearTemplate}>
-                Limpiar
+                Clear
               </Button>
             </div>
           )}
@@ -326,7 +326,7 @@ export default function AdminEmails() {
               Compose Email
             </CardTitle>
             <CardDescription>
-              Usa {'{username}'} en el contenido para personalizar con el nombre del usuario
+              Use {'{username}'} in the content to personalize with the user's name
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -388,7 +388,7 @@ export default function AdminEmails() {
                 className="flex-1"
               >
                 <Eye className="h-4 w-4 mr-2" />
-                Vista Previa
+                Preview
               </Button>
               <Button 
                 onClick={handleSend} 
@@ -400,7 +400,7 @@ export default function AdminEmails() {
                 ) : (
                   <>
                     <Send className="h-4 w-4 mr-2" />
-                    Enviar
+                    Send
                   </>
                 )}
               </Button>
@@ -469,17 +469,17 @@ export default function AdminEmails() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Eye className="h-5 w-5" />
-              Vista Previa del Email
+              Email Preview
             </DialogTitle>
             <DialogDescription>
-              Así se verá el email para los destinatarios. Los valores como {'{username}'} se reemplazan con datos reales.
+              This is how the email will look for recipients. Values like {'{username}'} are replaced with actual data.
             </DialogDescription>
           </DialogHeader>
           
           <div className="flex-1 overflow-auto space-y-4">
             {/* Subject Preview */}
             <div className="p-4 bg-muted/50 rounded-lg border">
-              <Label className="text-xs text-muted-foreground">Asunto:</Label>
+              <Label className="text-xs text-muted-foreground">Subject:</Label>
               <p className="font-medium mt-1">{getPreviewSubject()}</p>
             </div>
             
@@ -487,7 +487,7 @@ export default function AdminEmails() {
             <div className="border rounded-lg overflow-hidden">
               <div className="bg-muted/30 px-4 py-2 border-b flex items-center gap-2">
                 <Mail className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">Contenido del Email</span>
+                <span className="text-sm text-muted-foreground">Email Content</span>
                 <Badge variant="outline" className="ml-auto text-xs">
                   {targetLabels[targetGroup]}
                 </Badge>
@@ -502,7 +502,7 @@ export default function AdminEmails() {
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="outline" onClick={() => setShowPreview(false)}>
               <X className="h-4 w-4 mr-2" />
-              Cerrar
+              Close
             </Button>
             <Button 
               onClick={() => {
@@ -512,7 +512,7 @@ export default function AdminEmails() {
               disabled={isSending}
             >
               <Send className="h-4 w-4 mr-2" />
-              Enviar a {targetLabels[targetGroup]}
+              Send to {targetLabels[targetGroup]}
             </Button>
           </DialogFooter>
         </DialogContent>
