@@ -2,25 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { sql, poolPromise } = require('../config/database');
 const { authMiddleware, adminMiddleware } = require('../middleware/auth');
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-// Email transporter configuration
-let transporter = null;
-
-function getTransporter() {
-  if (!transporter && process.env.SMTP_HOST) {
-    transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: process.env.SMTP_SECURE === 'true',
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS
-      }
-    });
-  }
-  return transporter;
-}
+// Initialize Resend
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 // POST /api/emails/mass-send - Send mass email to all users (Admin only)
 router.post('/mass-send', authMiddleware, adminMiddleware, async (req, res) => {
@@ -37,7 +22,6 @@ router.post('/mass-send', authMiddleware, adminMiddleware, async (req, res) => {
     let query = 'SELECT Email, Name FROM Account WHERE Email IS NOT NULL AND Email != \'\'';
     
     if (targetGroup === 'active') {
-      // Users who logged in last 30 days
       query += ' AND AccountId IN (SELECT DISTINCT AccountId FROM Character WHERE IsConnected = 1 OR AccountId IN (SELECT AccountId FROM Account WHERE AccountId > 0))';
     } else if (targetGroup === 'vip') {
       query += ' AND Authority >= 1 AND Authority < 100';
@@ -50,11 +34,8 @@ router.post('/mass-send', authMiddleware, adminMiddleware, async (req, res) => {
       return res.status(400).json({ success: false, error: 'No recipients found' });
     }
 
-    const emailTransporter = getTransporter();
-    
-    if (!emailTransporter) {
-      // If no SMTP configured, just log and save to database
-      console.log('SMTP not configured. Email would be sent to:', recipients.length, 'users');
+    if (!resend) {
+      console.log('Resend not configured. Email would be sent to:', recipients.length, 'users');
       
       // Save email to database for record
       await pool.request()
@@ -70,32 +51,41 @@ router.post('/mass-send', authMiddleware, adminMiddleware, async (req, res) => {
 
       return res.json({ 
         success: true, 
-        message: `Email queued for ${recipients.length} recipients`,
+        message: `Email queued for ${recipients.length} recipients (Resend not configured)`,
         data: { recipientCount: recipients.length, status: 'queued' }
       });
     }
 
-    // Send emails in batches
+    // Send emails in batches using Resend
     let sent = 0;
     let failed = 0;
-    const batchSize = 50;
+    const batchSize = 50; // Resend recommends batching
 
     for (let i = 0; i < recipients.length; i += batchSize) {
       const batch = recipients.slice(i, i + batchSize);
       
+      // Send individual emails (Resend batch API requires verified domain for each recipient)
       for (const recipient of batch) {
         try {
-          await emailTransporter.sendMail({
-            from: process.env.SMTP_FROM || 'noreply@novaera.com',
-            to: recipient.Email,
+          // Personalize content with username
+          const personalizedContent = content.replace(/\{username\}/g, recipient.Name);
+          
+          await resend.emails.send({
+            from: 'NovaEra <onboarding@resend.dev>', // Change to your verified domain
+            to: [recipient.Email],
             subject: subject,
-            html: content.replace(/\{username\}/g, recipient.Name)
+            html: personalizedContent
           });
           sent++;
         } catch (emailErr) {
           console.error('Failed to send to:', recipient.Email, emailErr.message);
           failed++;
         }
+      }
+
+      // Small delay between batches to avoid rate limiting
+      if (i + batchSize < recipients.length) {
+        await new Promise(resolve => setTimeout(resolve, 100));
       }
     }
 
