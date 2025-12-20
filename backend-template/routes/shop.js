@@ -50,7 +50,6 @@ router.get('/items', async (req, res) => {
         i.category_id,
         i.speed,
         i.level,
-        i.discount,
         c.name as category_name
       FROM web_item_shop_items i
       LEFT JOIN web_item_shop_categories c ON i.category_id = c.id
@@ -71,8 +70,7 @@ router.get('/items', async (req, res) => {
       speed: item.speed,
       level: item.level,
       uniquePurchase: item.unique_purchase,
-      showInHome: item.show_in_home,
-      discount: item.discount || 0
+      showInHome: item.show_in_home
     }));
 
     res.json({ success: true, data: items });
