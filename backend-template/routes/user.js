@@ -10,7 +10,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
     const result = await pool.request()
       .input('id', sql.BigInt, req.user.id)
       .query(`
-        SELECT AccountId, Name, Email, Authority, coins, RegistrationIP
+        SELECT AccountId, Name, Email, Authority, Coins, RegistrationIP
         FROM Account WHERE AccountId = @id
       `);
 
@@ -25,7 +25,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
         id: user.AccountId,
         username: user.Name,
         email: user.Email,
-        coins: user.coins || 0,
+        coins: user.Coins || 0,
         authority: user.Authority || 0
       }
     });
@@ -41,9 +41,9 @@ router.get('/coins', authMiddleware, async (req, res) => {
     const pool = await poolPromise;
     const result = await pool.request()
       .input('id', sql.BigInt, req.user.id)
-      .query('SELECT coins FROM Account WHERE AccountId = @id');
+      .query('SELECT Coins FROM Account WHERE AccountId = @id');
 
-    res.json({ success: true, data: { coins: result.recordset[0]?.coins || 0 } });
+    res.json({ success: true, data: { coins: result.recordset[0]?.Coins || 0 } });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Server error' });
   }

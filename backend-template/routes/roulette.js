@@ -42,9 +42,9 @@ router.post('/spin', authMiddleware, async (req, res) => {
     // Check coins
     const userResult = await pool.request()
       .input('id', sql.BigInt, req.user.id)
-      .query('SELECT coins FROM Account WHERE AccountId = @id');
+      .query('SELECT Coins FROM Account WHERE AccountId = @id');
 
-    const coins = userResult.recordset[0]?.coins || 0;
+    const coins = userResult.recordset[0]?.Coins || 0;
     if (coins < SPIN_COST) {
       return res.status(400).json({ success: false, error: 'Insufficient coins' });
     }
@@ -102,13 +102,13 @@ router.post('/spin', authMiddleware, async (req, res) => {
     // Get new balance
     const newBalance = await pool.request()
       .input('id', sql.BigInt, req.user.id)
-      .query('SELECT coins FROM Account WHERE AccountId = @id');
+      .query('SELECT Coins FROM Account WHERE AccountId = @id');
 
     res.json({
       success: true,
       data: {
         prize,
-        newBalance: newBalance.recordset[0]?.coins || 0
+        newBalance: newBalance.recordset[0]?.Coins || 0
       }
     });
   } catch (err) {
