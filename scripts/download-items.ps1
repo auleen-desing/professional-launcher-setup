@@ -4,7 +4,7 @@
 param(
     [int]$StartVNum = 0,
     [int]$EndVNum = 15000,
-    [string]$OutputFolder = "public/items",
+    [string]$OutputFolder = "C:\Users\admin\Desktop\Nueva carpeta\website\public\items",
     [int]$MaxParallel = 20
 )
 
