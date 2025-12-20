@@ -87,9 +87,9 @@ router.post('/purchase', authMiddleware, async (req, res) => {
     // Check user balance
     const balanceResult = await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
-      .query('SELECT coins FROM Account WHERE AccountId = @accountId');
+      .query('SELECT Coins FROM Account WHERE AccountId = @accountId');
     
-    const currentCoins = balanceResult.recordset[0]?.coins || 0;
+    const currentCoins = balanceResult.recordset[0]?.Coins || 0;
     
     if (currentCoins < title.Price) {
       return res.status(400).json({ success: false, error: 'Insufficient coins' });
@@ -99,7 +99,7 @@ router.post('/purchase', authMiddleware, async (req, res) => {
     await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
       .input('price', sql.Int, title.Price)
-      .query('UPDATE Account SET coins = coins - @price WHERE AccountId = @accountId');
+      .query('UPDATE Account SET Coins = Coins - @price WHERE AccountId = @accountId');
     
     // Add title to user
     await pool.request()
@@ -110,9 +110,9 @@ router.post('/purchase', authMiddleware, async (req, res) => {
     // Get new balance
     const newBalanceResult = await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
-      .query('SELECT coins FROM Account WHERE AccountId = @accountId');
+      .query('SELECT Coins FROM Account WHERE AccountId = @accountId');
     
-    const newBalance = newBalanceResult.recordset[0]?.coins || 0;
+    const newBalance = newBalanceResult.recordset[0]?.Coins || 0;
 
     console.log(`[Titles] User ${req.user.id} purchased title ${title.DisplayName} for ${title.Price} coins`);
 

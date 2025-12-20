@@ -25,7 +25,7 @@ router.post('/send', authMiddleware, async (req, res) => {
     // Get sender info and verify balance
     const senderResult = await pool.request()
       .input('senderId', sql.BigInt, senderId)
-      .query('SELECT AccountId, Name, coins FROM Account WHERE AccountId = @senderId');
+      .query('SELECT AccountId, Name, Coins FROM Account WHERE AccountId = @senderId');
 
     if (senderResult.recordset.length === 0) {
       return res.status(404).json({ success: false, error: 'Sender not found' });
@@ -33,7 +33,7 @@ router.post('/send', authMiddleware, async (req, res) => {
 
     const sender = senderResult.recordset[0];
 
-    if (sender.coins < coinsToSend) {
+    if (sender.Coins < coinsToSend) {
       return res.status(400).json({ success: false, error: 'Insufficient coins' });
     }
 
@@ -57,12 +57,12 @@ router.post('/send', authMiddleware, async (req, res) => {
     await pool.request()
       .input('senderId', sql.BigInt, senderId)
       .input('amount', sql.Int, coinsToSend)
-      .query('UPDATE Account SET coins = coins - @amount WHERE AccountId = @senderId');
+      .query('UPDATE Account SET Coins = Coins - @amount WHERE AccountId = @senderId');
 
     await pool.request()
       .input('recipientId', sql.BigInt, recipient.AccountId)
       .input('amount', sql.Int, coinsToSend)
-      .query('UPDATE Account SET coins = coins + @amount WHERE AccountId = @recipientId');
+      .query('UPDATE Account SET Coins = Coins + @amount WHERE AccountId = @recipientId');
 
     // Log transactions
     const giftMessage = message ? `: "${message}"` : '';
@@ -91,7 +91,7 @@ router.post('/send', authMiddleware, async (req, res) => {
       success: true, 
       message: `Successfully sent ${coinsToSend} coins to ${recipient.Name}`,
       data: {
-        newBalance: sender.coins - coinsToSend
+        newBalance: sender.Coins - coinsToSend
       }
     });
   } catch (err) {

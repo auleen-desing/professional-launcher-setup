@@ -162,7 +162,7 @@ router.post('/claim', authMiddleware, async (req, res) => {
       await pool.request()
         .input('accountId', sql.BigInt, req.user.id)
         .input('coins', sql.Int, coinsReward)
-        .query('UPDATE Account SET coins = coins + @coins WHERE AccountId = @accountId');
+        .query('UPDATE Account SET Coins = Coins + @coins WHERE AccountId = @accountId');
     }
 
     // If there's an item reward, log it
@@ -173,9 +173,9 @@ router.post('/claim', authMiddleware, async (req, res) => {
     // Get updated coin balance
     const balanceResult = await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
-      .query('SELECT coins FROM Account WHERE AccountId = @accountId');
+      .query('SELECT Coins FROM Account WHERE AccountId = @accountId');
     
-    const newBalance = balanceResult.recordset[0]?.coins || 0;
+    const newBalance = balanceResult.recordset[0]?.Coins || 0;
 
     console.log(`[Daily] User ${req.user.id} claimed day ${newStreak}: ${coinsReward} coins`);
 

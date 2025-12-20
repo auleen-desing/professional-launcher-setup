@@ -141,7 +141,7 @@ router.post('/login', authRateLimit, async (req, res) => {
     const result = await pool.request()
       .input('username', sql.NVarChar, username.substring(0, 20)) // Limit length
       .query(`
-        SELECT AccountId, Name, Password, Authority, Email, coins
+        SELECT AccountId, Name, Password, Authority, Email, Coins
         FROM Account 
         WHERE Name = @username
       `);
@@ -222,7 +222,7 @@ router.post('/login', authRateLimit, async (req, res) => {
           id: user.AccountId,
           username: user.Name,
           email: user.Email || '',
-          coins: user.coins || 0,
+          coins: user.Coins || 0,
           authority: user.Authority || 0
         }
       }
@@ -666,7 +666,7 @@ router.get('/session', authMiddleware, async (req, res) => {
     const pool = await poolPromise;
     const result = await pool.request()
       .input('id', sql.BigInt, req.user.id)
-      .query('SELECT AccountId, Name, Email, Authority, coins FROM Account WHERE AccountId = @id');
+      .query('SELECT AccountId, Name, Email, Authority, Coins FROM Account WHERE AccountId = @id');
 
     if (result.recordset.length === 0) {
       return res.status(404).json({ success: false, error: 'User not found' });
@@ -686,7 +686,7 @@ router.get('/session', authMiddleware, async (req, res) => {
           id: user.AccountId,
           username: user.Name,
           email: user.Email || '',
-          coins: user.coins || 0,
+          coins: user.Coins || 0,
           authority: user.Authority || 0
         }
       }

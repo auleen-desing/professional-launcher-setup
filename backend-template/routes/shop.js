@@ -155,13 +155,13 @@ router.post('/purchase', authMiddleware, async (req, res) => {
     // Get user's current coins
     const userResult = await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
-      .query('SELECT coins FROM Account WHERE AccountId = @accountId');
+      .query('SELECT Coins FROM Account WHERE AccountId = @accountId');
 
     if (userResult.recordset.length === 0) {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
 
-    const userCoins = userResult.recordset[0]?.coins || 0;
+    const userCoins = userResult.recordset[0]?.Coins || 0;
 
     if (userCoins < finalPrice) {
       return res.status(400).json({ 
@@ -228,7 +228,7 @@ router.post('/purchase', authMiddleware, async (req, res) => {
     await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
       .input('price', sql.Int, finalPrice)
-      .query('UPDATE account SET Coins = Coins - @price WHERE AccountId = @accountId');
+      .query('UPDATE Account SET Coins = Coins - @price WHERE AccountId = @accountId');
 
     // Send item to character mail (use buyer's own character as sender - self-mail)
     await pool.request()
@@ -263,12 +263,12 @@ router.post('/purchase', authMiddleware, async (req, res) => {
     // Get new balance
     const newBalanceResult = await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
-      .query('SELECT coins FROM account WHERE AccountId = @accountId');
+      .query('SELECT Coins FROM Account WHERE AccountId = @accountId');
 
     res.json({ 
       success: true, 
       data: { 
-        newBalance: newBalanceResult.recordset[0]?.coins || 0,
+        newBalance: newBalanceResult.recordset[0]?.Coins || 0,
         message: 'Item purchased successfully! Check your in-game mail.'
       } 
     });
