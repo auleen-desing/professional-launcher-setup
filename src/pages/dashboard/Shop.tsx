@@ -394,9 +394,10 @@ export function Shop() {
                       <div className="flex items-start justify-between">
                         <div className="p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
                           <img 
-                            src={`/items/${item.itemVNum}.png`} 
+                            src={`${import.meta.env.BASE_URL}items/${item.itemVNum}.png`} 
                             alt={item.name}
                             className="h-12 w-12 object-contain"
+                            loading="lazy"
                             onError={(e) => {
                               e.currentTarget.style.display = 'none';
                               e.currentTarget.nextElementSibling?.classList.remove('hidden');
