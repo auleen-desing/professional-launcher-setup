@@ -394,7 +394,7 @@ export function Shop() {
                       <div className="flex items-start justify-between">
                         <div className="p-3 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
                           <img 
-                            src={`${import.meta.env.BASE_URL}items/${item.itemVNum}.png`} 
+                            src={`/items/${item.itemVNum}.png`} 
                             alt={item.name}
                             className="h-12 w-12 object-contain"
                             loading="lazy"
