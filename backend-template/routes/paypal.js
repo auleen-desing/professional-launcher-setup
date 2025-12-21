@@ -3,6 +3,7 @@ const router = express.Router();
 const { sql, poolPromise } = require('../config/database');
 const crypto = require('crypto');
 const { authMiddleware } = require('../middleware/auth');
+const { addPendingCoins } = require('../utils/pendingCoins');
 
 // Create pending donation record
 router.post('/create-donation', authMiddleware, async (req, res) => {
@@ -175,15 +176,15 @@ router.post('/ipn', async (req, res) => {
         WHERE Id = @id AND Status = 'pending'
       `);
 
-    // Credit coins to account
-    await pool.request()
-      .input('accountId', sql.BigInt, donation.AccountId)
-      .input('coins', sql.Int, donation.Coins)
-      .query(`
-        UPDATE Account SET Coins = ISNULL(Coins, 0) + @coins WHERE AccountId = @accountId
-      `);
+    // Credit coins using PENDING COINS system
+    await addPendingCoins(
+      donation.AccountId,
+      donation.Coins,
+      'donation',
+      `PayPal: ${paypalTxnId}`
+    );
 
-    console.log(`[PayPal IPN] SUCCESS: Credited ${donation.Coins} coins to account ${donation.AccountId}`);
+    console.log(`[PayPal IPN] SUCCESS: Added ${donation.Coins} pending coins for account ${donation.AccountId}`);
 
   } catch (error) {
     console.error('[PayPal IPN] Error processing:', error);
@@ -228,15 +229,15 @@ router.post('/admin/complete-donation', authMiddleware, async (req, res) => {
         WHERE TransactionId = @transactionId
       `);
 
-    // Credit coins to account
-    await pool.request()
-      .input('accountId', sql.BigInt, donation.AccountId)
-      .input('coins', sql.Int, donation.Coins)
-      .query(`
-        UPDATE Account SET Coins = ISNULL(Coins, 0) + @coins WHERE AccountId = @accountId
-      `);
+    // Credit coins using PENDING COINS system
+    await addPendingCoins(
+      donation.AccountId,
+      donation.Coins,
+      'donation',
+      `Admin manual: ${transactionId}`
+    );
 
-    console.log(`[PayPal Admin] Manually completed donation ${transactionId}: ${donation.Coins} coins to account ${donation.AccountId}`);
+    console.log(`[PayPal Admin] Manually completed donation ${transactionId}: ${donation.Coins} pending coins for account ${donation.AccountId}`);
 
     res.json({ 
       success: true, 

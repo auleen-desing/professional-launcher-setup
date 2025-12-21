@@ -92,15 +92,33 @@ router.post('/coins', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const { userId, amount, type, reason } = req.body;
     const pool = await poolPromise;
+    const { addPendingCoins, getPendingCoins } = require('../utils/pendingCoins');
 
-    const query = type === 'add' 
-      ? 'UPDATE Account SET Coins = Coins + @amount WHERE AccountId = @userId'
-      : 'UPDATE Account SET Coins = CASE WHEN Coins >= @amount THEN Coins - @amount ELSE 0 END WHERE AccountId = @userId';
+    // Get admin name for logging
+    const adminResult = await pool.request()
+      .input('adminId', sql.Int, req.user.id)
+      .query('SELECT Name FROM Account WHERE AccountId = @adminId');
+    const adminName = adminResult.recordset[0]?.Name || 'Admin';
 
-    await pool.request()
-      .input('userId', sql.Int, userId)
-      .input('amount', sql.Int, amount)
-      .query(query);
+    if (type === 'add') {
+      // Use PENDING COINS system for adding
+      const pendingResult = await addPendingCoins(
+        userId,
+        amount,
+        'admin',
+        `${adminName}: ${reason || 'Manual addition'}`
+      );
+
+      if (!pendingResult.success) {
+        return res.status(500).json({ success: false, error: 'Failed to add pending coins' });
+      }
+    } else {
+      // For removing coins, we still update directly (this is safe)
+      await pool.request()
+        .input('userId', sql.Int, userId)
+        .input('amount', sql.Int, amount)
+        .query('UPDATE Account SET Coins = CASE WHEN Coins >= @amount THEN Coins - @amount ELSE 0 END WHERE AccountId = @userId');
+    }
 
     // Log the transaction (optional - table may not exist)
     try {
@@ -123,12 +141,17 @@ router.post('/coins', authMiddleware, adminMiddleware, async (req, res) => {
       .input('userId', sql.Int, userId)
       .query('SELECT Name, Coins FROM Account WHERE AccountId = @userId');
 
+    const pending = await getPendingCoins(userId);
+
     res.json({
       success: true,
-      message: `${type === 'add' ? 'Added' : 'Removed'} ${amount} coins`,
+      message: type === 'add' 
+        ? `Added ${amount} coins to pending (will be credited on login)`
+        : `Removed ${amount} coins`,
       data: {
         username: userResult.recordset[0]?.Name,
-        newBalance: userResult.recordset[0]?.Coins
+        newBalance: userResult.recordset[0]?.Coins,
+        pendingCoins: pending.total
       }
     });
   } catch (err) {

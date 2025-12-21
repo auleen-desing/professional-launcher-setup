@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { sql, poolPromise } = require('../config/database');
 const { authMiddleware } = require('../middleware/auth');
+const { addPendingCoins, getPendingCoins } = require('../utils/pendingCoins');
 
 // POST /api/coupons/redeem
 router.post('/redeem', authMiddleware, async (req, res) => {
@@ -60,12 +61,6 @@ router.post('/redeem', authMiddleware, async (req, res) => {
         .input('couponId', sql.Int, coupon.Id)
         .query('INSERT INTO web_coupon_redemptions (CouponId, AccountId, RedeemedAt) VALUES (@couponId, @accountId, GETDATE())');
 
-      // Apply coupon reward
-      await transaction.request()
-        .input('accountId', sql.BigInt, req.user.id)
-        .input('coins', sql.Int, coupon.Coins)
-        .query('UPDATE Account SET Coins = ISNULL(Coins, 0) + @coins WHERE AccountId = @accountId');
-
       // Update coupon uses
       await transaction.request()
         .input('couponId', sql.Int, coupon.Id)
@@ -77,19 +72,38 @@ router.post('/redeem', authMiddleware, async (req, res) => {
       throw txError;
     }
 
-    // Fetch the updated balance from DB
+    // Add to PENDING COINS instead of directly to Account
+    const pendingResult = await addPendingCoins(
+      req.user.id,
+      coupon.Coins,
+      'coupon',
+      sanitizedCode
+    );
+
+    if (!pendingResult.success) {
+      console.error('Failed to add pending coins:', pendingResult.error);
+      return res.status(500).json({ success: false, error: 'Failed to add coins' });
+    }
+
+    // Get current balance + pending for display
     const balanceResult = await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
       .query('SELECT Coins FROM Account WHERE AccountId = @accountId');
     
-    const newBalance = balanceResult.recordset[0]?.Coins || 0;
+    const currentBalance = balanceResult.recordset[0]?.Coins || 0;
+    const pending = await getPendingCoins(req.user.id);
 
-    console.log('Coupon redeemed successfully:', coupon.Coins, 'coins, new balance:', newBalance);
+    console.log('Coupon redeemed successfully:', coupon.Coins, 'coins added to pending');
 
     res.json({ 
       success: true, 
-      message: `Coupon redeemed! You received ${coupon.Coins} coins.`,
-      data: { coins: coupon.Coins, newBalance }
+      message: `Coupon redeemed! You received ${coupon.Coins} coins. They will be available when you log into the game.`,
+      data: { 
+        coins: coupon.Coins, 
+        newBalance: currentBalance,
+        pendingCoins: pending.total,
+        note: 'Coins will be credited when you log into the game'
+      }
     });
   } catch (err) {
     console.error('Coupon error:', err);
