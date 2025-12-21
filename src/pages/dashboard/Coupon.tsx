@@ -49,7 +49,7 @@ export function Coupon() {
         updateCoins(nextBalance);
         toast({
           title: '🎉 Coupon redeemed!',
-          description: data.message || `You received ${data.data.coins} coins!`,
+          description: `You received ${data.data.coins} coins! They will be credited when you enter the game.`,
         });
         setCouponCode('');
       } else {
