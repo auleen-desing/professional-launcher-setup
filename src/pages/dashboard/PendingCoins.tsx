@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Clock, Coins, Gift, Ticket, Dices, CreditCard, AlertCircle, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { API_CONFIG } from '@/config/api';
+import { API_CONFIG, buildApiUrl } from '@/config/api';
 
 interface PendingCoin {
   id: number;
@@ -45,9 +47,11 @@ const sourceLabels: Record<string, string> = {
 };
 
 export function PendingCoins() {
-  const { user } = useAuth();
+  const { toast } = useToast();
+  const { user, refreshUser } = useAuth();
   const [data, setData] = useState<PendingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isClaiming, setIsClaiming] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -80,6 +84,47 @@ export function PendingCoins() {
       setError(err instanceof Error ? err.message : 'Failed to load pending coins');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleClaimNow = async () => {
+    try {
+      setIsClaiming(true);
+      setError(null);
+
+      const token = localStorage.getItem('novaera_token');
+      if (!token) {
+        throw new Error('You are not logged in.');
+      }
+
+      const response = await fetch(buildApiUrl('/pending/claim'), {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result?.success) {
+        throw new Error(result?.error || 'Failed to claim pending coins');
+      }
+
+      toast({
+        title: 'Pending coins claimed',
+        description: result?.message || 'Your coins were added to your balance.',
+      });
+
+      await refreshUser();
+      await fetchPendingCoins();
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Could not claim pending coins.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsClaiming(false);
     }
   };
 
@@ -140,13 +185,27 @@ export function PendingCoins() {
           </div>
           
           {data && data.total > 0 && (
-            <div className="mt-4 p-3 rounded-lg bg-primary/10 border border-primary/20">
-              <p className="text-sm text-primary flex items-center gap-2">
-                <AlertCircle className="h-4 w-4" />
-                These coins will be automatically added when you log into the game
-              </p>
+            <div className="mt-4 space-y-3">
+              <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
+                <p className="text-sm text-primary flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  These coins will be automatically added when you log into the game
+                </p>
+              </div>
+
+              <div className="flex justify-end">
+                <Button onClick={handleClaimNow} disabled={isClaiming} className="gap-2">
+                  {isClaiming ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Coins className="h-4 w-4" />
+                  )}
+                  {isClaiming ? 'Claiming...' : 'Claim now'}
+                </Button>
+              </div>
             </div>
           )}
+
         </CardContent>
       </Card>
 
