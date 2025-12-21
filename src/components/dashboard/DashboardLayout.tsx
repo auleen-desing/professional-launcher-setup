@@ -111,7 +111,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             {/* Coins Display */}
             <div className="flex items-center gap-2 bg-gradient-to-r from-primary/20 to-accent/20 border border-primary/30 rounded-lg px-4 py-2">
               <Coins className="h-4 w-4 text-primary" />
-              <span className="font-display font-bold text-primary">{user?.coins.toLocaleString()}</span>
+              <span className="font-display font-bold text-primary">{(user?.coins ?? 0).toLocaleString()}</span>
             </div>
             
             {/* User */}
