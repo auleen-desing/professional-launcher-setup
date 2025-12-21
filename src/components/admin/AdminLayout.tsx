@@ -17,7 +17,8 @@ import {
   BarChart3,
   Ticket,
   Globe,
-  Mail
+  Mail,
+  CreditCard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +38,7 @@ const navItems: NavItem[] = [
   { name: 'IP Ban', href: '/admin/ipban', icon: Globe },
   { name: 'Blocked IPs', href: '/admin/blocked-ips', icon: Shield },
   { name: 'NovaCoins', href: '/admin/coins', icon: Coins },
+  { name: 'Donations', href: '/admin/donations', icon: CreditCard },
   { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
   { name: 'Mass Email', href: '/admin/emails', icon: Mail },
   { name: 'Announcements', href: '/admin/announcements', icon: Megaphone },

@@ -44,7 +44,7 @@ import { AdminModeration } from "./pages/admin/AdminModeration";
 import { AdminStats } from "./pages/admin/AdminStats";
 import { AdminSettings } from "./pages/admin/AdminSettings";
 import AdminEmails from "./pages/admin/AdminEmails";
-
+import AdminDonations from "./pages/admin/AdminDonations";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -265,6 +265,7 @@ function AppRoutes() {
       <Route path="/admin/ipban" element={<ProtectedAdminRoute><AdminLayout><AdminIPBan /></AdminLayout></ProtectedAdminRoute>} />
       <Route path="/admin/blocked-ips" element={<ProtectedAdminRoute><AdminBlockedIPs /></ProtectedAdminRoute>} />
       <Route path="/admin/coins" element={<ProtectedAdminRoute><AdminLayout><AdminCoins /></AdminLayout></ProtectedAdminRoute>} />
+      <Route path="/admin/donations" element={<ProtectedAdminRoute><AdminDonations /></ProtectedAdminRoute>} />
       <Route path="/admin/coupons" element={<ProtectedAdminRoute><AdminLayout><AdminCoupons /></AdminLayout></ProtectedAdminRoute>} />
       <Route path="/admin/emails" element={<ProtectedAdminRoute><AdminLayout><AdminEmails /></AdminLayout></ProtectedAdminRoute>} />
       <Route path="/admin/announcements" element={<ProtectedAdminRoute><AdminLayout><AdminAnnouncements /></AdminLayout></ProtectedAdminRoute>} />

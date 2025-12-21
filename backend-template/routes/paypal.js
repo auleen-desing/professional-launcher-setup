@@ -301,6 +301,35 @@ router.get('/admin/pending-donations', authMiddleware, async (req, res) => {
   }
 });
 
+// Get ALL donations (admin only) - for admin panel
+router.get('/admin/all-donations', authMiddleware, async (req, res) => {
+  try {
+    const adminId = req.user.id;
+
+    const pool = await poolPromise;
+    const adminCheck = await pool.request()
+      .input('accountId', sql.BigInt, adminId)
+      .query(`SELECT Authority FROM Account WHERE AccountId = @accountId`);
+
+    if (!adminCheck.recordset[0] || adminCheck.recordset[0].Authority < 100) {
+      return res.status(403).json({ success: false, error: 'Admin access required' });
+    }
+
+    const result = await pool.request()
+      .query(`
+        SELECT d.*, a.Name as AccountName
+        FROM web_donations d
+        LEFT JOIN Account a ON d.AccountId = a.AccountId
+        ORDER BY d.CreatedAt DESC
+      `);
+
+    res.json({ success: true, data: result.recordset });
+  } catch (error) {
+    console.error('[PayPal Admin] Error:', error);
+    res.status(500).json({ success: false, error: 'Failed to fetch donations' });
+  }
+});
+
 // Check donation status
 router.get('/donation-status/:transactionId', authMiddleware, async (req, res) => {
   try {
