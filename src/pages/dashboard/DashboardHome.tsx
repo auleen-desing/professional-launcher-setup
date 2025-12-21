@@ -21,7 +21,6 @@ const features = [
   { name: 'Buy NovaCoins', href: '/dashboard/buy-coins', icon: Coins, description: 'Stripe, PayPal, Paysafecard', color: 'from-cyan-500 to-blue-500' },
   { name: 'Coupon', href: '/dashboard/coupon', icon: Ticket, description: 'Redeem codes', color: 'from-purple-500 to-pink-500' },
   { name: 'Roulette', href: '/dashboard/roulette', icon: Dices, description: 'Try your luck', color: 'from-orange-500 to-red-500' },
-  { name: 'Tickets', href: '/dashboard/tickets', icon: MessageSquare, description: 'Technical support', color: 'from-blue-500 to-indigo-500' },
   { name: 'Shop', href: '/dashboard/shop', icon: ShoppingCart, description: 'Item shop', color: 'from-amber-500 to-orange-500' },
 ];
 
