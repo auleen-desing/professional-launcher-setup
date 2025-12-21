@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { sql, poolPromise } = require('../config/database');
 const { authMiddleware } = require('../middleware/auth');
+const { addPendingCoins, getPendingCoins } = require('../utils/pendingCoins');
 
 
 // POST /api/coupons/redeem
@@ -54,8 +55,6 @@ router.post('/redeem', authMiddleware, async (req, res) => {
     const transaction = pool.transaction();
     await transaction.begin();
 
-    let coinsAdded = 0;
-
     try {
       // Record usage first (prevents double-spend)
       await transaction.request()
@@ -68,13 +67,16 @@ router.post('/redeem', authMiddleware, async (req, res) => {
         .input('couponId', sql.Int, coupon.Id)
         .query('UPDATE web_coupons SET CurrentUses = CurrentUses + 1 WHERE Id = @couponId');
 
-      // DIRECT APPROACH: Add coins directly to Account table (skip pending system)
+      // Add to PENDING COINS (will be claimed when player logs into game)
       await transaction.request()
         .input('accountId', sql.BigInt, req.user.id)
         .input('amount', sql.Int, coupon.Coins)
-        .query('UPDATE Account SET Coins = Coins + @amount WHERE AccountId = @accountId');
-
-      coinsAdded = coupon.Coins;
+        .input('source', sql.NVarChar(50), 'coupon')
+        .input('sourceDetail', sql.NVarChar(200), sanitizedCode)
+        .query(`
+          INSERT INTO web_pending_coins (AccountId, Amount, Source, SourceDetail, Status, CreatedAt, ExpiresAt)
+          VALUES (@accountId, @amount, @source, @sourceDetail, 'pending', GETDATE(), NULL)
+        `);
 
       await transaction.commit();
     } catch (txError) {
@@ -82,21 +84,24 @@ router.post('/redeem', authMiddleware, async (req, res) => {
       throw txError;
     }
 
-    // Get updated balance for display
+    // Get current balance + pending for display
     const balanceResult = await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
       .query('SELECT Coins FROM Account WHERE AccountId = @accountId');
     
-    const newBalance = balanceResult.recordset[0]?.Coins || 0;
+    const currentBalance = balanceResult.recordset[0]?.Coins || 0;
+    const pending = await getPendingCoins(req.user.id);
 
-    console.log('Coupon redeemed successfully:', coinsAdded, 'coins added directly to account. New balance:', newBalance);
+    console.log('Coupon redeemed successfully:', coupon.Coins, 'coins added to pending. Total pending:', pending.total);
 
     res.json({ 
       success: true, 
-      message: `Coupon redeemed! You received ${coinsAdded} coins!`,
+      message: `¡Cupón canjeado! Recibiste ${coupon.Coins} coins. Se acreditarán cuando entres al juego.`,
       data: { 
-        coins: coinsAdded, 
-        newBalance: newBalance
+        coins: coupon.Coins, 
+        currentBalance: currentBalance,
+        pendingCoins: pending.total,
+        note: 'Los coins se acreditarán automáticamente cuando inicies sesión en el juego'
       }
     });
   } catch (err) {
