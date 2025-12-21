@@ -157,12 +157,12 @@ router.post('/claim', authMiddleware, async (req, res) => {
         WHEN NOT MATCHED THEN INSERT (AccountId, LastClaim, Streak) VALUES (@accountId, GETDATE(), @streak);
       `);
 
-    // Add coins to account
+    // Add coins to WebCoins (separate from game coins)
     if (coinsReward > 0) {
       await pool.request()
         .input('accountId', sql.BigInt, req.user.id)
         .input('coins', sql.Int, coinsReward)
-        .query('UPDATE Account SET Coins = Coins + @coins WHERE AccountId = @accountId');
+        .query('UPDATE Account SET WebCoins = ISNULL(WebCoins, 0) + @coins WHERE AccountId = @accountId');
     }
 
     // If there's an item reward, log it
@@ -173,9 +173,10 @@ router.post('/claim', authMiddleware, async (req, res) => {
     // Get updated coin balance
     const balanceResult = await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
-      .query('SELECT Coins FROM Account WHERE AccountId = @accountId');
+      .query('SELECT Coins, WebCoins FROM Account WHERE AccountId = @accountId');
     
-    const newBalance = balanceResult.recordset[0]?.Coins || 0;
+    const gameCoins = balanceResult.recordset[0]?.Coins || 0;
+    const webCoins = balanceResult.recordset[0]?.WebCoins || 0;
 
     console.log(`[Daily] User ${req.user.id} claimed day ${newStreak}: ${coinsReward} coins`);
 
@@ -187,7 +188,9 @@ router.post('/claim', authMiddleware, async (req, res) => {
         itemVNum,
         itemAmount,
         newStreak,
-        newBalance
+        newBalance: webCoins,
+        gameCoins: gameCoins,
+        totalCoins: gameCoins + webCoins
       } 
     });
   } catch (err) {

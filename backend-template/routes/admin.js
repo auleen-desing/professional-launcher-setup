@@ -92,7 +92,6 @@ router.post('/coins', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const { userId, amount, type, reason } = req.body;
     const pool = await poolPromise;
-    const { addPendingCoins, getPendingCoins } = require('../utils/pendingCoins');
 
     // Get admin name for logging
     const adminResult = await pool.request()
@@ -101,23 +100,21 @@ router.post('/coins', authMiddleware, adminMiddleware, async (req, res) => {
     const adminName = adminResult.recordset[0]?.Name || 'Admin';
 
     if (type === 'add') {
-      // Use PENDING COINS system for adding
-      const pendingResult = await addPendingCoins(
-        userId,
-        amount,
-        'admin',
-        `${adminName}: ${reason || 'Manual addition'}`
-      );
-
-      if (!pendingResult.success) {
-        return res.status(500).json({ success: false, error: 'Failed to add pending coins' });
-      }
-    } else {
-      // For removing coins, we still update directly (this is safe)
+      // Add directly to WebCoins
       await pool.request()
         .input('userId', sql.Int, userId)
         .input('amount', sql.Int, amount)
-        .query('UPDATE Account SET Coins = CASE WHEN Coins >= @amount THEN Coins - @amount ELSE 0 END WHERE AccountId = @userId');
+        .query('UPDATE Account SET WebCoins = ISNULL(WebCoins, 0) + @amount WHERE AccountId = @userId');
+      
+      console.log(`[ADMIN] ${adminName} added ${amount} WebCoins to user ${userId}: ${reason || 'No reason'}`);
+    } else {
+      // For removing coins, remove from WebCoins first, then game coins if needed
+      await pool.request()
+        .input('userId', sql.Int, userId)
+        .input('amount', sql.Int, amount)
+        .query('UPDATE Account SET WebCoins = CASE WHEN WebCoins >= @amount THEN WebCoins - @amount ELSE 0 END WHERE AccountId = @userId');
+      
+      console.log(`[ADMIN] ${adminName} removed ${amount} WebCoins from user ${userId}: ${reason || 'No reason'}`);
     }
 
     // Log the transaction (optional - table may not exist)
@@ -139,19 +136,21 @@ router.post('/coins', authMiddleware, adminMiddleware, async (req, res) => {
     // Get user info for response
     const userResult = await pool.request()
       .input('userId', sql.Int, userId)
-      .query('SELECT Name, Coins FROM Account WHERE AccountId = @userId');
+      .query('SELECT Name, Coins, WebCoins FROM Account WHERE AccountId = @userId');
 
-    const pending = await getPendingCoins(userId);
+    const gameCoins = userResult.recordset[0]?.Coins || 0;
+    const webCoins = userResult.recordset[0]?.WebCoins || 0;
 
     res.json({
       success: true,
       message: type === 'add' 
-        ? `Added ${amount} coins to pending (will be credited on login)`
-        : `Removed ${amount} coins`,
+        ? `Added ${amount} WebCoins to user`
+        : `Removed ${amount} WebCoins from user`,
       data: {
         username: userResult.recordset[0]?.Name,
-        newBalance: userResult.recordset[0]?.Coins,
-        pendingCoins: pending.total
+        newBalance: webCoins,
+        gameCoins: gameCoins,
+        totalCoins: gameCoins + webCoins
       }
     });
   } catch (err) {

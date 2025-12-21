@@ -152,16 +152,16 @@ router.post('/purchase', authMiddleware, async (req, res) => {
       ? Math.floor(item.price * (1 - SHOP_DISCOUNT / 100)) 
       : item.price;
 
-    // Get user's current coins
+    // Get user's current WebCoins
     const userResult = await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
-      .query('SELECT Coins FROM Account WHERE AccountId = @accountId');
+      .query('SELECT WebCoins FROM Account WHERE AccountId = @accountId');
 
     if (userResult.recordset.length === 0) {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
 
-    const userCoins = userResult.recordset[0]?.Coins || 0;
+    const userCoins = userResult.recordset[0]?.WebCoins || 0;
 
     if (userCoins < finalPrice) {
       return res.status(400).json({ 
@@ -224,11 +224,11 @@ router.post('/purchase', authMiddleware, async (req, res) => {
       targetCharId = charResult.recordset[0].CharacterId;
     }
 
-    // Deduct coins directly (using discounted price)
+    // Deduct coins from WebCoins (using discounted price)
     await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
       .input('price', sql.Int, finalPrice)
-      .query('UPDATE Account SET Coins = Coins - @price WHERE AccountId = @accountId');
+      .query('UPDATE Account SET WebCoins = WebCoins - @price WHERE AccountId = @accountId');
 
     // Send item to character mail (use buyer's own character as sender - self-mail)
     await pool.request()
@@ -263,12 +263,17 @@ router.post('/purchase', authMiddleware, async (req, res) => {
     // Get new balance
     const newBalanceResult = await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
-      .query('SELECT Coins FROM Account WHERE AccountId = @accountId');
+      .query('SELECT Coins, WebCoins FROM Account WHERE AccountId = @accountId');
+
+    const gameCoins = newBalanceResult.recordset[0]?.Coins || 0;
+    const webCoins = newBalanceResult.recordset[0]?.WebCoins || 0;
 
     res.json({ 
       success: true, 
       data: { 
-        newBalance: newBalanceResult.recordset[0]?.Coins || 0,
+        newBalance: webCoins,
+        gameCoins: gameCoins,
+        totalCoins: gameCoins + webCoins,
         message: 'Item purchased successfully! Check your in-game mail.'
       } 
     });

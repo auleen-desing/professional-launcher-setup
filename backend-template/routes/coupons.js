@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { sql, poolPromise } = require('../config/database');
 const { authMiddleware } = require('../middleware/auth');
-const { addPendingCoins, getPendingCoins } = require('../utils/pendingCoins');
 
 
 // POST /api/coupons/redeem
@@ -67,16 +66,11 @@ router.post('/redeem', authMiddleware, async (req, res) => {
         .input('couponId', sql.Int, coupon.Id)
         .query('UPDATE web_coupons SET CurrentUses = CurrentUses + 1 WHERE Id = @couponId');
 
-      // Add to PENDING COINS (will be claimed when player logs into game)
+      // Add coins directly to WebCoins (separate from game coins)
       await transaction.request()
         .input('accountId', sql.BigInt, req.user.id)
         .input('amount', sql.Int, coupon.Coins)
-        .input('source', sql.NVarChar(50), 'coupon')
-        .input('sourceDetail', sql.NVarChar(200), sanitizedCode)
-        .query(`
-          INSERT INTO web_pending_coins (AccountId, Amount, Source, SourceDetail, Status, CreatedAt, ExpiresAt)
-          VALUES (@accountId, @amount, @source, @sourceDetail, 'pending', GETDATE(), NULL)
-        `);
+        .query('UPDATE Account SET WebCoins = ISNULL(WebCoins, 0) + @amount WHERE AccountId = @accountId');
 
       await transaction.commit();
     } catch (txError) {
@@ -84,24 +78,24 @@ router.post('/redeem', authMiddleware, async (req, res) => {
       throw txError;
     }
 
-    // Get current balance + pending for display
+    // Get current balance
     const balanceResult = await pool.request()
       .input('accountId', sql.BigInt, req.user.id)
-      .query('SELECT Coins FROM Account WHERE AccountId = @accountId');
+      .query('SELECT Coins, WebCoins FROM Account WHERE AccountId = @accountId');
     
-    const currentBalance = balanceResult.recordset[0]?.Coins || 0;
-    const pending = await getPendingCoins(req.user.id);
+    const gameCoins = balanceResult.recordset[0]?.Coins || 0;
+    const webCoins = balanceResult.recordset[0]?.WebCoins || 0;
 
-    console.log('Coupon redeemed successfully:', coupon.Coins, 'coins added to pending. Total pending:', pending.total);
+    console.log('Coupon redeemed successfully:', coupon.Coins, 'coins added to WebCoins. New balance:', webCoins);
 
     res.json({ 
       success: true, 
-      message: `¡Cupón canjeado! Recibiste ${coupon.Coins} coins. Se acreditarán cuando entres al juego.`,
+      message: `¡Cupón canjeado! Recibiste ${coupon.Coins} coins.`,
       data: { 
         coins: coupon.Coins, 
-        currentBalance: currentBalance,
-        pendingCoins: pending.total,
-        note: 'Los coins se acreditarán automáticamente cuando inicies sesión en el juego'
+        currentBalance: webCoins,
+        gameCoins: gameCoins,
+        totalCoins: gameCoins + webCoins
       }
     });
   } catch (err) {
