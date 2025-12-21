@@ -82,6 +82,7 @@ router.post('/ipn', async (req, res) => {
       
       if (verifyResult !== 'VERIFIED') {
         console.error('[PayPal IPN] SECURITY: IPN verification failed - possible fraud attempt');
+        console.error('[PayPal IPN] Verification result:', verifyResult);
         return;
       }
       console.log('[PayPal IPN] IPN verified successfully');
@@ -93,13 +94,17 @@ router.post('/ipn', async (req, res) => {
 
     // Extract relevant fields
     const paymentStatus = params.payment_status;
+    const pendingReason = params.pending_reason; // Important for held payments
     const transactionId = params.custom; // Our transaction ID
     const paypalTxnId = params.txn_id;
     const receiverEmail = params.receiver_email;
     const paymentAmount = parseFloat(params.mc_gross) || 0;
+    const txnType = params.txn_type;
 
     console.log('[PayPal IPN] Extracted values:');
     console.log(`  payment_status: ${paymentStatus}`);
+    console.log(`  pending_reason: ${pendingReason || 'N/A'}`);
+    console.log(`  txn_type: ${txnType || 'N/A'}`);
     console.log(`  custom (our txn): ${transactionId}`);
     console.log(`  txn_id (paypal): ${paypalTxnId}`);
     console.log(`  mc_gross: ${paymentAmount}`);
@@ -107,6 +112,23 @@ router.post('/ipn', async (req, res) => {
     // Skip test/verification IPNs
     if (paypalTxnId === 'TEST123' || !paypalTxnId) {
       console.log('[PayPal IPN] Skipping test/verification IPN');
+      return;
+    }
+
+    // Handle different payment statuses
+    if (paymentStatus === 'Pending') {
+      console.log(`[PayPal IPN] Payment is PENDING. Reason: ${pendingReason}`);
+      // Log this for admin review - payment is held by PayPal
+      const pool = await poolPromise;
+      await pool.request()
+        .input('transactionId', sql.NVarChar(100), transactionId)
+        .input('pendingReason', sql.NVarChar(100), pendingReason || 'unknown')
+        .query(`
+          UPDATE web_donations 
+          SET Status = 'paypal_pending', Notes = @pendingReason
+          WHERE TransactionId = @transactionId AND Status = 'pending'
+        `);
+      console.log(`[PayPal IPN] Updated donation ${transactionId} to paypal_pending status`);
       return;
     }
 
