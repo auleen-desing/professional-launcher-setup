@@ -112,25 +112,64 @@ async function getPendingCoinsList(accountId) {
  * @returns {Promise<{success: boolean, coinsAdded: number, itemsClaimed: number}>}
  */
 async function claimPendingCoins(accountId) {
+  const pool = await poolPromise;
+  const transaction = new sql.Transaction(pool);
+
   try {
-    const pool = await poolPromise;
-    
-    const result = await pool.request()
+    await transaction.begin();
+
+    // Lock pending rows for this account to prevent double-claiming
+    const pendingResult = await new sql.Request(transaction)
       .input('accountId', sql.BigInt, accountId)
-      .execute('SP_ClaimPendingCoins');
-    
-    const data = result.recordset[0];
-    
-    if (data?.CoinsAdded > 0) {
-      console.log(`[PendingCoins] Claimed ${data.CoinsAdded} coins for account ${accountId}`);
+      .query(`
+        SELECT Id, Amount
+        FROM web_pending_coins WITH (UPDLOCK, HOLDLOCK)
+        WHERE AccountId = @accountId
+          AND Status = 'pending'
+          AND (ExpiresAt IS NULL OR ExpiresAt > GETDATE())
+      `);
+
+    const items = pendingResult.recordset || [];
+    const itemsClaimed = items.length;
+    const coinsAdded = items.reduce((sum, row) => sum + (row?.Amount || 0), 0);
+
+    if (coinsAdded > 0) {
+      await new sql.Request(transaction)
+        .input('accountId', sql.BigInt, accountId)
+        .input('coinsAdded', sql.Int, coinsAdded)
+        .query(`
+          UPDATE Account
+          SET Coins = ISNULL(Coins, 0) + @coinsAdded
+          WHERE AccountId = @accountId
+        `);
+
+      await new sql.Request(transaction)
+        .input('accountId', sql.BigInt, accountId)
+        .query(`
+          UPDATE web_pending_coins
+          SET Status = 'claimed'
+          WHERE AccountId = @accountId
+            AND Status = 'pending'
+            AND (ExpiresAt IS NULL OR ExpiresAt > GETDATE())
+        `);
+
+      console.log(`[PendingCoins] Claimed ${coinsAdded} coins for account ${accountId}`);
     }
-    
+
+    await transaction.commit();
+
     return {
       success: true,
-      coinsAdded: data?.CoinsAdded || 0,
-      itemsClaimed: data?.ItemsClaimed || 0
+      coinsAdded,
+      itemsClaimed,
     };
   } catch (error) {
+    try {
+      await transaction.rollback();
+    } catch (_) {
+      // ignore rollback errors
+    }
+
     console.error('[PendingCoins] Error claiming pending coins:', error);
     return { success: false, coinsAdded: 0, itemsClaimed: 0 };
   }
