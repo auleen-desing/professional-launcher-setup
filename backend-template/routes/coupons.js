@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { sql, poolPromise } = require('../config/database');
 const { authMiddleware } = require('../middleware/auth');
-const { addPendingCoins, getPendingCoins } = require('../utils/pendingCoins');
+const { getPendingCoins } = require('../utils/pendingCoins');
+
 
 // POST /api/coupons/redeem
 router.post('/redeem', authMiddleware, async (req, res) => {
@@ -50,10 +51,10 @@ router.post('/redeem', authMiddleware, async (req, res) => {
       return res.status(400).json({ success: false, error: 'You have already used this coupon' });
     }
 
-    // SECURITY: Use transaction to prevent race conditions
+    // SECURITY: Use transaction to prevent race conditions AND keep redemption + pending coins atomic
     const transaction = pool.transaction();
     await transaction.begin();
-    
+
     try {
       // Record usage first (prevents double-spend)
       await transaction.request()
@@ -65,24 +66,22 @@ router.post('/redeem', authMiddleware, async (req, res) => {
       await transaction.request()
         .input('couponId', sql.Int, coupon.Id)
         .query('UPDATE web_coupons SET CurrentUses = CurrentUses + 1 WHERE Id = @couponId');
-      
+
+      // Add to PENDING COINS inside the same transaction (so we never mark redeemed without coins)
+      await transaction.request()
+        .input('accountId', sql.BigInt, req.user.id)
+        .input('amount', sql.Int, coupon.Coins)
+        .input('source', sql.NVarChar(50), 'coupon')
+        .input('sourceDetail', sql.NVarChar(200), sanitizedCode)
+        .query(`
+          INSERT INTO web_pending_coins (AccountId, Amount, Source, SourceDetail, Status, CreatedAt, ExpiresAt)
+          VALUES (@accountId, @amount, @source, @sourceDetail, 'pending', GETDATE(), NULL)
+        `);
+
       await transaction.commit();
     } catch (txError) {
       await transaction.rollback();
       throw txError;
-    }
-
-    // Add to PENDING COINS instead of directly to Account
-    const pendingResult = await addPendingCoins(
-      req.user.id,
-      coupon.Coins,
-      'coupon',
-      sanitizedCode
-    );
-
-    if (!pendingResult.success) {
-      console.error('Failed to add pending coins:', pendingResult.error);
-      return res.status(500).json({ success: false, error: 'Failed to add coins' });
     }
 
     // Get current balance + pending for display
