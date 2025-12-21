@@ -28,10 +28,18 @@ import {
   Copy, 
   Check,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  Users
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { API_CONFIG } from '@/config/api';
+
+interface Redemption {
+  Id: number;
+  AccountId: number;
+  AccountName: string;
+  RedeemedAt: string;
+}
 
 interface Coupon {
   Id: number;
@@ -64,6 +72,10 @@ export function AdminCoupons() {
   const [creating, setCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [redemptionsDialogOpen, setRedemptionsDialogOpen] = useState(false);
+  const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
+  const [redemptions, setRedemptions] = useState<Redemption[]>([]);
+  const [loadingRedemptions, setLoadingRedemptions] = useState(false);
   const { toast } = useToast();
 
   const [newCoupon, setNewCoupon] = useState({
@@ -206,6 +218,26 @@ export function AdminCoupons() {
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'Never';
     return new Date(dateStr).toLocaleDateString();
+  };
+
+  const formatDateTime = (dateStr: string) => {
+    return new Date(dateStr).toLocaleString();
+  };
+
+  const fetchRedemptions = async (coupon: Coupon) => {
+    setSelectedCoupon(coupon);
+    setRedemptionsDialogOpen(true);
+    setLoadingRedemptions(true);
+    try {
+      const response = await adminRequest(`/admin/coupons/${coupon.Id}/redemptions`);
+      if (response.success) {
+        setRedemptions(response.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching redemptions:', error);
+    } finally {
+      setLoadingRedemptions(false);
+    }
   };
 
   return (
@@ -399,14 +431,26 @@ export function AdminCoupons() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-destructive hover:text-destructive"
-                        onClick={() => handleDelete(coupon)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => fetchRedemptions(coupon)}
+                          disabled={coupon.CurrentUses === 0}
+                          title="View redemptions"
+                        >
+                          <Users className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive hover:text-destructive h-8 w-8"
+                          onClick={() => handleDelete(coupon)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -415,6 +459,57 @@ export function AdminCoupons() {
           )}
         </CardContent>
       </Card>
+
+      {/* Redemptions Dialog */}
+      <Dialog open={redemptionsDialogOpen} onOpenChange={setRedemptionsDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              Redemptions - {selectedCoupon?.Code}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            {loadingRedemptions ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : redemptions.length === 0 ? (
+              <div className="text-center py-4 text-muted-foreground">
+                No redemptions yet
+              </div>
+            ) : (
+              <div className="max-h-80 overflow-y-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Account</TableHead>
+                      <TableHead>Redeemed At</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {redemptions.map((r) => (
+                      <TableRow key={r.Id}>
+                        <TableCell className="font-medium">
+                          {r.AccountName || `ID: ${r.AccountId}`}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {formatDateTime(r.RedeemedAt)}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRedemptionsDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

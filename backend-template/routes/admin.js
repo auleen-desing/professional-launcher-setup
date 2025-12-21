@@ -385,6 +385,33 @@ router.get('/coupons', authMiddleware, adminMiddleware, async (req, res) => {
   }
 });
 
+// GET /api/admin/coupons/:id/redemptions - Get redemptions for a specific coupon
+router.get('/coupons/:id/redemptions', authMiddleware, adminMiddleware, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const pool = await poolPromise;
+    
+    const result = await pool.request()
+      .input('couponId', sql.Int, id)
+      .query(`
+        SELECT 
+          r.Id,
+          r.AccountId,
+          a.Name as AccountName,
+          r.RedeemedAt
+        FROM web_coupon_redemptions r
+        LEFT JOIN Account a ON r.AccountId = a.AccountId
+        WHERE r.CouponId = @couponId
+        ORDER BY r.RedeemedAt DESC
+      `);
+    
+    res.json({ success: true, data: result.recordset });
+  } catch (err) {
+    console.error('Get coupon redemptions error:', err);
+    res.status(500).json({ success: false, error: 'Server error' });
+  }
+});
+
 // POST /api/admin/coupons - Create a new coupon
 router.post('/coupons', authMiddleware, adminMiddleware, async (req, res) => {
   try {
