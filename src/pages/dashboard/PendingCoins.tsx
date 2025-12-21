@@ -59,7 +59,7 @@ export function PendingCoins() {
       setIsLoading(true);
       setError(null);
       
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('novaera_token');
       const response = await fetch(`${API_CONFIG.BASE_URL}/pending/coins`, {
         headers: {
           'Authorization': `Bearer ${token}`,
