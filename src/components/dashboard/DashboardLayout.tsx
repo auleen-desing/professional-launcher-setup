@@ -48,7 +48,6 @@ const navItems: NavItem[] = [
   { name: 'Coupon', href: '/dashboard/coupon', icon: Ticket },
   { name: 'Roulette', href: '/dashboard/roulette', icon: Dices },
   { name: 'Shop', href: '/dashboard/shop', icon: ShoppingCart },
-  { name: 'Tickets', href: '/dashboard/tickets', icon: MessageSquare },
   { name: 'Unbug', href: '/dashboard/unbug', icon: Bug },
   { name: 'Password', href: '/dashboard/password', icon: Lock },
 ];
