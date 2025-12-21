@@ -397,8 +397,12 @@ router.post('/verify-email', async (req, res) => {
       .input('token', sql.NVarChar, token)
       .query('UPDATE web_email_verifications SET VerifiedAt = GETDATE() WHERE Token = @token');
 
-    // Email verified - Authority remains at 0
-    console.log(`[AUTH] Email verified for user: ${verification.Username}`);
+    // Update Authority to 1 when email is verified
+    await pool.request()
+      .input('accountId', sql.BigInt, verification.AccountId)
+      .query('UPDATE Account SET Authority = 1 WHERE AccountId = @accountId');
+
+    console.log(`[AUTH] Email verified for user: ${verification.Username}, Authority set to 1`);
 
     res.json({ 
       success: true, 
