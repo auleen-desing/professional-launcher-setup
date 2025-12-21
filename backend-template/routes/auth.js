@@ -137,11 +137,10 @@ router.post('/login', authRateLimit, async (req, res) => {
       });
     }
 
-    const pool = await poolPromise;
     const result = await pool.request()
       .input('username', sql.NVarChar, username.substring(0, 20)) // Limit length
       .query(`
-        SELECT AccountId, Name, Password, Authority, Email, Coins
+        SELECT AccountId, Name, Password, Authority, Email, Coins, WebCoins
         FROM Account 
         WHERE Name = @username
       `);
@@ -214,6 +213,9 @@ router.post('/login', authRateLimit, async (req, res) => {
 
     console.log(`[AUTH] Successful login: ${username} from ${ip}`);
 
+    const gameCoins = user.Coins || 0;
+    const webCoins = user.WebCoins || 0;
+
     res.json({
       success: true,
       data: {
@@ -222,7 +224,9 @@ router.post('/login', authRateLimit, async (req, res) => {
           id: user.AccountId,
           username: user.Name,
           email: user.Email || '',
-          coins: user.Coins || 0,
+          coins: webCoins,              // spendable balance for the website
+          gameCoins: gameCoins,         // read-only (managed by the game)
+          totalCoins: gameCoins + webCoins,
           authority: user.Authority || 0
         }
       }
@@ -666,18 +670,21 @@ router.get('/session', authMiddleware, async (req, res) => {
     const pool = await poolPromise;
     const result = await pool.request()
       .input('id', sql.BigInt, req.user.id)
-      .query('SELECT AccountId, Name, Email, Authority, Coins FROM Account WHERE AccountId = @id');
+      .query('SELECT AccountId, Name, Email, Authority, Coins, WebCoins FROM Account WHERE AccountId = @id');
 
     if (result.recordset.length === 0) {
       return res.status(404).json({ success: false, error: 'User not found' });
     }
 
     const user = result.recordset[0];
-    
+
     // Check if banned
     if (user.Authority === -1) {
       return res.status(403).json({ success: false, error: 'Account banned' });
     }
+
+    const gameCoins = user.Coins || 0;
+    const webCoins = user.WebCoins || 0;
 
     res.json({
       success: true,
@@ -686,7 +693,9 @@ router.get('/session', authMiddleware, async (req, res) => {
           id: user.AccountId,
           username: user.Name,
           email: user.Email || '',
-          coins: user.Coins || 0,
+          coins: webCoins,              // spendable balance for the website
+          gameCoins: gameCoins,         // read-only (managed by the game)
+          totalCoins: gameCoins + webCoins,
           authority: user.Authority || 0
         }
       }
