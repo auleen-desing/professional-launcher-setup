@@ -57,6 +57,7 @@ app.use('/api/config', require('./routes/config'));
 app.use('/api/transactions', require('./routes/transactions'));
 app.use('/api/gifts', require('./routes/gifts'));
 app.use('/api/emails', require('./routes/emails'));
+app.use('/api/pending', require('./routes/pending'));
 
 // Health check
 app.get('/api/health', (req, res) => {

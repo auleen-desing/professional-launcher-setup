@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { sql, poolPromise } = require('../config/database');
 const { authMiddleware } = require('../middleware/auth');
+const { addPendingCoins, getPendingCoins } = require('../utils/pendingCoins');
 
 const SPIN_COST = 500;
 
@@ -67,7 +68,7 @@ router.post('/spin', authMiddleware, async (req, res) => {
       color: p.Color
     }));
 
-    // Deduct spin cost
+    // Deduct spin cost (this is safe - we're removing, not adding)
     await pool.request()
       .input('id', sql.BigInt, req.user.id)
       .input('cost', sql.Int, SPIN_COST)
@@ -88,12 +89,14 @@ router.post('/spin', authMiddleware, async (req, res) => {
 
     console.log('Won prize:', prize.name);
 
-    // Award prize
+    // Award prize using PENDING COINS system
     if (prize.type === 'coins' && prize.value > 0) {
-      await pool.request()
-        .input('id', sql.BigInt, req.user.id)
-        .input('coins', sql.Int, prize.value)
-        .query('UPDATE Account SET Coins = Coins + @coins WHERE AccountId = @id');
+      await addPendingCoins(
+        req.user.id,
+        prize.value,
+        'roulette',
+        `Won: ${prize.name}`
+      );
     } else if (prize.type === 'item' && prize.value) {
       // Log item prize for manual delivery or game integration
       console.log(`[Roulette] User ${req.user.id} won item ${prize.value} x${prize.itemAmount} (${prize.name})`);
@@ -104,11 +107,15 @@ router.post('/spin', authMiddleware, async (req, res) => {
       .input('id', sql.BigInt, req.user.id)
       .query('SELECT Coins FROM Account WHERE AccountId = @id');
 
+    const pending = await getPendingCoins(req.user.id);
+
     res.json({
       success: true,
       data: {
         prize,
-        newBalance: newBalance.recordset[0]?.Coins || 0
+        newBalance: newBalance.recordset[0]?.Coins || 0,
+        pendingCoins: pending.total,
+        note: prize.type === 'coins' ? 'Coins will be credited when you log into the game' : null
       }
     });
   } catch (err) {
