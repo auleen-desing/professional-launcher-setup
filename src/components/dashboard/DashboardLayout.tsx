@@ -39,7 +39,6 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
-  { name: 'My Characters', href: '/dashboard/characters', icon: Users },
   { name: 'Rankings', href: '/dashboard/rankings', icon: Trophy },
   { name: 'Buy NovaCoins', href: '/dashboard/buy-coins', icon: Coins },
   { name: 'Pending Coins', href: '/dashboard/pending', icon: Clock },
