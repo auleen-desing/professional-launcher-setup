@@ -46,13 +46,10 @@ const navItems: NavItem[] = [
   { name: 'Send Gift', href: '/dashboard/gifts', icon: Gift },
   { name: 'Transactions', href: '/dashboard/transactions', icon: History },
   { name: 'Coupon', href: '/dashboard/coupon', icon: Ticket },
-  { name: 'Daily Reward', href: '/dashboard/daily', icon: Calendar },
-  { name: 'Title Shop', href: '/dashboard/titles', icon: Crown },
   { name: 'Roulette', href: '/dashboard/roulette', icon: Dices },
   { name: 'Shop', href: '/dashboard/shop', icon: ShoppingCart },
   { name: 'Tickets', href: '/dashboard/tickets', icon: MessageSquare },
   { name: 'Unbug', href: '/dashboard/unbug', icon: Bug },
-  { name: 'Avatar', href: '/dashboard/avatar', icon: User },
   { name: 'Password', href: '/dashboard/password', icon: Lock },
 ];
 
