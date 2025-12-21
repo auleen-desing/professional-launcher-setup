@@ -137,6 +137,7 @@ router.post('/login', authRateLimit, async (req, res) => {
       });
     }
 
+    const pool = await poolPromise;
     const result = await pool.request()
       .input('username', sql.NVarChar, username.substring(0, 20)) // Limit length
       .query(`
