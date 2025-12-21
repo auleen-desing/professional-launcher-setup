@@ -22,10 +22,10 @@ router.post('/send', authMiddleware, async (req, res) => {
 
     const pool = await poolPromise;
 
-    // Get sender info and verify balance
+    // Get sender info and verify WebCoins balance
     const senderResult = await pool.request()
       .input('senderId', sql.BigInt, senderId)
-      .query('SELECT AccountId, Name, Coins FROM Account WHERE AccountId = @senderId');
+      .query('SELECT AccountId, Name, WebCoins FROM Account WHERE AccountId = @senderId');
 
     if (senderResult.recordset.length === 0) {
       return res.status(404).json({ success: false, error: 'Sender not found' });
@@ -33,7 +33,7 @@ router.post('/send', authMiddleware, async (req, res) => {
 
     const sender = senderResult.recordset[0];
 
-    if (sender.Coins < coinsToSend) {
+    if ((sender.WebCoins || 0) < coinsToSend) {
       return res.status(400).json({ success: false, error: 'Insufficient coins' });
     }
 
@@ -53,16 +53,16 @@ router.post('/send', authMiddleware, async (req, res) => {
       return res.status(400).json({ success: false, error: 'You cannot send coins to yourself' });
     }
 
-    // Perform transfer
+    // Perform transfer using WebCoins
     await pool.request()
       .input('senderId', sql.BigInt, senderId)
       .input('amount', sql.Int, coinsToSend)
-      .query('UPDATE Account SET Coins = Coins - @amount WHERE AccountId = @senderId');
+      .query('UPDATE Account SET WebCoins = WebCoins - @amount WHERE AccountId = @senderId');
 
     await pool.request()
       .input('recipientId', sql.BigInt, recipient.AccountId)
       .input('amount', sql.Int, coinsToSend)
-      .query('UPDATE Account SET Coins = Coins + @amount WHERE AccountId = @recipientId');
+      .query('UPDATE Account SET WebCoins = ISNULL(WebCoins, 0) + @amount WHERE AccountId = @recipientId');
 
     // Log transactions
     const giftMessage = message ? `: "${message}"` : '';
@@ -91,7 +91,7 @@ router.post('/send', authMiddleware, async (req, res) => {
       success: true, 
       message: `Successfully sent ${coinsToSend} coins to ${recipient.Name}`,
       data: {
-        newBalance: sender.Coins - coinsToSend
+        newBalance: (sender.WebCoins || 0) - coinsToSend
       }
     });
   } catch (err) {

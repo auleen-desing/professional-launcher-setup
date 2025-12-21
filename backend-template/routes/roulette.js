@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { sql, poolPromise } = require('../config/database');
 const { authMiddleware } = require('../middleware/auth');
-const { addPendingCoins, getPendingCoins } = require('../utils/pendingCoins');
 
 const SPIN_COST = 500;
 
@@ -40,13 +39,13 @@ router.post('/spin', authMiddleware, async (req, res) => {
 
     console.log('Roulette spin for user:', req.user.id);
 
-    // Check coins
+    // Check WebCoins (use WebCoins for roulette)
     const userResult = await pool.request()
       .input('id', sql.BigInt, req.user.id)
-      .query('SELECT Coins FROM Account WHERE AccountId = @id');
+      .query('SELECT WebCoins FROM Account WHERE AccountId = @id');
 
-    const coins = userResult.recordset[0]?.Coins || 0;
-    if (coins < SPIN_COST) {
+    const webCoins = userResult.recordset[0]?.WebCoins || 0;
+    if (webCoins < SPIN_COST) {
       return res.status(400).json({ success: false, error: 'Insufficient coins' });
     }
 
@@ -68,11 +67,11 @@ router.post('/spin', authMiddleware, async (req, res) => {
       color: p.Color
     }));
 
-    // Deduct spin cost (this is safe - we're removing, not adding)
+    // Deduct spin cost from WebCoins
     await pool.request()
       .input('id', sql.BigInt, req.user.id)
       .input('cost', sql.Int, SPIN_COST)
-      .query('UPDATE Account SET Coins = Coins - @cost WHERE AccountId = @id');
+      .query('UPDATE Account SET WebCoins = WebCoins - @cost WHERE AccountId = @id');
 
     // Determine prize (weighted random)
     const random = Math.random() * 100;
@@ -89,14 +88,13 @@ router.post('/spin', authMiddleware, async (req, res) => {
 
     console.log('Won prize:', prize.name);
 
-    // Award prize using PENDING COINS system
+    // Award prize - add coins directly to WebCoins
     if (prize.type === 'coins' && prize.value > 0) {
-      await addPendingCoins(
-        req.user.id,
-        prize.value,
-        'roulette',
-        `Won: ${prize.name}`
-      );
+      await pool.request()
+        .input('id', sql.BigInt, req.user.id)
+        .input('amount', sql.Int, prize.value)
+        .query('UPDATE Account SET WebCoins = ISNULL(WebCoins, 0) + @amount WHERE AccountId = @id');
+      console.log(`[Roulette] User ${req.user.id} won ${prize.value} coins`);
     } else if (prize.type === 'item' && prize.value) {
       // Log item prize for manual delivery or game integration
       console.log(`[Roulette] User ${req.user.id} won item ${prize.value} x${prize.itemAmount} (${prize.name})`);
@@ -105,17 +103,18 @@ router.post('/spin', authMiddleware, async (req, res) => {
     // Get new balance
     const newBalance = await pool.request()
       .input('id', sql.BigInt, req.user.id)
-      .query('SELECT Coins FROM Account WHERE AccountId = @id');
+      .query('SELECT Coins, WebCoins FROM Account WHERE AccountId = @id');
 
-    const pending = await getPendingCoins(req.user.id);
+    const gameCoins = newBalance.recordset[0]?.Coins || 0;
+    const newWebCoins = newBalance.recordset[0]?.WebCoins || 0;
 
     res.json({
       success: true,
       data: {
         prize,
-        newBalance: newBalance.recordset[0]?.Coins || 0,
-        pendingCoins: pending.total,
-        note: prize.type === 'coins' ? 'Coins will be credited when you log into the game' : null
+        newBalance: newWebCoins,
+        gameCoins: gameCoins,
+        totalCoins: gameCoins + newWebCoins
       }
     });
   } catch (err) {

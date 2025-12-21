@@ -10,7 +10,7 @@ router.get('/profile', authMiddleware, async (req, res) => {
     const result = await pool.request()
       .input('id', sql.BigInt, req.user.id)
       .query(`
-        SELECT AccountId, Name, Email, Authority, Coins, RegistrationIP
+        SELECT AccountId, Name, Email, Authority, Coins, WebCoins, RegistrationIP
         FROM Account WHERE AccountId = @id
       `);
 
@@ -19,13 +19,18 @@ router.get('/profile', authMiddleware, async (req, res) => {
     }
 
     const user = result.recordset[0];
+    const gameCoins = user.Coins || 0;
+    const webCoins = user.WebCoins || 0;
+    
     res.json({
       success: true,
       data: {
         id: user.AccountId,
         username: user.Name,
         email: user.Email,
-        coins: user.Coins || 0,
+        coins: webCoins,           // WebCoins as main balance (what web can use)
+        gameCoins: gameCoins,      // Game coins (read-only, managed by game)
+        totalCoins: gameCoins + webCoins, // Combined for display
         authority: user.Authority || 0
       }
     });
@@ -41,9 +46,19 @@ router.get('/coins', authMiddleware, async (req, res) => {
     const pool = await poolPromise;
     const result = await pool.request()
       .input('id', sql.BigInt, req.user.id)
-      .query('SELECT Coins FROM Account WHERE AccountId = @id');
+      .query('SELECT Coins, WebCoins FROM Account WHERE AccountId = @id');
 
-    res.json({ success: true, data: { coins: result.recordset[0]?.Coins || 0 } });
+    const gameCoins = result.recordset[0]?.Coins || 0;
+    const webCoins = result.recordset[0]?.WebCoins || 0;
+    
+    res.json({ 
+      success: true, 
+      data: { 
+        coins: webCoins,           // WebCoins as main balance
+        gameCoins: gameCoins,      // Game coins (read-only)
+        totalCoins: gameCoins + webCoins
+      } 
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: 'Server error' });
   }
