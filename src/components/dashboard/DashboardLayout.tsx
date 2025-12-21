@@ -23,7 +23,8 @@ import {
   Shield,
   Crown,
   Gift,
-  History
+  History,
+  Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -41,6 +42,7 @@ const navItems: NavItem[] = [
   { name: 'My Characters', href: '/dashboard/characters', icon: Users },
   { name: 'Rankings', href: '/dashboard/rankings', icon: Trophy },
   { name: 'Buy NovaCoins', href: '/dashboard/buy-coins', icon: Coins },
+  { name: 'Pending Coins', href: '/dashboard/pending', icon: Clock },
   { name: 'Send Gift', href: '/dashboard/gifts', icon: Gift },
   { name: 'Transactions', href: '/dashboard/transactions', icon: History },
   { name: 'Coupon', href: '/dashboard/coupon', icon: Ticket },
