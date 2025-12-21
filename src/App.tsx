@@ -24,6 +24,7 @@ import Characters from "./pages/dashboard/Characters";
 import Rankings from "./pages/dashboard/Rankings";
 import Gifts from "./pages/dashboard/Gifts";
 import Transactions from "./pages/dashboard/Transactions";
+import { PendingCoins } from "./pages/dashboard/PendingCoins";
 import Launcher from "./pages/Launcher";
 import { VerifyEmail } from "./pages/VerifyEmail";
 import { ForgotPassword } from "./pages/ForgotPassword";
@@ -232,6 +233,16 @@ function AppRoutes() {
           <ProtectedRoute>
             <DashboardLayout>
               <Gifts />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard/pending"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <PendingCoins />
             </DashboardLayout>
           </ProtectedRoute>
         }
