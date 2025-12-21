@@ -134,7 +134,7 @@ export function PendingCoins() {
             <div className="text-right">
               <p className="text-sm text-muted-foreground">Current Balance</p>
               <p className="text-2xl font-display font-bold text-foreground">
-                {user?.coins.toLocaleString() || 0}
+                {(user?.coins ?? 0).toLocaleString()}
               </p>
             </div>
           </div>

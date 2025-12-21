@@ -49,7 +49,7 @@ export function DashboardHome() {
               <div>
                 <p className="text-sm text-muted-foreground mb-1">Your NovaCoins</p>
                 <p className="text-5xl sm:text-6xl font-display font-black text-gradient-cyan">
-                  {user?.coins.toLocaleString()}
+                  {(user?.coins ?? 0).toLocaleString()}
                 </p>
               </div>
               <div className="flex items-center gap-2 text-neon-green mb-2">

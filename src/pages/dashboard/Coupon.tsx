@@ -39,7 +39,14 @@ export function Coupon() {
       const data = await response.json();
 
       if (data.success) {
-        updateCoins(data.data.newBalance);
+        const nextBalance =
+          typeof data?.data?.newBalance === 'number'
+            ? data.data.newBalance
+            : typeof data?.data?.currentBalance === 'number'
+              ? data.data.currentBalance
+              : user?.coins ?? 0;
+
+        updateCoins(nextBalance);
         toast({
           title: '🎉 Coupon redeemed!',
           description: data.message || `You received ${data.data.coins} coins!`,
