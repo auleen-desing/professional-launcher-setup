@@ -174,9 +174,9 @@ export function BuyCoins() {
       form.action = 'https://www.paypal.com/cgi-bin/webscr';
 
       const fields = {
-        cmd: '_donations',
+        cmd: '_xclick', // Changed from _donations to _xclick for digital goods
         business: paypalEmail,
-        item_name: 'Server donation',
+        item_name: `${totalCoins} NovaCoins - Virtual Currency`,
         amount: selectedPackage.price.toString(),
         custom: transactionId,
         currency_code: 'EUR',
@@ -185,8 +185,10 @@ export function BuyCoins() {
         return: RETURN_URL,
         cancel_return: CANCEL_URL,
         rm: '2', // Return method - POST data and auto-redirect
-        no_shipping: '1', // No shipping address required
+        no_shipping: '1', // No shipping address required - digital product
         no_note: '1', // No note field
+        undefined_quantity: '0', // Fixed quantity
+        quantity: '1', // Single item purchase
       };
 
       Object.entries(fields).forEach(([name, value]) => {
