@@ -342,12 +342,14 @@ export default function AdminDonations() {
                         <TableCell>
                           <div className="flex items-center gap-1 text-sm text-muted-foreground">
                             <Calendar className="w-3 h-3" />
-                            {donation.CreatedAt ? (() => {
-                              const date = new Date(donation.CreatedAt);
-                              // Add 1 hour for UTC+1
-                              date.setHours(date.getHours() + 1);
-                              return format(date, 'dd/MM/yyyy HH:mm');
-                            })() : '-'}
+                            {donation.CreatedAt ? new Date(donation.CreatedAt).toLocaleString('es-ES', { 
+                              timeZone: 'Europe/Madrid',
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            }) : '-'}
                           </div>
                         </TableCell>
                         <TableCell>
