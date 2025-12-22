@@ -160,7 +160,7 @@ router.post('/ipn', async (req, res) => {
       .input('transactionId', sql.NVarChar(100), transactionId)
       .query(`
         SELECT * FROM web_donations 
-        WHERE TransactionId = @transactionId AND Status = 'pending'
+        WHERE TransactionId = @transactionId AND Status IN ('pending', 'paypal_pending')
       `);
 
     if (!donationResult.recordset || donationResult.recordset.length === 0) {
