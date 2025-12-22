@@ -198,13 +198,13 @@ router.post('/ipn', async (req, res) => {
         WHERE Id = @id AND Status IN ('pending', 'paypal_pending')
       `);
 
-    // Credit coins DIRECTLY to Account.Coins
+    // Credit coins DIRECTLY to Account.WebCoins
     await pool.request()
       .input('accountId', sql.BigInt, donation.AccountId)
       .input('coins', sql.Int, donation.Coins)
       .query(`
         UPDATE Account 
-        SET Coins = ISNULL(Coins, 0) + @coins 
+        SET WebCoins = ISNULL(WebCoins, 0) + @coins 
         WHERE AccountId = @accountId
       `);
 
@@ -253,13 +253,13 @@ router.post('/admin/complete-donation', authMiddleware, async (req, res) => {
         WHERE TransactionId = @transactionId
       `);
 
-    // Credit coins DIRECTLY to Account.Coins
+    // Credit coins DIRECTLY to Account.WebCoins
     await pool.request()
       .input('accountId', sql.BigInt, donation.AccountId)
       .input('coins', sql.Int, donation.Coins)
       .query(`
         UPDATE Account 
-        SET Coins = ISNULL(Coins, 0) + @coins 
+        SET WebCoins = ISNULL(WebCoins, 0) + @coins 
         WHERE AccountId = @accountId
       `);
 
