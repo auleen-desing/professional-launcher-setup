@@ -75,7 +75,7 @@ export default function AdminDonations() {
   const fetchDonations = async () => {
     setLoading(true);
     try {
-      const response = await apiService.request<Donation[]>('/paypal/admin/all-donations');
+      const response = await apiService.request<Donation[]>('/payments/paypal/admin/all-donations');
       if (response.success && response.data) {
         setDonations(response.data);
         setFilteredDonations(response.data);
@@ -124,10 +124,10 @@ export default function AdminDonations() {
 
   const handleCompleteDonation = async () => {
     if (!selectedDonation) return;
-    
+
     setCompleting(true);
     try {
-      const response = await apiService.request('/paypal/admin/complete-donation', {
+      const response = await apiService.request('/payments/paypal/admin/complete-donation', {
         method: 'POST',
         body: JSON.stringify({ transactionId: selectedDonation.TransactionId })
       });
