@@ -24,14 +24,14 @@ router.post('/redeem', authMiddleware, async (req, res) => {
 
     console.log('Redeeming coupon:', sanitizedCode, 'for user:', req.user.id);
 
-    // Find coupon
+    // Find coupon - use CAST to DATE for expiration check to include the entire day
     const couponResult = await pool.request()
       .input('code', sql.NVarChar, sanitizedCode)
       .query(`
         SELECT * FROM web_coupons 
         WHERE Code = @code AND Active = 1 
         AND (MaxUses IS NULL OR CurrentUses < MaxUses)
-        AND (ExpiresAt IS NULL OR ExpiresAt > GETDATE())
+        AND (ExpiresAt IS NULL OR CAST(ExpiresAt AS DATE) >= CAST(GETDATE() AS DATE))
       `);
 
     if (couponResult.recordset.length === 0) {
