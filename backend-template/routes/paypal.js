@@ -195,18 +195,20 @@ router.post('/ipn', async (req, res) => {
       .query(`
         UPDATE web_donations 
         SET Status = 'completed', TransactionId = @paypalTxnId, CompletedAt = GETDATE()
-        WHERE Id = @id AND Status = 'pending'
+        WHERE Id = @id AND Status IN ('pending', 'paypal_pending')
       `);
 
-    // Credit coins using PENDING COINS system
-    await addPendingCoins(
-      donation.AccountId,
-      donation.Coins,
-      'donation',
-      `PayPal: ${paypalTxnId}`
-    );
+    // Credit coins DIRECTLY to Account.Coins
+    await pool.request()
+      .input('accountId', sql.BigInt, donation.AccountId)
+      .input('coins', sql.Int, donation.Coins)
+      .query(`
+        UPDATE Account 
+        SET Coins = ISNULL(Coins, 0) + @coins 
+        WHERE AccountId = @accountId
+      `);
 
-    console.log(`[PayPal IPN] SUCCESS: Added ${donation.Coins} pending coins for account ${donation.AccountId}`);
+    console.log(`[PayPal IPN] SUCCESS: Credited ${donation.Coins} coins directly to account ${donation.AccountId}`);
 
   } catch (error) {
     console.error('[PayPal IPN] Error processing:', error);
@@ -251,15 +253,17 @@ router.post('/admin/complete-donation', authMiddleware, async (req, res) => {
         WHERE TransactionId = @transactionId
       `);
 
-    // Credit coins using PENDING COINS system
-    await addPendingCoins(
-      donation.AccountId,
-      donation.Coins,
-      'donation',
-      `Admin manual: ${transactionId}`
-    );
+    // Credit coins DIRECTLY to Account.Coins
+    await pool.request()
+      .input('accountId', sql.BigInt, donation.AccountId)
+      .input('coins', sql.Int, donation.Coins)
+      .query(`
+        UPDATE Account 
+        SET Coins = ISNULL(Coins, 0) + @coins 
+        WHERE AccountId = @accountId
+      `);
 
-    console.log(`[PayPal Admin] Manually completed donation ${transactionId}: ${donation.Coins} pending coins for account ${donation.AccountId}`);
+    console.log(`[PayPal Admin] Completed donation ${transactionId}: ${donation.Coins} coins credited directly to account ${donation.AccountId}`);
 
     res.json({ 
       success: true, 
