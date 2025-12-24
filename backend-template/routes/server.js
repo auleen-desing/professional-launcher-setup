@@ -7,7 +7,7 @@ const CHANNELS = [
   { id: 'CH2', name: 'Channel 2', port: 51235 },
   { id: 'CH3', name: 'Channel 3', port: 51236 },
   { id: 'CH4', name: 'Channel 4', port: 51237 },
-  { id: 'PVP', name: 'PvP Channel', port: 5100 }
+  { id: 'ACT4', name: 'Act 4', port: 5200 }
 ];
 
 const SERVER_IP = process.env.SERVER_IP || '127.0.0.1';
