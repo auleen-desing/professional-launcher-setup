@@ -8,9 +8,9 @@ async function getShopDiscount() {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
-      .query("SELECT config_value FROM web_config WHERE config_key = 'SHOP_DISCOUNT'");
+      .query("SELECT value FROM web_config WHERE name = 'SHOP_DISCOUNT'");
     if (result.recordset.length > 0) {
-      const val = Number(result.recordset[0].config_value);
+      const val = Number(result.recordset[0].value);
       if (Number.isFinite(val) && val >= 0 && val <= 100) return val;
     }
   } catch (e) {
