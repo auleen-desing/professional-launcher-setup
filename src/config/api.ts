@@ -7,12 +7,11 @@ export const API_CONFIG = {
   SERVER_IP: '148.113.198.241',
   LOGIN_PORT: 4000,
   CHANNELS: {
-    CH1: { port: 1337, name: 'Channel 1' },
-    CH2: { port: 1338, name: 'Channel 2' },
-    CH3: { port: 1339, name: 'Channel 3' },
-    CH4: { port: 1340, name: 'Channel 4' },
-    CH5: { port: 1341, name: 'Channel 5' },
-    CH51: { port: 5100, name: 'Raid Channel' },
+    CH1: { port: 51234, name: 'Channel 1' },
+    CH2: { port: 51235, name: 'Channel 2' },
+    CH3: { port: 51236, name: 'Channel 3' },
+    CH4: { port: 51237, name: 'Channel 4' },
+    PVP: { port: 5100, name: 'PvP Channel' },
   },
   
   // NosTale Server Info
