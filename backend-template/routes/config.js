@@ -8,14 +8,14 @@ router.get('/', async (req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request().query(`
-      SELECT config_key, config_value 
+      SELECT name, value 
       FROM web_config 
-      WHERE config_key IN ('COIN_BONUS', 'SHOP_DISCOUNT', 'ROULETTE_SPIN_COST', 'DAILY_FREE_SPINS')
+      WHERE name IN ('COIN_BONUS', 'SHOP_DISCOUNT', 'ROULETTE_SPIN_COST', 'DAILY_FREE_SPINS')
     `);
 
     const config = {};
     result.recordset.forEach(row => {
-      config[row.config_key] = Number(row.config_value) || row.config_value;
+      config[row.name] = Number(row.value) || row.value;
     });
 
     // Provide defaults if table doesn't exist or is empty
@@ -69,10 +69,10 @@ router.put('/', authMiddleware, adminMiddleware, async (req, res) => {
           .input('key', sql.NVarChar, update.key)
           .input('value', sql.NVarChar, String(Math.floor(numValue)))
           .query(`
-            IF EXISTS (SELECT 1 FROM web_config WHERE config_key = @key)
-              UPDATE web_config SET config_value = @value, updated_at = GETDATE() WHERE config_key = @key
+            IF EXISTS (SELECT 1 FROM web_config WHERE name = @key)
+              UPDATE web_config SET value = @value WHERE name = @key
             ELSE
-              INSERT INTO web_config (config_key, config_value) VALUES (@key, @value)
+              INSERT INTO web_config (name, value) VALUES (@key, @value)
           `);
       }
     }
