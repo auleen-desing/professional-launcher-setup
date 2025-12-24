@@ -45,6 +45,7 @@ export function AdminSettings() {
     try {
       const token = localStorage.getItem('novaera_token');
       const response = await fetch(buildApiUrl('/config'), {
+        cache: 'no-store',
         headers: { 'Authorization': `Bearer ${token}` },
       });
       
@@ -81,6 +82,7 @@ export function AdminSettings() {
       const token = localStorage.getItem('novaera_token');
       const response = await fetch(buildApiUrl('/config'), {
         method: 'PUT',
+        cache: 'no-store',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
