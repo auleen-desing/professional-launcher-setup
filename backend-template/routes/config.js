@@ -8,9 +8,9 @@ router.get('/', async (req, res) => {
   try {
     const pool = await poolPromise;
     const result = await pool.request().query(`
-      SELECT name, value 
-      FROM web_config 
-      WHERE name IN ('COIN_BONUS', 'SHOP_DISCOUNT', 'ROULETTE_SPIN_COST', 'DAILY_FREE_SPINS')
+      SELECT [name] as name, [value] as value
+      FROM dbo.web_config 
+      WHERE LTRIM(RTRIM([name])) IN ('COIN_BONUS', 'SHOP_DISCOUNT', 'ROULETTE_SPIN_COST', 'DAILY_FREE_SPINS')
     `);
 
     const config = {};
@@ -69,10 +69,10 @@ router.put('/', authMiddleware, adminMiddleware, async (req, res) => {
           .input('key', sql.NVarChar, update.key)
           .input('value', sql.NVarChar, String(Math.floor(numValue)))
           .query(`
-            IF EXISTS (SELECT 1 FROM web_config WHERE name = @key)
-              UPDATE web_config SET value = @value WHERE name = @key
+            IF EXISTS (SELECT 1 FROM dbo.web_config WHERE LTRIM(RTRIM([name])) = @key)
+              UPDATE dbo.web_config SET [value] = @value WHERE LTRIM(RTRIM([name])) = @key
             ELSE
-              INSERT INTO web_config (name, value) VALUES (@key, @value)
+              INSERT INTO dbo.web_config ([name], [value]) VALUES (@key, @value)
           `);
       }
     }
