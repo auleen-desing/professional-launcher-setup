@@ -56,7 +56,8 @@ export function Shop() {
 
   const fetchConfig = async () => {
     try {
-      const res = await fetch(buildApiUrl('/config'));
+      // Prefer the shop-specific config endpoint so UI matches backend purchase calculations
+      const res = await fetch(buildApiUrl('/shop/config'), { cache: 'no-store' });
       const contentType = res.headers.get('content-type') ?? '';
 
       if (!res.ok || !contentType.includes('application/json')) {
@@ -64,8 +65,9 @@ export function Shop() {
       }
 
       const data = await res.json();
-      if (data?.success && typeof data?.data?.SHOP_DISCOUNT === 'number') {
-        setGlobalDiscount(data.data.SHOP_DISCOUNT);
+      const discount = data?.data?.globalDiscount;
+      if (data?.success && typeof discount === 'number') {
+        setGlobalDiscount(discount);
       }
     } catch {
       // Keep fallback from API_CONFIG.SHOP_DISCOUNT
