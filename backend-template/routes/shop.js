@@ -8,7 +8,7 @@ async function getShopDiscount() {
   try {
     const pool = await poolPromise;
     const result = await pool.request()
-      .query("SELECT value FROM web_config WHERE name = 'SHOP_DISCOUNT'");
+      .query("SELECT TOP 1 [value] as value FROM dbo.web_config WHERE LTRIM(RTRIM([name])) = 'SHOP_DISCOUNT'");
     if (result.recordset.length > 0) {
       const val = Number(result.recordset[0].value);
       if (Number.isFinite(val) && val >= 0 && val <= 100) return val;
