@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { CheckCircle2, XCircle, Loader2, ArrowLeft, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,12 +10,18 @@ export function VerifyEmail() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const token = searchParams.get('token');
-  
+
+  const hasVerifiedRef = useRef(false);
+
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'expired'>('loading');
   const [message, setMessage] = useState('');
   const [username, setUsername] = useState('');
 
   useEffect(() => {
+    // React 18 StrictMode (dev) can run effects twice; guard to avoid double verification.
+    if (hasVerifiedRef.current) return;
+    hasVerifiedRef.current = true;
+
     const verifyEmail = async () => {
       if (!token) {
         setStatus('error');
@@ -25,19 +31,29 @@ export function VerifyEmail() {
 
       try {
         const response = await apiService.verifyEmail(token);
-        
+
         if (response.success) {
           setStatus('success');
           setMessage(response.message || 'Email verified successfully!');
           setUsername(response.data?.username || '');
-        } else {
-          if (response.error?.includes('expired')) {
-            setStatus('expired');
-          } else {
-            setStatus('error');
-          }
-          setMessage(response.error || 'Verification failed.');
+          return;
         }
+
+        // Treat "already verified" as success to avoid false-negative UX (e.g. double request).
+        const errMsg = response.error || 'Verification failed.';
+        if (errMsg.toLowerCase().includes('already verified')) {
+          setStatus('success');
+          setMessage('Email already verified! You can login now.');
+          setUsername(response.data?.username || '');
+          return;
+        }
+
+        if (errMsg.toLowerCase().includes('expired')) {
+          setStatus('expired');
+        } else {
+          setStatus('error');
+        }
+        setMessage(errMsg);
       } catch (error) {
         setStatus('error');
         setMessage('Could not connect to server.');
