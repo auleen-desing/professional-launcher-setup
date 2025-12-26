@@ -80,12 +80,15 @@ router.get('/my-requests', authMiddleware, async (req, res) => {
 
 // ADMIN: Get all pending payment requests
 router.get('/admin/pending', authMiddleware, async (req, res) => {
+    console.log('[PaymentRequests] Fetching pending requests, user:', req.user?.id, 'isAdmin:', req.user?.isAdmin);
     try {
         if (!req.user.isAdmin) {
+            console.log('[PaymentRequests] Access denied - not admin');
             return res.status(403).json({ success: false, error: 'Access denied' });
         }
 
         const pool = await getPool();
+        console.log('[PaymentRequests] Querying pending requests...');
         const result = await pool.request()
             .query(`
                 SELECT pr.*, a.AccountName as username
@@ -95,6 +98,7 @@ router.get('/admin/pending', authMiddleware, async (req, res) => {
                 ORDER BY pr.created_at ASC
             `);
 
+        console.log('[PaymentRequests] Found', result.recordset.length, 'pending requests');
         res.json({ success: true, data: result.recordset });
     } catch (error) {
         console.error('Get pending requests error:', error);
