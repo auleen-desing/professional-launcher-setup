@@ -4,7 +4,7 @@ const { getPool } = require('../config/database');
 const { authMiddleware } = require('../middleware/auth');
 const { logTransaction } = require('./transactions');
 
-// Submit a payment request (Paysafecard, Bizum)
+// Submit a payment request (Paysafecard)
 router.post('/submit', authMiddleware, async (req, res) => {
     try {
         const { paymentType, code, amount, coinsRequested } = req.body;
@@ -14,7 +14,7 @@ router.post('/submit', authMiddleware, async (req, res) => {
             return res.status(400).json({ success: false, error: 'All fields are required' });
         }
 
-        const validTypes = ['paysafecard', 'bizum'];
+        const validTypes = ['paysafecard'];
         if (!validTypes.includes(paymentType)) {
             return res.status(400).json({ success: false, error: 'Invalid payment type' });
         }
@@ -217,9 +217,9 @@ router.post('/admin/process/:id', authMiddleware, async (req, res) => {
             await logTransaction(
                 pool,
                 request.account_id,
-                request.payment_type === 'paysafecard' ? 'paysafecard' : 'bizum',
+                'paysafecard',
                 coins,
-                `${request.payment_type.toUpperCase()} - €${request.amount}`,
+                `PAYSAFECARD - €${request.amount}`,
                 request.code
             );
         }

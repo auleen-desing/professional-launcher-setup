@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,7 @@ interface PaymentRequest {
 }
 
 const AlternativePayments = () => {
+  const navigate = useNavigate();
   const [code, setCode] = useState('');
   const [amount, setAmount] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -37,12 +39,30 @@ const AlternativePayments = () => {
     fetchMyRequests();
   }, []);
 
+  const handleAuthError = () => {
+    localStorage.removeItem('novaera_token');
+    localStorage.removeItem('novaera_user');
+    toast.error('Session expired. Please log in again.');
+    navigate('/login');
+  };
+
   const fetchMyRequests = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('novaera_token');
+      if (!token) {
+        handleAuthError();
+        return;
+      }
+
       const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.PAYMENT_REQUESTS.MY_REQUESTS), {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
+
+      if (response.status === 401) {
+        handleAuthError();
+        return;
+      }
+
       const data = await response.json();
       if (data.success) {
         setMyRequests(data.data);
@@ -64,22 +84,32 @@ const AlternativePayments = () => {
       return;
     }
 
+    const token = localStorage.getItem('novaera_token');
+    if (!token) {
+      handleAuthError();
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const token = localStorage.getItem('auth_token');
       const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.PAYMENT_REQUESTS.SUBMIT), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           paymentType: 'paysafecard',
           code: code.trim(),
           amount: parseFloat(amount),
-          coinsRequested
-        })
+          coinsRequested,
+        }),
       });
+
+      if (response.status === 401) {
+        handleAuthError();
+        return;
+      }
 
       const data = await response.json();
       if (data.success) {

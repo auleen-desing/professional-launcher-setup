@@ -65,7 +65,7 @@ export default function AdminBlockedIPs() {
     if (showRefresh) setIsRefreshing(true);
     
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('novaera_token');
       const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.ADMIN.BLOCKED_IPS), {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -99,7 +99,7 @@ export default function AdminBlockedIPs() {
     }
 
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('novaera_token');
       const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.ADMIN.BLOCK_IP), {
         method: 'POST',
         headers: {
@@ -127,7 +127,7 @@ export default function AdminBlockedIPs() {
 
   const handleUnblockIP = async (ip: string) => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('novaera_token');
       const response = await fetch(buildApiUrl(API_CONFIG.ENDPOINTS.ADMIN.UNBLOCK_IP.replace(':ip', ip)), {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
