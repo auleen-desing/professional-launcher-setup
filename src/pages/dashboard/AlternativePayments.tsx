@@ -29,8 +29,10 @@ const AlternativePayments = () => {
   const [myRequests, setMyRequests] = useState<PaymentRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Coin rate: 1€ = 100 coins (adjust as needed)
-  const COIN_RATE = 100;
+  // Coin rate: 1€ = 100 coins base, x3 multiplier for alternative payments
+  const BASE_COIN_RATE = 100;
+  const MULTIPLIER = 3;
+  const COIN_RATE = BASE_COIN_RATE * MULTIPLIER;
   const coinsRequested = Math.floor(parseFloat(amount || '0') * COIN_RATE);
 
   useEffect(() => {
@@ -117,6 +119,16 @@ const AlternativePayments = () => {
         <p className="text-muted-foreground">Redeem Paysafecard or Bizum for {API_CONFIG.COIN_NAME}</p>
       </div>
 
+      <div className="p-4 rounded-xl bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-500/30 text-center">
+        <div className="flex items-center justify-center gap-2 mb-1">
+          <span className="text-2xl font-bold text-green-400">x3</span>
+          <span className="text-lg font-semibold text-green-300">BONUS</span>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Get 3x more {API_CONFIG.COIN_NAME} with Paysafecard & Bizum!
+        </p>
+      </div>
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="paysafecard" className="flex items-center gap-2">
@@ -171,8 +183,9 @@ const AlternativePayments = () => {
                 </div>
                 {coinsRequested > 0 && (
                   <div className="p-3 rounded-lg bg-primary/10 text-center">
-                    <span className="text-sm text-muted-foreground">You will receive:</span>
+                    <span className="text-sm text-muted-foreground">You will receive (x3 bonus):</span>
                     <p className="text-2xl font-bold text-primary">{coinsRequested.toLocaleString()} {API_CONFIG.COIN_NAME}</p>
+                    <p className="text-xs text-green-400">Normal: {Math.floor(parseFloat(amount || '0') * 100).toLocaleString()} → With bonus: {coinsRequested.toLocaleString()}</p>
                   </div>
                 )}
                 <Button 
@@ -263,8 +276,9 @@ const AlternativePayments = () => {
                 </div>
                 {coinsRequested > 0 && (
                   <div className="p-3 rounded-lg bg-primary/10 text-center">
-                    <span className="text-sm text-muted-foreground">You will receive:</span>
+                    <span className="text-sm text-muted-foreground">You will receive (x3 bonus):</span>
                     <p className="text-2xl font-bold text-primary">{coinsRequested.toLocaleString()} {API_CONFIG.COIN_NAME}</p>
+                    <p className="text-xs text-green-400">Normal: {Math.floor(parseFloat(amount || '0') * 100).toLocaleString()} → With bonus: {coinsRequested.toLocaleString()}</p>
                   </div>
                 )}
                 <Button 
