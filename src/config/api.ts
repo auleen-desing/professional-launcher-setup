@@ -108,6 +108,13 @@ export const API_CONFIG = {
       BLOCK_IP: '/admin/block-ip',
       UNBLOCK_IP: '/admin/unblock-ip/:ip',
     },
+    PAYMENT_REQUESTS: {
+      SUBMIT: '/payment-requests/submit',
+      MY_REQUESTS: '/payment-requests/my-requests',
+      ADMIN_PENDING: '/payment-requests/admin/pending',
+      ADMIN_ALL: '/payment-requests/admin/all',
+      ADMIN_PROCESS: '/payment-requests/admin/process/:id',
+    },
   },
 };
 

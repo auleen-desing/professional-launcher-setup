@@ -39,6 +39,7 @@ const navItems: NavItem[] = [
   { name: 'Blocked IPs', href: '/admin/blocked-ips', icon: Shield },
   { name: 'NovaCoins', href: '/admin/coins', icon: Coins },
   { name: 'Donations', href: '/admin/donations', icon: CreditCard },
+  { name: 'Payment Requests', href: '/admin/payment-requests', icon: Coins },
   { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
   { name: 'Mass Email', href: '/admin/emails', icon: Mail },
   { name: 'Announcements', href: '/admin/announcements', icon: Megaphone },

@@ -26,6 +26,7 @@ import Rankings from "./pages/dashboard/Rankings";
 import Gifts from "./pages/dashboard/Gifts";
 import Transactions from "./pages/dashboard/Transactions";
 import { PendingCoins } from "./pages/dashboard/PendingCoins";
+import AlternativePayments from "./pages/dashboard/AlternativePayments";
 import Launcher from "./pages/Launcher";
 import { VerifyEmail } from "./pages/VerifyEmail";
 import { ForgotPassword } from "./pages/ForgotPassword";
@@ -45,6 +46,7 @@ import { AdminStats } from "./pages/admin/AdminStats";
 import { AdminSettings } from "./pages/admin/AdminSettings";
 import AdminEmails from "./pages/admin/AdminEmails";
 import AdminDonations from "./pages/admin/AdminDonations";
+import AdminPaymentRequests from "./pages/admin/AdminPaymentRequests";
 const queryClient = new QueryClient();
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -258,6 +260,16 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/dashboard/alternative-payments"
+        element={
+          <ProtectedRoute>
+            <DashboardLayout>
+              <AlternativePayments />
+            </DashboardLayout>
+          </ProtectedRoute>
+        }
+      />
 
       {/* Admin Routes - Protected by CanUseCP > 1 */}
       <Route path="/admin" element={<ProtectedAdminRoute><AdminLayout><AdminDashboard /></AdminLayout></ProtectedAdminRoute>} />
@@ -266,6 +278,7 @@ function AppRoutes() {
       <Route path="/admin/blocked-ips" element={<ProtectedAdminRoute><AdminBlockedIPs /></ProtectedAdminRoute>} />
       <Route path="/admin/coins" element={<ProtectedAdminRoute><AdminLayout><AdminCoins /></AdminLayout></ProtectedAdminRoute>} />
       <Route path="/admin/donations" element={<ProtectedAdminRoute><AdminDonations /></ProtectedAdminRoute>} />
+      <Route path="/admin/payment-requests" element={<ProtectedAdminRoute><AdminLayout><AdminPaymentRequests /></AdminLayout></ProtectedAdminRoute>} />
       <Route path="/admin/coupons" element={<ProtectedAdminRoute><AdminLayout><AdminCoupons /></AdminLayout></ProtectedAdminRoute>} />
       <Route path="/admin/emails" element={<ProtectedAdminRoute><AdminLayout><AdminEmails /></AdminLayout></ProtectedAdminRoute>} />
       <Route path="/admin/announcements" element={<ProtectedAdminRoute><AdminLayout><AdminAnnouncements /></AdminLayout></ProtectedAdminRoute>} />
