@@ -42,7 +42,7 @@ const navItems: NavItem[] = [
   { name: 'Overview', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Rankings', href: '/dashboard/rankings', icon: Trophy },
   { name: 'Buy NovaCoins', href: '/dashboard/buy-coins', icon: Coins },
-  { name: 'Paysafecard / Bizum', href: '/dashboard/alternative-payments', icon: CreditCard },
+  { name: 'Paysafecard', href: '/dashboard/alternative-payments', icon: CreditCard },
   { name: 'Pending Coins', href: '/dashboard/pending', icon: Clock },
   { name: 'Send Gift', href: '/dashboard/gifts', icon: Gift },
   { name: 'Transactions', href: '/dashboard/transactions', icon: History },
