@@ -8,7 +8,7 @@ const { logTransaction } = require('./transactions');
 router.post('/submit', authMiddleware, async (req, res) => {
     try {
         const { paymentType, code, amount, coinsRequested } = req.body;
-        const accountId = req.user.accountId;
+        const accountId = req.user.id;
 
         if (!paymentType || !code || !amount || !coinsRequested) {
             return res.status(400).json({ success: false, error: 'All fields are required' });
@@ -59,7 +59,7 @@ router.post('/submit', authMiddleware, async (req, res) => {
 // Get user's payment requests
 router.get('/my-requests', authMiddleware, async (req, res) => {
     try {
-        const accountId = req.user.accountId;
+        const accountId = req.user.id;
         const pool = await getPool();
 
         const result = await pool.request()
@@ -114,20 +114,25 @@ router.get('/admin/all', authMiddleware, async (req, res) => {
         const status = req.query.status || 'all';
         const offset = (page - 1) * limit;
 
-        const pool = await getPool();
-        
-        let whereClause = '';
-        if (status !== 'all') {
-            whereClause = `WHERE pr.status = '${status}'`;
+        const allowedStatuses = ['all', 'pending', 'approved', 'rejected'];
+        if (!allowedStatuses.includes(status)) {
+            return res.status(400).json({ success: false, error: 'Invalid status filter' });
         }
 
-        const countResult = await pool.request()
-            .query(`SELECT COUNT(*) as total FROM web_payment_requests pr ${whereClause}`);
+        const pool = await getPool();
+        
+        const whereClause = status === 'all' ? '' : 'WHERE pr.status = @status';
 
-        const result = await pool.request()
-            .input('offset', offset)
-            .input('limit', limit)
-            .query(`
+        const countReq = pool.request();
+        if (status !== 'all') countReq.input('status', status);
+        const countResult = await countReq.query(
+            `SELECT COUNT(*) as total FROM web_payment_requests pr ${whereClause}`
+        );
+
+        const dataReq = pool.request().input('offset', offset).input('limit', limit);
+        if (status !== 'all') dataReq.input('status', status);
+
+        const result = await dataReq.query(`
                 SELECT pr.*, a.AccountName as username,
                        admin.AccountName as processed_by_name
                 FROM web_payment_requests pr
@@ -192,7 +197,7 @@ router.post('/admin/process/:id', authMiddleware, async (req, res) => {
             .input('id', id)
             .input('status', status)
             .input('adminNotes', adminNotes || null)
-            .input('processedBy', req.user.accountId)
+            .input('processedBy', req.user.id)
             .query(`
                 UPDATE web_payment_requests 
                 SET status = @status, admin_notes = @adminNotes, processed_by = @processedBy, processed_at = GETDATE()

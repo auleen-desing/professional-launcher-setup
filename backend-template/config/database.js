@@ -34,6 +34,13 @@ const poolPromise = new sql.ConnectionPool(config)
   })
   .catch(err => {
     console.error('Database connection failed:', err);
+    throw err;
   });
 
-module.exports = { sql, poolPromise };
+const getPool = async () => {
+  const pool = await poolPromise;
+  if (!pool) throw new Error('Database pool not available');
+  return pool;
+};
+
+module.exports = { sql, poolPromise, getPool };
